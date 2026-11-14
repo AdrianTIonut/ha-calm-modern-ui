@@ -1,4 +1,4 @@
-/* Calm Modern UI (ccu) — generat de build.mjs din src/: theme.js, i18n.mjs, config.mjs, state.mjs, actions.mjs, gestures.mjs, icons.mjs, presets.mjs, render.mjs, graph-data.mjs, graph-card.mjs, energy.mjs, weather.mjs, controls.mjs, radio.mjs, editor.mjs, cards.mjs */
+/* Calm Modern UI (ccu) — generat de build.mjs din src/: theme.js, i18n.mjs, config.mjs, state.mjs, actions.mjs, gestures.mjs, icons.mjs, presets.mjs, render.mjs, graph-data.mjs, graph-card.mjs, energy.mjs, weather.mjs, controls.mjs, radio.mjs, vehicles.mjs, editor.mjs, cards.mjs */
 (() => {
 'use strict';
 const __m = {};
@@ -221,6 +221,11 @@ const CCU_THEME = `
   background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-alert) 30%, transparent), color-mix(in srgb, var(--ccu-alert) 8%, transparent) 65%), color-mix(in srgb, var(--ccu-alert) 11%, var(--ccu-bg));
   box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-alert) 16%, transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-alert) 38%, transparent); }
 .ccu-nav-item[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-alert) 45%, transparent)); }
+.ccu-badge.lit { background: var(--ccu-c-yellow); color: #1c1500; box-shadow: 0 0 0 2px var(--ccu-bg), 0 0 10px color-mix(in srgb, var(--ccu-c-yellow) 60%, transparent); }
+.ccu-nav-item[data-state="lit"] { color: var(--ccu-c-yellow); border-color: color-mix(in srgb, var(--ccu-c-yellow) 55%, transparent);
+  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-c-yellow) 26%, transparent), color-mix(in srgb, var(--ccu-c-yellow) 7%, transparent) 65%), color-mix(in srgb, var(--ccu-c-yellow) 9%, var(--ccu-bg));
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-c-yellow) 14%, transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-c-yellow) 34%, transparent); }
+.ccu-nav-item[data-state="lit"] .ccu-ico { color: var(--ccu-c-yellow); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-c-yellow) 45%, transparent)); }
 .ccu-nav-item:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 1px; }
 .ccu-nav-item[data-state="on"] { color: var(--ccu-on-hi); border-color: color-mix(in srgb, var(--ccu-on) 72%, transparent);
   background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-on) 32%, transparent), color-mix(in srgb, var(--ccu-on) 8%, transparent) 65%), color-mix(in srgb, var(--ccu-on) 13%, var(--ccu-bg));
@@ -357,7 +362,7 @@ const CCU_THEME = `
 .ccu-bat-shell .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 10px; min-width: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -8px 12px -8px rgba(0,0,0,.35), 0 0 16px -2px rgba(246,195,67,.4); transition: width .6s ease; }
 .ccu-bat-shell[data-state="backup"] .fill { box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 16px -2px rgba(244,105,75,.55); }
 .ccu-bat-shell .pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
-.ccu-bat-info { display: grid; gap: 6px; font-size: 13px; min-width: 0; } .ccu-bat-info .a { color: var(--ccu-muted); } .ccu-bat-info .a b { color: var(--ccu-text); font-weight: 600; }
+.ccu-bat-info { display: grid; gap: 6px; font-size: 13px; min-width: 0; } .ccu-bat-info .a { color: var(--ccu-muted); } .ccu-bat-info .a b { color: var(--ccu-text); font-weight: 600; } .ccu-bat-info .e { white-space: nowrap; } .ccu-bat-info .u, .ccu-bat-info .a, .ccu-bat-info .d { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; } .ccu-bat-info i { font-style: normal; } .ccu-bat-info b { white-space: nowrap; } .ccu-bat-info .u, .ccu-bat-info .d { color: var(--ccu-muted); } .ccu-bat-info .u b, .ccu-bat-info .d b { color: var(--ccu-text); font-weight: 600; } .ccu-bat-info .d { font-size: 12px; }
 .ccu-bat-slider { position: relative; margin: 20px 10px 58px; }
 .ccu-bat-slider .tr { height: 4px; border-radius: 2px; background: rgba(148,163,184,.26); } .ccu-bat-slider .fl { height: 100%; border-radius: 2px; background: var(--ccu-c-yellow); box-shadow: 0 0 8px color-mix(in srgb, var(--ccu-c-yellow) 50%, transparent); }
 .ccu-bat-slider .mk { position: absolute; top: -4px; transform: translateX(-50%); display: grid; justify-items: center; }
@@ -612,6 +617,26 @@ const CCU_THEME = `
 .ccu-radio .sp.on { color: var(--ccu-text); border-color: color-mix(in srgb, var(--ccu-on) 60%, transparent); background: color-mix(in srgb, var(--ccu-on) 14%, var(--ccu-surface-2)); }
 .ccu-radio .sp:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 .ccu-radio[data-state="na"] { opacity: .55; }
+/* mașini: panou pe mașină, rânduri cu termen (zile rămase), bară colorată după stare */
+.ccu-veh { display: grid; gap: 14px; }
+.ccu-veh .vh { display: grid; gap: 6px; }
+.ccu-veh .hd { display: flex; align-items: center; gap: 10px; padding: 0 2px 2px; } .ccu-veh .hd .ccu-ico { --ico: 24px; color: var(--ccu-accent); } .ccu-veh .hd b { font-size: 15px; font-weight: 650; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccu-veh .hd .pl { font-size: 11px; letter-spacing: .08em; padding: 3px 8px; border-radius: 7px; color: var(--ccu-muted); border: var(--ccu-bw) solid var(--ccu-line); background: color-mix(in srgb, var(--ccu-text) 5%, transparent); }
+.ccu-veh .vh[data-state="soon"] .hd .ccu-ico { color: var(--ccu-alert-hi); } .ccu-veh .vh[data-state="expired"] .hd .ccu-ico { color: var(--ccu-c-red); }
+.ccu-veh .vd { position: relative; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 4px 12px; padding: 10px 14px 12px; border-radius: 14px; overflow: hidden;
+  background: var(--ccu-gloss), var(--ccu-surface-2); border: var(--ccu-bw) solid var(--ccu-line); box-shadow: var(--ccu-edge); }
+.ccu-veh .vd .ccu-ico { --ico: 22px; color: var(--ccu-muted); } .ccu-veh .vd .nm { display: grid; min-width: 0; font-size: 14px; font-weight: 600; } .ccu-veh .vd .nm small { font-size: 11.5px; font-weight: 400; color: var(--ccu-muted); }
+.ccu-veh .vd > b { font-size: 14px; font-weight: 700; white-space: nowrap; text-align: right; }
+.ccu-veh .vd .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--ccu-text) 10%, transparent); overflow: hidden; } .ccu-veh .vd .bar i { display: block; height: 100%; border-radius: 2px; background: var(--ccu-on); transition: width .4s ease; }
+.ccu-veh .vd[data-state="ok"] .ccu-ico { color: var(--ccu-on-hi); }
+.ccu-veh .vd[data-state="soon"] { border-color: color-mix(in srgb, var(--ccu-alert) 65%, transparent); background: radial-gradient(130% 160% at 50% 0%, color-mix(in srgb, var(--ccu-alert) 22%, transparent), color-mix(in srgb, var(--ccu-alert) 6%, transparent) 65%), color-mix(in srgb, var(--ccu-alert) 9%, var(--ccu-bg)); }
+.ccu-veh .vd[data-state="soon"] .ccu-ico, .ccu-veh .vd[data-state="soon"] > b { color: var(--ccu-alert-hi); } .ccu-veh .vd[data-state="soon"] .bar i { background: var(--ccu-alert); }
+.ccu-veh .vd[data-state="expired"] { border-color: color-mix(in srgb, var(--ccu-c-red) 70%, transparent); background: radial-gradient(130% 160% at 50% 0%, color-mix(in srgb, var(--ccu-c-red) 26%, transparent), color-mix(in srgb, var(--ccu-c-red) 7%, transparent) 65%), color-mix(in srgb, var(--ccu-c-red) 10%, var(--ccu-bg)); }
+.ccu-veh .vd[data-state="expired"] .ccu-ico, .ccu-veh .vd[data-state="expired"] > b { color: var(--ccu-c-red); } .ccu-veh .vd[data-state="expired"] .bar i { background: var(--ccu-c-red); width: 100% !important; }
+.ccu-veh .vd[data-state="unset"] { border-style: dashed; } .ccu-veh .vd[data-state="unset"] > b { color: var(--ccu-muted); font-weight: 600; } .ccu-veh .vd[data-state="unset"] .bar { opacity: .4; }
+.ccu-veh .vd[data-editable="1"] { cursor: pointer; } .ccu-veh .vd .dp { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.ccu-veh .vd .now { all: unset; box-sizing: border-box; cursor: pointer; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 9px; color: var(--ccu-text); border: var(--ccu-bw) solid var(--ccu-line); background: color-mix(in srgb, var(--ccu-text) 7%, transparent); position: relative; z-index: 1; }
+.ccu-veh .vd .now:active { transform: scale(.96); } .ccu-veh .vd .now:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 /* titlu de secțiune */
 .ccu-ttl { display: flex; align-items: center; gap: 12px; padding: 2px 4px; } .ccu-ttl .ccu-ico { --ico: 28px; color: var(--ccu-accent); filter: drop-shadow(0 0 8px color-mix(in srgb, var(--ccu-accent) 45%, transparent)); }
 .ccu-ttl .tx { display: grid; gap: 1px; } .ccu-ttl b { font-size: 20px; font-weight: 650; letter-spacing: -.01em; } .ccu-ttl small { font-size: 12.5px; color: var(--ccu-muted); }
@@ -674,6 +699,14 @@ __m["i18n"] = (() => {
 // Variabile: t('Persoana #{n}: lipsește entity_id.', { n: 2 }).
 
 const EN = {
+ "Insignă cu număr": "Number badge",
+ "Entități numărate": "Counted entities",
+ "Aspect insignă": "Badge style",
+ "Numără entitățile pornite; un senzor numeric adaugă valoarea lui (ex. „becuri aprinse”).": "Counts the entities that are on; a numeric sensor adds its value (e.g. “lights on”).",
+ "„light” = galben, pentru lumini; implicit roșu (alertă).": "“light” = yellow, for lights; the default is red (alert).",
+ "Utilizabil până la {p}%": "Usable down to {p}%",
+ "Pe zi (100→{p}%)": "Per day (100→{p}%)",
+ "{a} kWh": "{a} kWh",
  "Încălzire": "Heat",
  "Răcire": "Cool",
  "Uscare": "Dry",
@@ -897,6 +930,26 @@ const EN = {
  "Tastă": "Key",
  "Comandă": "Command",
  "Ex. KEY_11 sau numele din integrarea ta.": "E.g. KEY_11 or the name used by your integration.",
+ "Ignoră dispozitivele": "Ignored devices",
+ "Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.": "Pick a device from the list that you no longer use (e.g. a broken toothbrush) or type a word from its name and press Enter.",
+ "Adaugă dispozitive": "Add devices",
+ "Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).": "Sensors added even if they are not found automatically or are ignored (e.g. a battery sensor without a type).",
+ "slabă": "low",
+ "Baterii slabe": "Low batteries",
+ "Un singur chip, doar când există baterii slabe: arată numărul (sau numele, dacă e una) și, la atingere, deschide ce setezi mai jos.": "A single chip, shown only when there are low batteries: it shows the count (or the name, if there is one) and opens what you set below when tapped.",
+ "Arată chip „baterii slabe”": "Show a “low batteries” chip",
+ "Prag baterie slabă (%)": "Low battery threshold (%)",
+ "Text (opțional)": "Text (optional)",
+ "Exclude dispozitivele care conțin": "Exclude devices containing",
+ "Include oricum": "Always include",
+ "Exclude telefoanele și tabletele": "Exclude phones and tablets",
+ "La atingere (ex. deschide lista bateriilor)": "On tap (e.g. open the battery list)",
+ "Scrie un cuvânt din numele sau din entity_id și apasă Enter, ex. deye.": "Type a word from the name or entity_id and press Enter, e.g. deye.",
+ "Entități adăugate chiar dacă ar fi excluse.": "Entities added even if they would be excluded.",
+ "Găsește singur bateriile": "Find batteries automatically",
+ "Caută în Home Assistant toate dispozitivele cu baterie (senzori „battery”), fără telefoane și tablete.": "Looks in Home Assistant for every device with a battery (“battery” sensors), without phones and tablets.",
+ "Descoperire automată": "Auto-discovery",
+ "Arată doar bateriile slabe": "Show only low batteries",
  "Radio: „{k}” nu e un entity_id valid.": "Radio: “{k}” is not a valid entity_id.",
  "Radio: „{k}” trebuie să fie din domeniul {d}.": "Radio: “{k}” must be from the {d} domain.",
  "Radio: lipsește „stations” (un select cu posturile).": "Radio: “stations” is missing (a select with the stations).",
@@ -1058,7 +1111,43 @@ const EN = {
  "Grindină": "Hail",
  "Vânt și nori": "Windy and cloudy",
  "Fenomen deosebit": "Exceptional weather",
- "La atingere (ex. deschide pagina graficului)": "On tap (e.g. open the graph's page)"
+ "La atingere (ex. deschide pagina graficului)": "On tap (e.g. open the graph's page)",
+ "Mașina #{n} nu e un obiect.": "Vehicle #{n} is not an object.",
+ "Mașina „{v}”, documentul #{n}: pentru km trebuie „remaining” sau „odometer” + „last_km”.": "Vehicle “{v}”, document #{n}: for km you need “remaining” or “odometer” + “last_km”.",
+ "Mașina „{v}”, documentul #{n}: lipsește „entity” (o dată) sau „odometer” / „remaining” (km).": "Vehicle “{v}”, document #{n}: “entity” (a date) or “odometer” / “remaining” (km) is missing.",
+ "Mașina {n}": "Vehicle {n}",
+ "Mașini": "Vehicles",
+ "Ulei": "Oil",
+ "Document": "Document",
+ "Setează data": "Set the date",
+ "depășit cu {n} km": "overdue by {n} km",
+ "în {n} km": "in {n} km",
+ "la {n} km": "at {n} km",
+ "Schimbat acum": "Changed now",
+ "expirat de o zi": "expired a day ago",
+ "expirat de {n} zile": "expired {n} days ago",
+ "Data de expirare": "Expiry date",
+ "Un helper „dată” (se poate modifica din card) sau un senzor cu dată, ex. revizia din mașină.": "A “date” helper (editable from the card) or a sensor with a date, e.g. the service date from the car.",
+ "Pentru kilometri (ulei, revizie)": "For kilometers (oil, service)",
+ "Kilometraj (senzor)": "Odometer (sensor)",
+ "Kilometri la ultima schimbare (număr)": "Kilometers at the last change (number)",
+ "sau: kilometri rămași (senzor)": "or: kilometers left (sensor)",
+ "Interval (km)": "Interval (km)",
+ "Cu butonul „Schimbat acum” de pe card primește kilometrajul curent.": "The “Changed now” button on the card sets it to the current odometer.",
+ "Fiecare mașină are documentele ei: RCA, ITP, rovinietă, revizie / ulei.": "Each vehicle has its own documents: insurance, inspection, road tax, service / oil.",
+ "Adaugă mașină": "Add vehicle",
+ "Mașină": "Vehicle",
+ "Număr de înmatriculare (opțional)": "License plate (optional)",
+ "Documente": "Documents",
+ "Adaugă document": "Add document",
+ "Scrie numele mașinii ca să poți adăuga documente.": "Type the vehicle name to be able to add documents.",
+ "Termene mașini": "Vehicle deadlines",
+ "Un chip cât timp un termen (RCA, ITP, rovinietă, ulei) se apropie sau a expirat; arată documentul și termenul, sau numărul.": "A chip while a deadline (insurance, inspection, road tax, oil) is close or has passed; it shows the document and its deadline, or the count.",
+ "Arată chip „termene mașini”": "Show a “vehicle deadlines” chip",
+ "Alertă cu câte zile înainte": "Alert how many days before",
+ "La atingere (ex. deschide pagina Mașini)": "On tap (e.g. open the Vehicles page)",
+ "Alertă la câți km rămași": "Alert at how many km left",
+ "Termenul devine portocaliu (și apare în chip) cu atâtea zile înainte.": "The deadline turns orange (and shows in the chip) this many days before."
 };
 
 /** Dicționare pe limbă (ro = identitate). Adaugă aici alte limbi: DICT.de = { 'Pornit': 'Ein', … } (ce lipsește cade pe engleză). */
@@ -2104,6 +2193,8 @@ const ICONS = {
   ruler: svg('<rect class="fl" x="3" y="11" width="26" height="10" rx="2"/><path d="M8 11v4M13 11v6M18 11v4M23 11v6"/>'),
   alert: svg('<path class="fl" d="M16 5 29 27H3z"/><path d="M16 13v7M16 23.5v.01"/>'),
   info: svg('<circle class="fl" cx="16" cy="16" r="12"/><path d="M16 14.5v7M16 10.5v.01"/>'),
+  road:    svg('<path class="fl" d="M11 5h10l7 22H4z"/><path d="M16 8v3M16 14v3.5M16 21v4"/>'),
+  van:     svg('<path class="fl" d="M3 22V9.5A2.5 2.5 0 0 1 5.5 7H19v15z"/><path d="M19 12h5.2a2 2 0 0 1 1.7 1l2.1 3.7V22H19"/><path d="M22 12v4.7h6"/><circle cx="9" cy="22.5" r="2.6"/><circle cx="23" cy="22.5" r="2.6"/>'),
   shield: svg('<path class="fl" d="M16 4 6 8v8c0 6 4 10 10 12 6-2 10-6 10-12V8z"/><path d="m11.5 16 3.5 3.5 6-6.5"/>'),
   sunset: svg('<path d="M4 24h24M9 24a7 7 0 0 1 14 0"/><path class="fl" d="M9 24a7 7 0 0 1 14 0z"/><path d="M16 8v4M6.5 14l2.5 2.5M25.5 14 23 16.5M13 5.5l3 3 3-3"/>'),
   hand: svg('<path class="fl" d="M10 17V8.5a1.8 1.8 0 0 1 3.6 0V15M13.6 14V6.5a1.8 1.8 0 0 1 3.6 0V15M17.2 14V8a1.8 1.8 0 0 1 3.6 0v9M20.8 17v-5.5a1.8 1.8 0 0 1 3.6 0V19c0 5-3 8-8 8-3 0-5-1.4-6.4-3.6L6 18.5a1.8 1.8 0 0 1 3-2L10 18"/>'),
@@ -2196,6 +2287,7 @@ const MDI = {
   'clock-time-eight': 'clock', 'clock-check': 'clock', 'clock-end': 'clock', 'timer-off': 'clock', 'grass': 'leaf', 'flower': 'leaf', 'weather-night': 'w-moon', 'weather-sunny': 'sun',
   'compass-outline': 'compass', 'satellite-variant': 'compass', 'latitude': 'compass', 'longitude': 'compass', 'map-marker': 'compass', 'map-marker-multiple': 'compass', 'target': 'compass',
   'alert-circle': 'ok', 'alert-octagon': 'ok', 'check-all': 'ok', 'check-circle': 'ok', 'progress-check': 'ok',
+  'highway': 'road', 'road': 'road', 'road-variant': 'road', 'toll': 'road', 'sign-direction': 'road', 'van-utility': 'van', 'van-passenger': 'van', 'bus': 'van', 'truck': 'van', 'truck-delivery': 'van', 'shield-car': 'shield', 'car-wrench': 'car', 'car-cog': 'car', 'car-info': 'car', 'oil': 'wrench', 'oil-level': 'wrench',
   'car': 'car', 'car-electric': 'car', 'ev-station': 'car', 'ev-plug-type2': 'car',
   'chart-line': 'chart', 'bubble-chart': 'chart', 'chart-areaspline': 'chart', 'chart-bar': 'chart', 'sine-wave': 'wave', 'waveform': 'wave', 'delta': 'wave', 'calendar': 'calendar', 'calendar-today': 'calendar', 'calendar-month': 'calendar', 'calendar-week': 'calendar', 'calendar-year': 'calendar', 'calendar-clock': 'calendar', 'bell': 'bell', 'bell-alert': 'bell', 'bell-settings': 'bell', 'bell-outline': 'bell', 'bell-ring': 'bell', 'wrench': 'wrench', 'tools': 'wrench', 'engine': 'wrench', 'oil': 'wrench', 'wrench-clock': 'wrench', 'auto-fix': 'wrench', 'strategy': 'wrench', 'hammer-wrench': 'wrench', 'refresh': 'refresh', 'update': 'refresh', 'repeat-variant': 'refresh', 'rotate-3d-variant': 'refresh', 'screen-rotation': 'refresh', 'cog-clockwise': 'refresh', 'sync': 'refresh', 'download': 'download', 'upload': 'upload', 'cash': 'cash', 'currency-eur': 'cash', 'currency-usd': 'cash', 'cash-multiple': 'cash', 'chip': 'chip', 'memory': 'chip', 'cpu-64-bit': 'chip', 'database': 'database', 'harddisk': 'database', 'sd': 'database', 'web': 'globe', 'network-outline': 'globe', 'earth': 'globe', 'server-network': 'server', 'ethernet': 'server', 'server': 'server', 'lan': 'server', 'robot': 'robot', 'robot-outline': 'robot', 'robot-mower': 'mower', 'robot-mower-outline': 'mower', 'mower': 'mower', 'filter': 'filter', 'filter-variant': 'filter', 'filter-remove': 'filter', 'cleaning-services': 'filter', 'filter-outline': 'filter', 'tune-variant': 'sliders', 'tune': 'sliders', 'tune-vertical': 'sliders', 'radio': 'radio', 'radio-tower': 'radio', 'arrow-left-right': 'swaph', 'arrow-oscillating': 'swaph', 'arrow-oscillating-off': 'swaph', 'swap-horizontal': 'swaph', 'arrow-up-down': 'swapv', 'swap-vertical': 'swapv', 'weight': 'weight', 'weight-kilogram': 'weight', 'ruler-square': 'ruler', 'texture-box': 'ruler', 'ruler': 'ruler', 'alert-circle': 'alert', 'alert-octagon': 'alert', 'alert': 'alert', 'alert-outline': 'alert', 'alert-circle-outline': 'alert', 'windsock': 'w-wind', 'sleep': 'w-moon', 'playlist-play': 'menu',
   'information': 'info', 'information-outline': 'info', 'information-variant': 'info', 'shield-check': 'shield', 'shield-alert': 'shield', 'shield': 'shield', 'shield-outline': 'shield', 'shield-lock': 'shield', 'weather-sunset-up': 'sunset', 'weather-sunset-down': 'sunset', 'weather-sunset': 'sunset', 'weather-sunny-alert': 'sunset', 'hand-back-right': 'hand', 'hand-back-left': 'hand', 'hand-front-right': 'hand', 'file-document-outline': 'paper', 'file-document': 'paper', 'file': 'paper', 'wifi-off': 'wifi', 'wifi-alert': 'wifi', 'wifi-check': 'wifi', 'wifi-strength-off': 'wifi', 'pool-thermometer': 'pool', 'calendar-sync': 'calendar', 'calendar-clock': 'calendar', 'chart-timeline-variant': 'chart', 'chart-donut': 'chart', 'chart-arc': 'chart', 'wrench-cog': 'wrench', 'application-cog': 'cog', 'water-check': 'drop', 'water-outline': 'drop', 'cup-water': 'drop', 'water-plus': 'drop', 'thermometer-lines': 'thermo', 'temperature-celsius': 'thermo', 'home-thermometer': 'thermo',
@@ -2530,7 +2622,13 @@ function renderChips(config, hass, opts = {}) {
   const items = (config.entities || []).map((e, i) => { const m = entityModel(e, i, hass, config); return m.hidden ? '' : renderChip(m, e, hass); }).join(''); // hide_off: chip-ul dispare când nu e „on”
   const waste = wasteModel(config.waste, opts.events, opts.now || new Date()).map((w) =>
     `<span class="ccu-chip" data-state="${w.diff === 0 ? 'alert' : 'on'}" data-waste="1" data-entity="${esc(config.waste.calendar)}"><span class="ccu-ico">${iconSvg(w.icon)}</span>${esc(w.label)} <b>${w.diff === 0 ? t('azi') : w.diff === 1 ? t('mâine') : t('în {n} zile', { n: w.diff })}</b></span>`).join('');
-  return `<div class="ccu-chips">${waste}${items}</div>${notes(opts.warnings)}`;
+  // baterii slabe: un singur chip, doar când există; cu o singură baterie arată numele și procentul, altfel numărul
+  const lb = opts.lowBat && opts.lowBat.count > 0 ? opts.lowBat : null;
+  const lowChip = lb ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-bat="1" data-entity="${esc(lb.low[0].entity)}"><span class="ccu-ico">${iconSvg('battery')}</span>${lb.count === 1 && !(config.low_batteries && config.low_batteries.label) ? `${esc(lb.low[0].name)} <b>${lb.low[0].binary ? esc(t('slabă')) : Math.round(lb.low[0].pct) + '%'}</b>` : `${esc((config.low_batteries && config.low_batteries.label) || t('Baterii slabe'))} <b>${lb.count}</b>`}</span>` : '';
+  // termene (RCA, ITP, rovinietă, ulei…): un chip cât timp ceva se apropie sau a expirat; cu unul singur arată documentul și termenul, altfel numărul
+  const due = opts.due && opts.due.length ? opts.due : null, dl = config.deadlines;
+  const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1">${iconSvg('calendar')}${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
+  return `<div class="ccu-chips">${dueChip}${lowChip}${waste}${items}</div>${notes(opts.warnings)}`;
 }
 
 /** Normalizează secțiunea `header` (iconiță, ≤ 3 valori, ceas). */
@@ -2605,7 +2703,7 @@ function normalizeNav(cfg) {
     if (!o || (!back && (typeof path !== 'string' || !path.startsWith('/')))) { warnings.push(t('Meniu #{n}: lipsește „path” (adresă ce începe cu /) sau „back: true”.', { n: i + 1 })); return; }
     const vi = o.visible_if && typeof o.visible_if === 'object' && /^[a-z_]+\.[a-z0-9_]+$/.test(String(o.visible_if.entity)) ? { entity: o.visible_if.entity, state: String(o.visible_if.state) } : null;
     const bl = Array.isArray(o.badge) ? o.badge : (o.badge && Array.isArray(o.badge.entities) ? o.badge.entities : []);
-    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, match: o.match, back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)) });
+    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, match: o.match, back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
   });
   return { items, warnings };
 }
@@ -2617,12 +2715,13 @@ function renderNav(config, currentPath, opts = {}) {
   let on = config.items.findIndex(isOn);
   const hs = opts.hass && opts.hass.states;
   // insignă: câte entități din `badge` sunt „on” (ex. persoane detectate de camere); > 0 → butonul devine roșu (alertă) ca „Persoane pe n camere”
-  const cnt = (it) => (hs && it.badge ? it.badge.filter((id) => hs[id] && hs[id].state === 'on').length : 0);
+  // un `sensor.*` numeric (ex. un contor „becuri aprinse”) adaugă valoarea lui; orice alt tip de entitate adaugă 1 când e „on”
+  const cnt = (it) => (hs && it.badge ? it.badge.reduce((a, id) => { const s = hs[id]; if (!s) return a; if (id.startsWith('sensor.')) { const n = Math.round(Number(s.state)); return a + (Number.isFinite(n) && n > 0 ? n : 0); } return a + (s.state === 'on' ? 1 : 0); }, 0) : 0);
   // visible_if: { entity, state } — elementul se vede doar când entitatea are acea stare (ex. butonul „Tableta” doar pe tabletă)
   const shown = (it) => !it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state);
   const labels = config.labels !== false;
-  const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? 'alert' : 'off';
-    return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');
+  const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? (it.badge_style === 'light' ? 'lit' : 'alert') : 'off';
+    return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge${it.badge_style === 'light' ? ' lit' : ''}">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');
   const nav = `<nav class="ccu-nav${config.compact ? ' compact' : ''}${labels ? '' : ' nolabels'}">${html}</nav>`;
   // sticky: bara rămâne fixă jos, pe ecran, cât derulezi pagina; un spațiu gol în pagină (spacer) o împiedică să acopere ultimul card
   if (config.sticky) return `${config.spacer === false ? '' : '<div class="ccu-nav-spacer"></div>'}<div class="ccu-nav-fixed">${nav}</div>${notes(opts.warnings)}`;
@@ -3478,14 +3577,19 @@ function buildBatteryModel(config, hass) {
   const total = capE !== null && capE > 0 ? capE : (config.capacity_kwh || null);
   const now = soc !== null && total ? (soc / 100) * total : null;
   const loadW = toWatts(st(config.load));
-  let autonomyH = null;
-  if (soc !== null && total && loadW !== null && loadW >= THRESH_W) autonomyH = (Math.max(0, soc - config.reserve_pct) / 100 * total * 1000) / loadW;
   const gp = st(config.grid_present);
   const backup = !!gp && gp.state === 'off';
+  // banda utilizabilă = [prag, 100]%: cu rețea pragul e rezerva (reserve_pct), fără rețea (backup) pragul de oprire (shutdown_pct).
+  // Toate valorile se calculează exact din procente și capacitate; se rotunjește doar la afișare.
+  const floor = backup ? config.shutdown_pct : config.reserve_pct;
+  const bandTotal = total ? ((100 - floor) / 100) * total : null;                       // ex. 37,7 kWh × (100 − 20)% = 30,16 kWh
+  const usable = soc !== null && total ? (Math.max(0, soc - floor) / 100) * total : null; // ex. 37,7 kWh × (53 − 20)% = 12,441 kWh
+  let autonomyH = null;
+  if (usable !== null && loadW !== null && loadW >= THRESH_W) autonomyH = (usable * 1000) / loadW;
   const state = soc === null ? 'na' : backup ? 'backup' : soc <= config.reserve_pct ? 'low' : 'ok';
   const hh = (h) => (h === null ? '—' : h >= 100 ? '>99 h' : `~${formatNumber(Math.round(h * 10) / 10)} h`);
-  return { soc, total, now, autonomyH, state, backup, socText: soc === null ? '—' : `${Math.round(soc)}%`,
-    energyText: now !== null && total ? t('{a} kWh din {b} kWh', { a: formatNumber(now), b: formatNumber(total) }) : (total ? t('— din {b} kWh', { b: formatNumber(total) }) : ''),
+  return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, socText: soc === null ? '—' : `${Math.round(soc)}%`,
+    energyText: usable !== null && bandTotal !== null ? t('{a} kWh din {b} kWh', { a: formatNumber(Math.round(usable * 10) / 10), b: formatNumber(Math.round(bandTotal * 10) / 10) }) : (bandTotal !== null ? t('— din {b} kWh', { b: formatNumber(Math.round(bandTotal * 10) / 10) }) : ''),
     autonomyText: hh(autonomyH) };
 }
 
@@ -3496,18 +3600,91 @@ function renderBattery(config, m, opts = {}) {
   const [c0, c1] = m.state === 'backup' ? ['#f4694b', '#a32a1f'] : m.state === 'low' ? ['#fbbf24', '#d97706'] : BAT_FILL[config.color];
   const pct = m.soc === null ? 0 : m.soc;
   // prima etichetă (oprire) se trage spre stânga, a doua (rezervă) spre dreapta: nu se mai suprapun nici pe telefon
-  const marks = [{ p: config.shutdown_pct, label: t('oprire invertor'), c: 'var(--ccu-c-red)', sh: '-48%' }, { p: config.reserve_pct, label: t('rezervă'), c: 'var(--ccu-c-yellow)', sh: '34%' }];
+  // pragul de oprire (10%) contează doar când rețeaua e căzută (backup): altfel se vede doar rezerva (20%)
+  const marks = m.backup
+    ? [{ p: config.shutdown_pct, label: t('oprire invertor'), c: 'var(--ccu-c-red)', sh: '-48%' }, { p: config.reserve_pct, label: t('rezervă'), c: 'var(--ccu-c-yellow)', sh: '34%' }]
+    : [{ p: config.reserve_pct, label: t('rezervă'), c: 'var(--ccu-c-yellow)', sh: '0%' }];
   const mk = marks.map((k) => `<span class="mk" style="left:${k.p}%"><i style="background:${k.c}"></i><span class="lb" style="--sh:${k.sh}"><b>${Math.round(k.p)}%</b><small>(${esc(k.label)})</small></span></span>`).join('');
   const head = m.state === 'backup'
     ? `<div class="ccu-bat-head backup"><span class="ccu-ico">${iconSvg('bolt')}</span><span>${t('Backup activ · Rețeaua este oprită')}</span></div>`
     : (config.show_title === false ? '' : `<div class="ccu-bat-head"><span class="ccu-ico">${iconSvg('battery')}</span><span>${esc(config.title)}</span></div>`);   // show_title: false = fără titlu „Baterie” + iconiță
   const body = `<div class="ccu-bat-body"><div class="ccu-bat-shell" data-state="${m.state}"><div class="fill" style="width:${pct}%;background:linear-gradient(180deg,${c0},${c1})"></div><span class="pct">${esc(m.socText)}</span></div>`
-    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span><span class="a">${t('Autonomie')} <b>${esc(m.autonomyText)}</b></span></div></div>`;
+    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span><span class="a"><i>${t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span></div></div>`;
   const slider = `<div class="ccu-bat-slider"><div class="tr"><div class="fl" style="width:${pct}%"></div></div>${mk}</div>`;
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
   return `<div class="ccu-card panel ccu-bat" data-state="${m.state}" data-id="0" data-entity="${esc(config.soc)}">${head}${body}${slider}${notes}</div>`;
 }
 
+
+// ============================================================ BATERII: DESCOPERIRE AUTOMATĂ ==
+const MOBILE_PLATFORMS = ['mobile_app', 'fully_kiosk', 'browser_mod'];
+const MOBILE_MODEL = /iphone|ipad|ipod|tablet|\btab\b|pixel|galaxy|sm-[a-z]\d/i;
+const strList = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(String).map((x) => x.trim()).filter(Boolean);
+
+/**
+ * `auto` (carduri baterii / chips): true sau { exclude, include, threshold, unavailable, mobile }.
+ *  - exclude: cuvinte căutate în entity_id și în nume (ex. „deye”, „audi”); include: entity_id forțate;
+ *  - threshold: „slabă” = până la acest procent (implicit 20); unavailable: true = păstrează și dispozitivele indisponibile;
+ *  - mobile (implicit true): lasă deoparte telefoanele, tabletele și browserele (aplicația HA, Fully Kiosk, Browser Mod).
+ */
+function normalizeAutoBatteries(v) {
+  if (!v) return null;
+  const o = v === true ? {} : typeof v === 'object' ? v : null;
+  if (!o) return null;
+  const th = Number(o.threshold);
+  const names = o.names && typeof o.names === 'object' && !Array.isArray(o.names) ? Object.fromEntries(Object.entries(o.names).filter(([k, v]) => okId(k) && v).map(([k, v]) => [k, String(v)])) : {};
+  return { exclude: strList(o.exclude), include: strList(o.include).filter(okId), threshold: Number.isFinite(th) && th >= 0 && th <= 100 ? th : 20, unavailable: o.unavailable === true, mobile: o.mobile !== false, names };
+}
+
+/** Bateriile găsite în HA (senzori cu device_class „battery”; binary_sensor „on” = slabă), crescător după nivel. */
+function discoverBatteries(hass, auto) {
+  const a = normalizeAutoBatteries(auto);
+  const S = (hass && hass.states) || {};
+  if (!a) return [];
+  const ex = a.exclude.map((x) => x.toLowerCase());
+  const out = [];
+  for (const [id, s] of Object.entries(S)) {
+    if (!/^(sensor|binary_sensor)\./.test(id) || !s) continue;
+    const at = s.attributes || {}, forced = a.include.includes(id);
+    // senzori cu device_class „battery” sau, dacă producătorul nu l-a pus, senzori în % al căror id se termină în „battery” / „battery_level” (ex. un senzor Tuya de temperatură / umiditate; nu „…_soh” sau „…_battery_health”)
+    const looksBattery = at.device_class === 'battery' || (!at.device_class && at.unit_of_measurement === '%' && id.startsWith('sensor.') && /(^|_)batt(ery)?(_level)?$/i.test(id));
+    if (!looksBattery && !forced) continue;
+    const friendly = String(at.friendly_name || '');
+    if (!forced && ex.some((x) => id.toLowerCase().includes(x) || friendly.toLowerCase().includes(x))) continue;
+    if (a.mobile && !forced) {
+      const ent = hass.entities && hass.entities[id], dev = ent && ent.device_id && hass.devices && hass.devices[ent.device_id];
+      if ((ent && MOBILE_PLATFORMS.includes(ent.platform)) || (dev && MOBILE_MODEL.test(String(dev.model || ''))) || /browser_mod/.test(id)) continue;
+    }
+    const gone = s.state === 'unavailable' || s.state === 'unknown' || s.state === '';
+    if (gone && !a.unavailable) continue;
+    const name = a.names[id] || friendly.replace(/\s*battery(\s*level)?\s*$/i, '').trim() || friendly || id.split('.')[1].replace(/_/g, ' ');
+    if (id.startsWith('binary_sensor.')) { out.push({ entity: id, name, pct: null, low: s.state === 'on', binary: true }); continue; }
+    if (at.unit_of_measurement && at.unit_of_measurement !== '%') continue;
+    const n = Number(s.state);
+    const pct = !gone && Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null;
+    if (pct === null && !gone) continue;
+    out.push({ entity: id, name, pct, low: pct !== null && pct <= a.threshold, binary: false });
+  }
+  const key = (r) => (r.binary ? (r.low ? -1 : 101) : r.pct === null ? 102 : r.pct);
+  return out.sort((x, y) => key(x) - key(y) || x.name.localeCompare(y.name));
+}
+
+/** Chip-ul „baterii slabe”: true sau { …auto, label, tap_action }. */
+function normalizeLowBatteries(v) {
+  if (!v) return null;
+  const auto = normalizeAutoBatteries(v);
+  if (!auto) return null;
+  const o = v === true ? {} : v;
+  return { ...auto, label: o.label ? String(o.label) : '', tap_action: o.tap_action, hold_action: o.hold_action };
+}
+
+/** Modelul chip-ului: câte baterii sunt slabe și care (cea mai slabă prima). */
+function lowBatteryModel(config, hass) {
+  if (!config) return null;
+  const rows = discoverBatteries(hass, config);
+  const low = rows.filter((r) => r.low);
+  return { rows, low, count: low.length };
+}
 
 // ============================================================ BATERII DISPOZITIVE ==
 /** Lista nivelurilor de baterie ale dispozitivelor (telefoane, tablete, mașină…), sortată crescător. */
@@ -3521,7 +3698,7 @@ function normalizeBatteriesConfig(cfg) {
   });
   if (items.length > 12) { items.length = 12; warnings.push(t('Baterii: maximum 12; restul sunt ignorate.')); }
   const n = (k, d) => (Number.isFinite(Number(src[k])) && src[k] >= 0 && src[k] <= 100 ? Number(src[k]) : d);
-  return { items, title: src.title ? String(src.title) : 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', warnings };
+  return { items, title: src.title ? String(src.title) : 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', auto: normalizeAutoBatteries(src.auto), only_low: src.only_low === true, warnings };
 }
 
 function buildBatteriesModel(config, hass) {
@@ -3534,8 +3711,19 @@ function buildBatteriesModel(config, hass) {
     const lvl = pct === null ? 'na' : pct < config.low_pct ? 'low' : pct < config.warn_pct ? 'warn' : 'ok';
     return { idx: i, entity: e.entity, name, pct, text: pct === null ? '—' : `${Math.round(pct)}%`, lvl };
   });
-  if (config.sort !== 'none') rows.sort((a, b) => (a.pct === null ? 101 : a.pct) - (b.pct === null ? 101 : b.pct));
-  return rows;
+  // `auto`: bateriile găsite singure în HA, fără cele deja listate
+  if (config.auto) {
+    const have = new Set(rows.map((r) => r.entity));
+    discoverBatteries(hass, config.auto).filter((d) => !have.has(d.entity)).forEach((d) => {
+      let lvl = d.binary ? (d.low ? 'low' : 'ok') : d.pct === null ? 'na' : d.pct < config.low_pct ? 'low' : d.pct < config.warn_pct ? 'warn' : 'ok';
+      if (d.low && lvl === 'ok') lvl = 'warn';   // ce numără chip-ul ca „slabă” (≤ prag) nu apare niciodată ca „în regulă” în listă
+      rows.push({ idx: rows.length, entity: d.entity, name: d.name, pct: d.binary ? (d.low ? 0 : 100) : d.pct, text: d.binary ? (d.low ? t('slabă') : 'OK') : d.pct === null ? '—' : `${Math.round(d.pct)}%`, lvl });
+    });
+  }
+  let out = rows;
+  if (config.only_low) out = rows.filter((r) => r.lvl === 'low' || r.lvl === 'warn');   // doar bateriile slabe (sub pragul de avertisment)
+  if (config.sort !== 'none') out.sort((a, b) => (a.pct === null ? 101 : a.pct) - (b.pct === null ? 101 : b.pct));
+  return out;
 }
 
 function renderBatteries(config, rows, opts = {}) {
@@ -3545,7 +3733,7 @@ function renderBatteries(config, rows, opts = {}) {
   return `<div class="ccu-card panel ccu-batts">${title}<div class="rows">${body}</div>${notes}</div>`;
 }
 
-return { toWatts, toKwh, fmtPower, normalizeFlowConfig, buildFlowModel, layoutFlow, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries };
+return { toWatts, toKwh, fmtPower, normalizeFlowConfig, buildFlowModel, layoutFlow, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeAutoBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries };
 })();
 
 __m["weather"] = (() => {
@@ -4128,10 +4316,143 @@ function renderRadio(c, hass, opts = {}) {
 return { normalizeRadio, stationUrl, radioModel, renderRadio };
 })();
 
+__m["vehicles"] = (() => {
+// src/vehicles.mjs — ccu-vehicle-card: termene ale mașinilor (RCA, ITP, rovinietă, revizie / ulei). Funcții PURE: normalizare, model, șablon HTML.
+// Interacțiunea (alegerea datei, „schimbat acum”) e în cards.mjs (CcuVehicleCard).
+const { t, intlLocale, getLang } = __m["i18n"];
+const { esc } = __m["render"];
+const { iconSvg } = __m["icons"];
+const { formatNumber } = __m["state"];
+const ID = /^[a-z_]+\.[a-z0-9_]+$/;
+const DAY = 864e5;
+const ok = (v) => typeof v === 'string' && ID.test(v);
+const num = (v, d, lo, hi) => { const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : d; };
+
+/** Config → { vehicles, alert_days, alert_km, title, warnings }. Un document: dată (`entity`) sau km (`remaining` | `odometer` + `last_km` + `interval_km`). */
+function normalizeVehicles(cfg) {
+  const src = cfg && typeof cfg === 'object' ? cfg : {};
+  const warnings = [], vehicles = [];
+  (Array.isArray(src.vehicles) ? src.vehicles : []).forEach((v, i) => {
+    const o = v && typeof v === 'object' ? v : null;
+    if (!o) { warnings.push(t('Mașina #{n} nu e un obiect.', { n: i + 1 })); return; }
+    const documents = [];
+    (Array.isArray(o.documents) ? o.documents : []).forEach((d, j) => {
+      const x = d && typeof d === 'object' ? d : null;
+      if (!x) return;
+      const label = x.label ? String(x.label) : '';
+      const base = { label, icon: x.icon ? String(x.icon) : '' };
+      if (ok(x.remaining) || ok(x.odometer)) {
+        const interval = num(x.interval_km, 10000, 1, 1000000);
+        if (!ok(x.remaining) && !ok(x.last_km)) { warnings.push(t('Mașina „{v}”, documentul #{n}: pentru km trebuie „remaining” sau „odometer” + „last_km”.', { v: o.name || i + 1, n: j + 1 })); return; }
+        documents.push({ ...base, kind: 'km', remaining: ok(x.remaining) ? x.remaining : '', odometer: ok(x.odometer) ? x.odometer : '', last_km: ok(x.last_km) ? x.last_km : '', interval_km: interval, alert_km: num(x.alert_km, 0, 0, 1000000) });
+      } else if (ok(x.entity)) {
+        documents.push({ ...base, kind: 'date', entity: x.entity });
+      } else warnings.push(t('Mașina „{v}”, documentul #{n}: lipsește „entity” (o dată) sau „odometer” / „remaining” (km).', { v: o.name || i + 1, n: j + 1 }));
+    });
+    vehicles.push({ name: o.name ? String(o.name) : t('Mașina {n}', { n: i + 1 }), icon: o.icon ? String(o.icon) : 'mdi:car', plate: o.plate ? String(o.plate) : '', documents });
+  });
+  return { vehicles, title: src.title !== undefined ? String(src.title || '') : t('Mașini'), alert_days: num(src.alert_days, 3, 0, 365), alert_km: num(src.alert_km, 500, 0, 1000000), warnings };
+}
+
+/** O dată din starea unei entități: „2026-11-14”, un ISO cu oră sau o dată în alt format simplu. Necunoscut / nesetat (an < 2000) → null. */
+function parseDate(s) {
+  const v = s === undefined || s === null ? '' : String(s).trim();
+  if (!v || v === 'unknown' || v === 'unavailable' || v === 'none') return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
+  if (!m) return null;
+  const y = Number(m[1]);
+  if (y < 2000) return null;
+  const d = new Date(y, Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+/** Zile întregi de la `now` (azi) până la `date`: pozitiv = în viitor, 0 = azi, negativ = expirat. */
+const daysUntil = (date, now) => Math.round((midnight(date).getTime() - midnight(now).getTime()) / DAY);
+
+const plural = (n, one, many) => (n === 1 ? t(one) : t(many, { n: formatNumber(n) }));
+
+/** Un document → { …, status: ok | soon | expired | unset, text, valueText, frac }. */
+function documentModel(doc, cfg, hass, now) {
+  const S = (id) => (id && hass && hass.states ? hass.states[id] : undefined);
+  const label = doc.label || (doc.kind === 'km' ? t('Ulei') : t('Document'));
+  if (doc.kind === 'date') {
+    const st = S(doc.entity), d = st ? parseDate(st.state) : null;
+    if (!d) return { ...doc, label, status: 'unset', text: t('Setează data'), valueText: '—', days: null, frac: 0, editable: doc.entity.startsWith('input_datetime.') };
+    const days = daysUntil(d, now);
+    const status = days < 0 ? 'expired' : days <= cfg.alert_days ? 'soon' : 'ok';
+    const text = days < 0 ? plural(-days, 'expirat de o zi', 'expirat de {n} zile') : days === 0 ? t('azi') : days === 1 ? t('mâine') : t('în {n} zile', { n: formatNumber(days) });
+    return { ...doc, label, status, text, valueText: formatDate(d), days, frac: Math.max(0, Math.min(1, days / 365)), editable: doc.entity.startsWith('input_datetime.') };
+  }
+  // km: rămași direct dintr-o entitate, sau interval − (odometru − km la ultima schimbare)
+  let left = null, target = null;
+  const odo = doc.odometer && S(doc.odometer) ? Number(S(doc.odometer).state) : NaN;
+  if (doc.remaining) { const n = Number(S(doc.remaining) && S(doc.remaining).state); left = Number.isFinite(n) ? n : null; if (left !== null && Number.isFinite(odo)) target = odo + left; }
+  else { const l = Number(S(doc.last_km) && S(doc.last_km).state); if (Number.isFinite(odo) && Number.isFinite(l)) { target = l + doc.interval_km; left = target - odo; } }
+  if (left === null) return { ...doc, label, status: 'unset', text: '—', valueText: '—', km: null, frac: 0, editable: false };
+  const alertKm = doc.alert_km || cfg.alert_km;
+  const status = left <= 0 ? 'expired' : left <= alertKm ? 'soon' : 'ok';
+  const text = left < 0 ? t('depășit cu {n} km', { n: formatNumber(Math.round(-left)) }) : t('în {n} km', { n: formatNumber(Math.round(left)) });
+  const editable = !doc.remaining && !!doc.last_km && doc.last_km.startsWith('input_number.') && !!doc.odometer;
+  return { ...doc, label, status, text, valueText: target !== null ? t('la {n} km', { n: formatNumber(Math.round(target)) }) : '', km: left, frac: Math.max(0, Math.min(1, left / doc.interval_km)), editable };
+}
+
+function formatDate(d) {
+  if (getLang() === 'ro') return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+  try { return d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return d.toISOString().slice(0, 10); }
+}
+
+const RANK = { expired: 3, soon: 2, ok: 1, unset: 0 };
+/** Toate mașinile: documente cu stare, plus starea cea mai gravă pe mașină. */
+function buildVehiclesModel(config, hass, now) {
+  const n = now || new Date();
+  return config.vehicles.map((v, vi) => {
+    const docs = v.documents.map((d, di) => ({ ...documentModel(d, config, hass, n), vi, di }));
+    const worst = docs.reduce((a, d) => (RANK[d.status] > RANK[a] ? d.status : a), 'ok');
+    return { ...v, vi, docs, status: docs.some((d) => d.status !== 'unset') ? worst : 'unset' };
+  });
+}
+
+/** Ce se apropie sau a expirat (pentru chip și notificări): { vehicle, label, text, status }. */
+function dueDocuments(config, hass, now) {
+  const out = [];
+  for (const v of buildVehiclesModel(config, hass, now)) for (const d of v.docs) if (d.status === 'soon' || d.status === 'expired') out.push({ vehicle: v.name, label: d.label, text: d.text, status: d.status, days: d.days === undefined ? null : d.days, km: d.km === undefined ? null : d.km });
+  return out.sort((a, b) => (a.status === b.status ? 0 : a.status === 'expired' ? -1 : 1));
+}
+
+/** Chip-ul „termene”: true sau { vehicles, alert_days, label, tap_action }; același format ca cardul. */
+function normalizeDeadlines(v) {
+  if (!v || typeof v !== 'object') return null;
+  const n = normalizeVehicles(v);
+  return { ...n, title: '', label: v.label ? String(v.label) : '', tap_action: v.tap_action };
+}
+
+function renderVehicles(config, hass, opts = {}) {
+  const now = opts.now || new Date();
+  const model = buildVehiclesModel(config, hass, now);
+  const panels = model.map((v) => {
+    const rows = v.docs.map((d) => {
+      const ico = iconSvg(d.icon || (d.kind === 'km' ? 'wrench' : 'calendar'));
+      const act = d.kind === 'date' ? (d.editable ? 'date' : '') : (d.editable ? 'km' : '');
+      const input = act === 'date' ? `<input class="dp" type="date" data-vi="${d.vi}" data-di="${d.di}" aria-label="${esc(d.label)}">` : '';
+      const btn = act === 'km' ? `<button type="button" class="now" data-act="km" data-vi="${d.vi}" data-di="${d.di}">${t('Schimbat acum')}</button>` : '';
+      return `<div class="vd" data-state="${d.status}" data-vi="${d.vi}" data-di="${d.di}" data-editable="${act ? 1 : 0}"><span class="ccu-ico">${ico}</span><span class="nm">${esc(d.label)}<small>${esc(d.valueText)}</small></span><b>${esc(d.text)}</b>${btn}<span class="bar"><i style="width:${Math.round(d.frac * 100)}%"></i></span>${input}</div>`;
+    }).join('');
+    return `<div class="vh" data-state="${v.status}"><div class="hd"><span class="ccu-ico">${iconSvg(v.icon.replace(/^mdi:/, '') === 'car' ? 'car' : v.icon)}</span><b>${esc(v.name)}</b>${v.plate ? `<span class="pl">${esc(v.plate)}</span>` : ''}</div>${rows}</div>`;
+  }).join('');
+  const title = config.title ? `<div class="ccu-title">${esc(config.title)}</div>` : '';
+  const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
+  return `<div class="ccu-card panel ccu-veh">${title}${panels}${notes}</div>`;
+}
+
+return { normalizeVehicles, parseDate, daysUntil, documentModel, formatDate, buildVehiclesModel, dueDocuments, normalizeDeadlines, renderVehicles };
+})();
+
 __m["editor"] = (() => {
 // src/editor.mjs — editorul vizual al cardurilor (fără YAML). Folosește componentele HA (`ha-form`, selectoare de entități, de iconițe).
 // Partea pură (conversii de config, detectare automată) e exportată și testată în Node; clasele DOM se creează doar în browser, prin defineEditors().
 const { t, setLang } = __m["i18n"];
+const { discoverBatteries } = __m["energy"];
 // ---------- logică pură ----------
 /** Scoate valorile goale (șir gol, listă goală, false, undefined) dintr-un obiect de config. */
 function cleanObj(o) {
@@ -4237,7 +4558,7 @@ function h(tag, attrs, ...kids) {
   for (const [k, v] of Object.entries(attrs || {})) {
     if (k === 'class') el.className = v; else if (k === 'text') el.textContent = v; else if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v);
   }
-  for (const k of kids.flat()) if (k != null && k !== false) el.append(k);
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) el.append(k);   // listele din liste (blocuri opționale) se aplatizează complet
   return el;
 }
 
@@ -4263,13 +4584,20 @@ function defineEditors() {
     constructor() { super(); this._cfg = {}; this._hass = null; this._root = this.attachShadow({ mode: 'open' }); this._ready = false; this._rows = {}; this._last = ''; }
     setConfig(c) {
       const j = JSON.stringify(c || {});
-      if (j === this._last) return; // HA ne dă înapoi config-ul pe care tocmai l-am emis: nu redesenăm (altfel se pierde cursorul)
+      // HA ne dă înapoi config-ul emis, dar ASINCRON: la o tastare rapidă ecoul primei litere ajunge după a treia. Ignorăm orice config pe care l-am trimis noi
+      // (nu doar ultimul), altfel ecoul vechi suprascrie ce ai scris, editorul se redesenează și cursorul se pierde.
+      if (j === this._last || (this._sent || []).includes(j)) return;
       this._last = j; this._cfg = JSON.parse(j); this._rows = {}; this._init();
     }
     set hass(hass) { this._hass = hass; setLang(hass); this._root.querySelectorAll('ha-form').forEach((f) => { f.hass = hass; }); }
     get hass() { return this._hass; }
     async _init() { if (!this._ready) { this._ready = true; await ensureHaParts(); } this._draw(); }
-    _emit() { this._last = JSON.stringify(this._cfg); this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: this._cfg }, bubbles: true, composed: true })); }
+    _emit() {
+      const j = JSON.stringify(this._cfg);
+      if (j === this._last) return;   // nimic nou (un formular poate emite de mai multe ori pe aceeași tastă)
+      this._last = j; (this._sent = this._sent || []).push(j); if (this._sent.length > 40) this._sent.shift();
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: JSON.parse(j) }, bubbles: true, composed: true }));   // o copie: HA nu poate modifica starea noastră
+    }
     _style() { const s = document.createElement('style'); s.textContent = CSS; return s; }
     _friendly(id) { const s = this._hass && this._hass.states && this._hass.states[id]; return (s && s.attributes && s.attributes.friendly_name) || ''; }
 
@@ -4279,7 +4607,8 @@ function defineEditors() {
       f.hass = this._hass; f.schema = schema; f.data = data;
       f.computeLabel = (s) => (labels && labels[s.name]) || s.name;
       f.computeHelper = (s) => (helpers && helpers[s.name]) || '';
-      f.addEventListener('value-changed', (e) => { e.stopPropagation(); onChange(e.detail.value || {}); });
+      // ha-form e „controlat”: dacă nu-i dăm înapoi valoarea nouă, la următoarea actualizare a lui `hass` (HA o trimite des) câmpul revine la valoarea veche și se pierd literele tastate
+      f.addEventListener('value-changed', (e) => { e.stopPropagation(); const v = e.detail.value || {}; f.data = v; onChange(v); });
       return f;
     }
     _obj(path, create) { let o = this._cfg; for (const p of path) { if (!o[p] || typeof o[p] !== 'object') { if (!create) return {}; o[p] = {}; } o = o[p]; } return o; }
@@ -4287,7 +4616,7 @@ function defineEditors() {
     _set(path, key, v, keepFalse) {
       const o = this._obj(path, true);
       if (isEmpty(v) && !(keepFalse && v === false)) delete o[key]; else o[key] = v;
-      if (path.length && !Object.keys(o).length) { const parent = this._obj(path.slice(0, -1), true); delete parent[path[path.length - 1]]; }
+      if (path.length && !Object.keys(o).length) { const parent = this._obj(path.slice(0, -1), true), last = path[path.length - 1]; if (path.length === 1 && (last === 'low_batteries' || last === 'auto' || last === 'deadlines')) parent[last] = true; else delete parent[last]; }
       this._emit();
     }
     /** Bloc cu un formular legat de cheile unui obiect din config (rădăcina sau o sub-cheie, ex. ['sensors']). */
@@ -4311,8 +4640,9 @@ function defineEditors() {
       };
       const wrap = h('div', { class: 'blk' }, h('h3', {}, title, h('small', { text: L.length + ' / ' + max })), hint ? h('p', { class: 'hint', text: hint }) : null);
       L.forEach((item, i) => {
-        const move = (d) => () => { const j = i + d; if (j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; save(); this._draw(); };
-        const del = () => { L.splice(i, 1); save(); this._draw(); };
+        const reset = () => { Object.keys(this._rows).forEach((k) => { if (k.startsWith(key + '.')) delete this._rows[k]; }); };   // listele din interiorul rândurilor se reiau din config
+        const move = (d) => () => { const j = i + d; if (j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; save(); reset(); this._draw(); };
+        const del = () => { L.splice(i, 1); save(); reset(); this._draw(); };
         const o = typeof item === 'string' ? { entity: item } : item;
         const label = (o && (o.name || o.label)) || (o && o.entity && this._friendly(o.entity)) || rowLabel + ' ' + (i + 1);
         wrap.append(h('div', { class: 'row' },
@@ -4331,7 +4661,7 @@ function defineEditors() {
      */
     _items(key, o) {
       const forms = o.forms, ready = o.ready || ((x) => !!(x && x.entity));
-      const rowBuilder = (item, i, onChange) => forms.map((fm) => {
+      const rowBuilder = (item, i, onChange) => [...forms.map((fm) => {
         const ks = names(fm.schema), keep = new Set(fm.defTrue || []);
         const f = this._form(fm.schema, pick(item, ks), fm.labels, (v) => {
           const next = { ...item };
@@ -4340,8 +4670,35 @@ function defineEditors() {
           onChange(item);
         }, fm.helpers);
         return fm.details ? h('details', { open: ks.some((k) => !isEmpty(item[k])) }, h('summary', { text: fm.details }), f) : f;
-      });
+      }), ...(o.extra ? [].concat(o.extra(item, i) || []) : [])];
       return this._listBlock(key, o.title, o.hint, o.max, o.addLabel, o.rowLabel, rowBuilder, ready, o.path, (x) => (o.compact !== false && Object.keys(x).length === 1 && x.entity ? x.entity : x));
+    }
+    /** Dispozitivele pe baterii găsite în HA, ca opțiuni pentru „Ignoră” (valoarea = entity_id; se pot scrie și cuvinte). */
+    _batteryIgnore() {
+      const names = (this._cfg.low_batteries && this._cfg.low_batteries.names) || (this._cfg.auto && this._cfg.auto.names) || {};
+      const rows = discoverBatteries(this._hass, { mobile: false, unavailable: true, names });
+      const options = rows.map((r) => ({ value: r.entity, label: r.name + (r.pct === null ? '' : ' · ' + Math.round(r.pct) + '%') }));
+      for (const v of [].concat((this._cfg.low_batteries && this._cfg.low_batteries.exclude) || [], (this._cfg.auto && this._cfg.auto.exclude) || [])) if (v && !options.some((o) => o.value === v)) options.push({ value: v, label: v });
+      return { select: { mode: 'dropdown', multiple: true, custom_value: true, options } };
+    }
+    /** Comutator pentru o funcție opțională a cardului, salvată ca `true` sau ca obiect cu opțiuni (ex. low_batteries, auto). */
+    _feature(key, title, hint, onLabel, optionsBuilder) {
+      const c = this._cfg, on = !!c[key];
+      return h('div', { class: 'blk' },
+        h('h3', {}, this._form([{ name: 'on', selector: BOOL }], { on }, { on: onLabel }, (v) => { if (v.on && !c[key]) c[key] = true; else if (!v.on) delete c[key]; this._emit(); this._draw(); })),
+        on ? [hint ? h('p', { class: 'hint', text: hint }) : null, optionsBuilder()] : null);
+    }
+    /** Mașinile și documentele lor (listă în listă): `path` = [] pentru card, ['deadlines'] pentru chip. */
+    _vehiclesBlock(path) {
+      const P = path || [];
+      const docForms = () => [
+        { schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'entity', selector: ENT({ domain: ['input_datetime', 'sensor'] }) }], labels: { label: t('Document'), icon: t('Iconiță'), entity: t('Data de expirare') }, helpers: { entity: t('Un helper „dată” (se poate modifica din card) sau un senzor cu dată, ex. revizia din mașină.') } },
+        { details: t('Pentru kilometri (ulei, revizie)'), schema: [{ name: 'odometer', selector: SENSOR() }, { name: 'last_km', selector: ENT({ domain: 'input_number' }) }, { name: 'remaining', selector: SENSOR() }, { name: 'interval_km', selector: NUM(1, 1000000, 100) }],
+          labels: { odometer: t('Kilometraj (senzor)'), last_km: t('Kilometri la ultima schimbare (număr)'), remaining: t('sau: kilometri rămași (senzor)'), interval_km: t('Interval (km)') }, helpers: { last_km: t('Cu butonul „Schimbat acum” de pe card primește kilometrajul curent.') } },
+      ];
+      return this._items('vehicles', { path: P, title: t('Mașini'), hint: t('Fiecare mașină are documentele ei: RCA, ITP, rovinietă, revizie / ulei.'), max: 6, addLabel: t('Adaugă mașină'), rowLabel: t('Mașină'), compact: false, ready: (x) => !!(x && x.name),
+        forms: [{ schema: [grid({ name: 'name', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'plate', selector: TXT }], labels: { name: t('Nume'), icon: t('Iconiță'), plate: t('Număr de înmatriculare (opțional)') } }],
+        extra: (item, i) => (item && item.name ? this._items('documents', { path: P.concat(['vehicles', String(i)]), title: t('Documente'), hint: '', max: 10, addLabel: t('Adaugă document'), rowLabel: t('Document'), compact: false, ready: (x) => !!(x && (x.entity || x.odometer || x.remaining)), forms: docForms() }) : h('p', { class: 'hint', text: t('Scrie numele mașinii ca să poți adăuga documente.') })) });
     }
     /** Blocul „Aspect și limbă” (preset, limbă), comun tuturor cardurilor. */
     _common() {
@@ -4425,6 +4782,14 @@ function defineEditors() {
   class CcuChipsEditor extends CcuEditor {
     _body() {
       return [
+        this._feature('deadlines', t('Termene mașini'), t('Un chip cât timp un termen (RCA, ITP, rovinietă, ulei) se apropie sau a expirat; arată documentul și termenul, sau numărul.'), t('Arată chip „termene mașini”'), () => [
+          this._fields(['deadlines'], '', '', [grid({ name: 'alert_days', selector: NUM(0, 30) }, { name: 'label', selector: TXT }), { name: 'tap_action', selector: ACTION }], { alert_days: t('Alertă cu câte zile înainte'), label: t('Text (opțional)'), tap_action: t('La atingere (ex. deschide pagina Mașini)') }),
+          this._vehiclesBlock(['deadlines']),
+        ]),
+        this._feature('low_batteries', t('Baterii slabe'), t('Un singur chip, doar când există baterii slabe: arată numărul (sau numele, dacă e una) și, la atingere, deschide ce setezi mai jos.'), t('Arată chip „baterii slabe”'), () => [
+          this._fields(['low_batteries'], '', '', [grid({ name: 'threshold', selector: NUM(0, 100) }, { name: 'label', selector: TXT }), { name: 'exclude', selector: this._batteryIgnore() }, { name: 'include', selector: ENT({ multiple: true }) }, { name: 'mobile', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
+            { threshold: t('Prag baterie slabă (%)'), label: t('Text (opțional)'), exclude: t('Ignoră dispozitivele'), include: t('Adaugă dispozitive'), mobile: t('Exclude telefoanele și tabletele'), tap_action: t('La atingere (ex. deschide lista bateriilor)') }, { exclude: t('Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.'), include: t('Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).') }, { defTrue: ['mobile'] }),
+        ]),
         this._items('entities', { title: t('Chips'), hint: t('Etichete mici de stare; pot apărea doar când sunt active.'), max: 40, addLabel: t('Adaugă chip'), rowLabel: t('Chip'),
           forms: entityForms([{ schema: [grid({ name: 'icon_color', selector: SEL(COLORS) }, { name: 'on_as', selector: SEL(['alert']) }), grid({ name: 'show_state', selector: BOOL }, { name: 'hide_off', selector: BOOL })], labels: { icon_color: t('Culoarea iconiței'), on_as: t('Când e pornit arată ca'), show_state: t('Arată valoarea'), hide_off: t('Ascunde când e oprit') } }]) }),
       ];
@@ -4447,7 +4812,8 @@ function defineEditors() {
       return [
         this._fields([], t('Meniu'), '', [grid({ name: 'sticky', selector: BOOL }, { name: 'compact', selector: BOOL })], { sticky: t('Fixat jos pe ecran'), compact: t('Compact') }),
         this._items('items', { title: t('Butoane meniu'), hint: t('Fiecare buton duce la o pagină (cale completă, ex. /dashboard-casa/camere).'), max: 8, addLabel: t('Adaugă buton'), rowLabel: t('Buton'), compact: false, ready: (x) => !!(x && x.path),
-          forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } }] }),
+          forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } },
+            { details: t('Insignă cu număr'), schema: [{ name: 'badge', selector: ENT({ multiple: true }) }, { name: 'badge_style', selector: SEL(['light']) }], labels: { badge: t('Entități numărate'), badge_style: t('Aspect insignă') }, helpers: { badge: t('Numără entitățile pornite; un senzor numeric adaugă valoarea lui (ex. „becuri aprinse”).'), badge_style: t('„light” = galben, pentru lumini; implicit roșu (alertă).') } }] }),
       ];
     }
   }
@@ -4480,6 +4846,11 @@ function defineEditors() {
       return [
         this._fields([], t('Baterii dispozitive'), '', [{ name: 'title', selector: TXT }, grid({ name: 'warn_pct', selector: NUM(0, 100) }, { name: 'low_pct', selector: NUM(0, 100) }), { name: 'sort', selector: SEL(['asc', 'none']) }],
           { title: t('Titlu (opțional)'), warn_pct: t('Avertisment sub (%)'), low_pct: t('Critic sub (%)'), sort: t('Ordine') }),
+        this._feature('auto', t('Găsește singur bateriile'), t('Caută în Home Assistant toate dispozitivele cu baterie (senzori „battery”), fără telefoane și tablete.'), t('Descoperire automată'), () => [
+          this._fields(['auto'], '', '', [{ name: 'threshold', selector: NUM(0, 100) }, { name: 'exclude', selector: this._batteryIgnore() }, { name: 'include', selector: ENT({ multiple: true }) }, { name: 'mobile', selector: BOOL }],
+            { threshold: t('Prag baterie slabă (%)'), exclude: t('Ignoră dispozitivele'), include: t('Adaugă dispozitive'), mobile: t('Exclude telefoanele și tabletele') }, { exclude: t('Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.'), include: t('Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).') }, { defTrue: ['mobile'] }),
+          this._fields([], '', '', [{ name: 'only_low', selector: BOOL }], { only_low: t('Arată doar bateriile slabe') }),
+        ]),
         this._items('entities', { title: t('Dispozitive'), hint: t('Senzori de nivel baterie: telefoane, tablete, mașină…'), max: 30, addLabel: t('Adaugă dispozitiv'), rowLabel: t('Dispozitiv'),
           forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, { name: 'name', selector: TXT }], labels: { entity: t('Senzor'), name: t('Nume') } }] }),
       ];
@@ -4547,8 +4918,18 @@ function defineEditors() {
     }
   }
 
+  class CcuVehicleEditor extends CcuEditor {
+    _body() {
+      return [
+        this._fields([], t('Mașini'), '', [{ name: 'title', selector: TXT }, grid({ name: 'alert_days', selector: NUM(0, 30) }, { name: 'alert_km', selector: NUM(0, 5000, 50) })],
+          { title: t('Titlu (opțional)'), alert_days: t('Alertă cu câte zile înainte'), alert_km: t('Alertă la câți km rămași') }, { alert_days: t('Termenul devine portocaliu (și apare în chip) cu atâtea zile înainte.') }),
+        this._vehiclesBlock([]),
+      ];
+    }
+  }
+
   const defs = { 'ccu-flow-editor': CcuFlowEditor, 'ccu-buttons-editor': CcuButtonsEditor, 'ccu-chips-editor': CcuChipsEditor, 'ccu-header-editor': CcuHeaderEditor, 'ccu-nav-editor': CcuNavEditor, 'ccu-graph-editor': CcuGraphEditor,
-    'ccu-battery-editor': CcuBatteryEditor, 'ccu-batteries-editor': CcuBatteriesEditor, 'ccu-people-editor': CcuPeopleEditor, 'ccu-weather-editor': CcuWeatherEditor, 'ccu-title-editor': CcuTitleEditor, 'ccu-controls-editor': CcuControlsEditor, 'ccu-remote-editor': CcuRemoteEditor, 'ccu-radio-editor': CcuRadioEditor };
+    'ccu-battery-editor': CcuBatteryEditor, 'ccu-batteries-editor': CcuBatteriesEditor, 'ccu-people-editor': CcuPeopleEditor, 'ccu-weather-editor': CcuWeatherEditor, 'ccu-title-editor': CcuTitleEditor, 'ccu-controls-editor': CcuControlsEditor, 'ccu-remote-editor': CcuRemoteEditor, 'ccu-radio-editor': CcuRadioEditor, 'ccu-vehicle-editor': CcuVehicleEditor };
   for (const [tag, cls] of Object.entries(defs)) if (!customElements.get(tag)) customElements.define(tag, cls);
 }
 
@@ -4566,11 +4947,12 @@ const { runAction, toggleEntity } = __m["actions"];
 const { attachGestures } = __m["gestures"];
 const { defineEditors, detectEnergy } = __m["editor"];
 const { normalizeRadio, radioModel, renderRadio, stationUrl } = __m["radio"];
+const { normalizeVehicles, buildVehiclesModel, renderVehicles, normalizeDeadlines, dueDocuments, parseDate } = __m["vehicles"];
 const { applyPreset } = __m["presets"];
 const { normalizeGraphConfig, buildGraphModel, renderGraphCard, nearestPoint, rangeHours, thin, formatValue } = __m["graph-card"];
 const { parseMinimalResponse, formatTimeLabel } = __m["graph-data"];
 const { normalizeWeatherConfig, buildWeatherModel, renderWeather } = __m["weather"];
-const { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries } = __m["energy"];
+const { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel } = __m["energy"];
 const { normalizeControls, controlModel, renderControls, sliderValue, normalizeTitle, renderTitle, normalizeRemote, renderRemote } = __m["controls"];
 const { formatNumber } = __m["state"];
 const { normalizeWaste, renderButtons, renderChips, renderHeader, renderNav, renderPeople, normalizePeople, normalizeHeader, normalizeNav, sparkPath, patchNodes, defaultTap } = __m["render"];
@@ -4739,13 +5121,46 @@ class CcuChipsCard extends CcuBase {
   static getConfigElement() { return document.createElement('ccu-chips-editor'); }
   _build(cfg) {
     const waste = normalizeWaste(cfg && cfg.waste);
-    this._allowEmpty = !!waste;
+    const low = normalizeLowBatteries(cfg && cfg.low_batteries);
+    const dl = normalizeDeadlines(cfg && cfg.deadlines);
+    this._allowEmpty = !!waste || !!low || !!dl;
     const r = normalizeConfig(cfg);
     r.config.waste = waste;
-    if (waste) r.warnings = r.warnings.filter((w) => !/entit/i.test(w));
+    r.config.low_batteries = low;
+    r.config.deadlines = dl;
+    if (waste || low || dl) r.warnings = r.warnings.filter((w) => !/entit/i.test(w));
     return r;
   }
-  _html() { return renderChips(this._config, this._hass, { warnings: this._warnings, events: this._events, now: new Date() }); }
+  _html() { return renderChips(this._config, this._hass, { warnings: this._warnings, events: this._events, now: new Date(), lowBat: lowBatteryModel(this._config.low_batteries, this._hass), due: this._config.deadlines ? dueDocuments(this._config.deadlines, this._hass, new Date()) : null }); }
+  _hasClock() { return !!(this._config && this._config.deadlines); }   // la miezul nopții „zilele rămase” se schimbă
+  // chips-ul „baterii slabe” depinde de toate bateriile din HA: lista lor se reface cel mult o dată la 30 s
+  _entityIds() {
+    let base = super._entityIds();
+    const dl = this._config && this._config.deadlines;
+    if (dl) base = base.concat(vehicleEntityIds(dl));
+    if (!this._config || !this._config.low_batteries || !this._hass) return base;
+    if (!this._batIds || Date.now() - this._batAt > 30000) { this._batAt = Date.now(); this._batIds = discoverBatteries(this._hass, { ...this._config.low_batteries, unavailable: true }).map((r) => r.entity); }
+    return base.concat(this._batIds);
+  }
+  _lowAction(kind) {
+    const lb = this._config && this._config.low_batteries; if (!lb) return null;
+    const own = asAction(lb[kind + '_action']);
+    if (own) return { ...own, entity: own.entity };
+    const m = lowBatteryModel(lb, this._hass);
+    return kind === 'tap' && m && m.low[0] ? { action: 'more-info', entity: m.low[0].entity } : null;
+  }
+  _bind() {
+    super._bind();
+    if (this._batDeleg) return;
+    this._batDeleg = true;
+    const fire = (e) => {
+      const el = e.target && e.target.closest ? e.target.closest('[data-bat],[data-due]') : null; if (!el) return;
+      if (el.hasAttribute('data-due')) { const dl = this._config.deadlines, ta = dl && asAction(dl.tap_action); if (ta) runAction(this._hass, el, ta); return; }
+      const a = this._lowAction('tap'); if (a) runAction(this._hass, el, a);
+    };
+    this._mount.addEventListener('click', fire);
+    this._mount.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.closest && e.target.closest('[data-bat],[data-due]')) { e.preventDefault(); fire(e); } });
+  }
   set hass(h) { this._hass = h; super.hass = h; this._loadWaste(); }
   get hass() { return this._hass; }
   // evenimentele din calendarul de colectare (azi + următoarele zile), reîncărcate din 30 în 30 de minute
@@ -4950,7 +5365,14 @@ class CcuBatteriesCard extends CcuBase {
   _build(cfg) {
     const b = normalizeBatteriesConfig(cfg);
     const base = normalizeConfig({ ...(cfg || {}), entities: b.items.map((i) => i.entity) });
-    return { config: { ...base.config, entities: b.items, title: b.title, warn_pct: b.warn_pct, low_pct: b.low_pct, sort: b.sort }, warnings: b.warnings.concat(base.warnings.filter((w) => !/entit|Fără/i.test(w))) };
+    this._allowEmpty = !!b.auto;
+    return { config: { ...base.config, entities: b.items, title: b.title, warn_pct: b.warn_pct, low_pct: b.low_pct, sort: b.sort, auto: b.auto, only_low: b.only_low }, warnings: b.warnings.concat(base.warnings.filter((w) => !/entit|Fără/i.test(w))) };
+  }
+  _entityIds() {
+    const base = (this._config.entities || []).map((e) => e.entity);
+    if (!this._config.auto || !this._hass) return base;
+    if (!this._batIds || Date.now() - this._batAt > 30000) { this._batAt = Date.now(); this._batIds = discoverBatteries(this._hass, { ...this._config.auto, unavailable: true }).map((r) => r.entity); }
+    return base.concat(this._batIds);
   }
   _html() { return renderBatteries(this._config, buildBatteriesModel(this._config, this._hass), { warnings: this._warnings }); }
   getCardSize() { return Math.ceil(((this._config && this._config.entities.length) || 4) * 0.55) + 1; }
@@ -5340,6 +5762,69 @@ class CcuRadioCard extends CcuBase {
   }
 }
 
+// toate entitățile folosite de un config de mașini (pentru redesenare la schimbări)
+function vehicleEntityIds(n) {
+  const o = [];
+  for (const v of (n && n.vehicles) || []) for (const d of v.documents) { if (d.entity) o.push(d.entity); if (d.remaining) o.push(d.remaining); if (d.odometer) o.push(d.odometer); if (d.last_km) o.push(d.last_km); }
+  return o;
+}
+
+class CcuVehicleCard extends CcuBase {
+  static getConfigElement() { return document.createElement('ccu-vehicle-editor'); }
+  _allowEmpty = true;
+  _build(cfg) {
+    const n = normalizeVehicles(cfg);
+    const { config, warnings } = normalizeConfig({ ...(cfg || {}), entities: vehicleEntityIds(n).map((e) => ({ entity: e })) });
+    config.veh = n;
+    return { config, warnings: warnings.filter((w) => !/entit/i.test(w)).concat(n.warnings) };
+  }
+  _entityIds() { return vehicleEntityIds(this._config.veh); }
+  _hasClock() { return true; }   // la miezul nopții „zilele rămase” se schimbă
+  _html(now) { return renderVehicles(this._config.veh, this._hass, { warnings: this._warnings, now }); }
+  // câmpurile de dată (ascunse peste rând) iau valoarea curentă din HA, ca selectorul nativ să se deschidă pe data potrivită
+  _draw(force) { super._draw(force); this._syncDates(); }
+  _syncDates() {
+    if (!this._hass || !this._config) return;
+    this._mount.querySelectorAll('input.dp').forEach((inp) => {
+      const d = this._doc(Number(inp.getAttribute('data-vi')), Number(inp.getAttribute('data-di')));
+      const st = d && this._hass.states && this._hass.states[d.entity], dt = st ? parseDate(st.state) : null;
+      const v = dt ? dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0') : '';
+      if (inp.value !== v && this._root.activeElement !== inp) inp.value = v;
+    });
+  }
+  _doc(vi, di) { const v = this._config.veh.vehicles[vi]; return v && v.documents[di]; }
+  _bind() {
+    this._unbind.forEach((f) => f()); this._unbind = [];
+    if (this._deleg) return;
+    this._deleg = true;
+    const m = this._mount;
+    m.addEventListener('change', (e) => {
+      const inp = e.target.closest && e.target.closest('input.dp'); if (!inp || !inp.value) return;
+      const d = this._doc(Number(inp.getAttribute('data-vi')), Number(inp.getAttribute('data-di')));
+      if (d && d.entity && this._hass && this._hass.callService) this._hass.callService('input_datetime', 'set_datetime', { entity_id: d.entity, date: inp.value });
+    });
+    m.addEventListener('click', (e) => {
+      const btn = e.target.closest && e.target.closest('button.now');
+      if (btn) {
+        const d = this._doc(Number(btn.getAttribute('data-vi')), Number(btn.getAttribute('data-di')));
+        const odo = d && d.odometer && this._hass.states[d.odometer], n = odo ? Number(odo.state) : NaN;
+        if (d && d.last_km && Number.isFinite(n)) this._hass.callService('input_number', 'set_value', { entity_id: d.last_km, value: Math.round(n) });   // „am schimbat uleiul acum”: km curenți devin punctul de plecare
+        return;
+      }
+      const row = e.target.closest && e.target.closest('.vd[data-editable="1"]');
+      const inp = row && row.querySelector('input.dp');
+      // câmpul de dată e transparent peste rând; în Chrome / Edge un clic pe el doar îl focalizează, deci deschidem selectorul explicit (pe iOS se deschide singur)
+      if (inp) { try { inp.showPicker(); } catch (err) { inp.focus(); } }
+    });
+  }
+  getCardSize() { return 3 + ((this._config && this._config.veh.vehicles.length) || 1) * 2; }
+  getGridOptions() { return { columns: 12, min_columns: 5, rows: 'auto' }; }
+  static getStubConfig(hass) {
+    const ids = Object.keys((hass && hass.states) || {}).filter((i) => /^input_datetime\./.test(i));
+    return { vehicles: [{ name: 'Car', icon: 'mdi:car', documents: [{ label: 'Insurance', entity: ids[0] || 'input_datetime.insurance' }, { label: 'Inspection', entity: ids[1] || 'input_datetime.inspection' }] }] };
+  }
+}
+
 if (typeof customElements !== 'undefined') {
   if (!customElements.get('ccu-buttons-card')) customElements.define('ccu-buttons-card', CcuButtonsCard); // fără eroare dacă fișierul e încărcat de două ori
   if (!customElements.get('ccu-chips-card')) customElements.define('ccu-chips-card', CcuChipsCard); // fără eroare dacă fișierul e încărcat de două ori
@@ -5355,6 +5840,7 @@ if (typeof customElements !== 'undefined') {
   if (!customElements.get('ccu-title-card')) customElements.define('ccu-title-card', CcuTitleCard);
   if (!customElements.get('ccu-remote-card')) customElements.define('ccu-remote-card', CcuRemoteCard);
   if (!customElements.get('ccu-radio-card')) customElements.define('ccu-radio-card', CcuRadioCard);
+  if (!customElements.get('ccu-vehicle-card')) customElements.define('ccu-vehicle-card', CcuVehicleCard);
   defineEditors();
   const reg = (type, name, description) => { (window.customCards = window.customCards || []).push({ type, name, description, preview: false }); };
   reg('ccu-buttons-card', 'Calm Modern — Buttons', 'Grid of tiles (xs–xl) with states, colors and subtle animated icons.');
@@ -5368,6 +5854,7 @@ if (typeof customElements !== 'undefined') {
   reg('ccu-nav-card', 'Calm Modern — Navigation bar', 'Navigation bar with icons and labels; sticky, compact, back button, badges.');
   reg('ccu-controls-card', 'Calm Modern — Controls', 'Thermostat dial, lights with brightness and colors, fan, media player, number slider and selector.');
   reg('ccu-remote-card', 'Calm Modern — Remote', 'TV remote (remote.send_command): power, volume, channels, menu and arrows.');
+  reg('ccu-vehicle-card', 'Calm Modern — Vehicles', 'Insurance, inspection, road tax and service deadlines per vehicle, with days left, a colored bar and editable dates.');
   reg('ccu-radio-card', 'Calm Modern — Radio', 'Radio with a tuning dial, equalizer display, previous / next station, play / stop and volume.');
   reg('ccu-title-card', 'Calm Modern — Title', 'Section title with icon and subtitle.');
   reg('ccu-header-card', 'Calm Modern — Header', 'Icon, up to 3 values and a clock or outdoor value in one row.');

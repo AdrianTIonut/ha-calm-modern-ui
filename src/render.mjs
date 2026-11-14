@@ -222,7 +222,13 @@ export function renderChips(config, hass, opts = {}) {
   const items = (config.entities || []).map((e, i) => { const m = entityModel(e, i, hass, config); return m.hidden ? '' : renderChip(m, e, hass); }).join(''); // hide_off: chip-ul dispare când nu e „on”
   const waste = wasteModel(config.waste, opts.events, opts.now || new Date()).map((w) =>
     `<span class="ccu-chip" data-state="${w.diff === 0 ? 'alert' : 'on'}" data-waste="1" data-entity="${esc(config.waste.calendar)}"><span class="ccu-ico">${iconSvg(w.icon)}</span>${esc(w.label)} <b>${w.diff === 0 ? t('azi') : w.diff === 1 ? t('mâine') : t('în {n} zile', { n: w.diff })}</b></span>`).join('');
-  return `<div class="ccu-chips">${waste}${items}</div>${notes(opts.warnings)}`;
+  // baterii slabe: un singur chip, doar când există; cu o singură baterie arată numele și procentul, altfel numărul
+  const lb = opts.lowBat && opts.lowBat.count > 0 ? opts.lowBat : null;
+  const lowChip = lb ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-bat="1" data-entity="${esc(lb.low[0].entity)}"><span class="ccu-ico">${iconSvg('battery')}</span>${lb.count === 1 && !(config.low_batteries && config.low_batteries.label) ? `${esc(lb.low[0].name)} <b>${lb.low[0].binary ? esc(t('slabă')) : Math.round(lb.low[0].pct) + '%'}</b>` : `${esc((config.low_batteries && config.low_batteries.label) || t('Baterii slabe'))} <b>${lb.count}</b>`}</span>` : '';
+  // termene (RCA, ITP, rovinietă, ulei…): un chip cât timp ceva se apropie sau a expirat; cu unul singur arată documentul și termenul, altfel numărul
+  const due = opts.due && opts.due.length ? opts.due : null, dl = config.deadlines;
+  const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1">${iconSvg('calendar')}${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
+  return `<div class="ccu-chips">${dueChip}${lowChip}${waste}${items}</div>${notes(opts.warnings)}`;
 }
 
 /** Normalizează secțiunea `header` (iconiță, ≤ 3 valori, ceas). */
@@ -297,7 +303,7 @@ export function normalizeNav(cfg) {
     if (!o || (!back && (typeof path !== 'string' || !path.startsWith('/')))) { warnings.push(t('Meniu #{n}: lipsește „path” (adresă ce începe cu /) sau „back: true”.', { n: i + 1 })); return; }
     const vi = o.visible_if && typeof o.visible_if === 'object' && /^[a-z_]+\.[a-z0-9_]+$/.test(String(o.visible_if.entity)) ? { entity: o.visible_if.entity, state: String(o.visible_if.state) } : null;
     const bl = Array.isArray(o.badge) ? o.badge : (o.badge && Array.isArray(o.badge.entities) ? o.badge.entities : []);
-    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, match: o.match, back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)) });
+    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, match: o.match, back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
   });
   return { items, warnings };
 }
@@ -309,12 +315,13 @@ export function renderNav(config, currentPath, opts = {}) {
   let on = config.items.findIndex(isOn);
   const hs = opts.hass && opts.hass.states;
   // insignă: câte entități din `badge` sunt „on” (ex. persoane detectate de camere); > 0 → butonul devine roșu (alertă) ca „Persoane pe n camere”
-  const cnt = (it) => (hs && it.badge ? it.badge.filter((id) => hs[id] && hs[id].state === 'on').length : 0);
+  // un `sensor.*` numeric (ex. un contor „becuri aprinse”) adaugă valoarea lui; orice alt tip de entitate adaugă 1 când e „on”
+  const cnt = (it) => (hs && it.badge ? it.badge.reduce((a, id) => { const s = hs[id]; if (!s) return a; if (id.startsWith('sensor.')) { const n = Math.round(Number(s.state)); return a + (Number.isFinite(n) && n > 0 ? n : 0); } return a + (s.state === 'on' ? 1 : 0); }, 0) : 0);
   // visible_if: { entity, state } — elementul se vede doar când entitatea are acea stare (ex. butonul „Tableta” doar pe tabletă)
   const shown = (it) => !it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state);
   const labels = config.labels !== false;
-  const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? 'alert' : 'off';
-    return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');
+  const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? (it.badge_style === 'light' ? 'lit' : 'alert') : 'off';
+    return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge${it.badge_style === 'light' ? ' lit' : ''}">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');
   const nav = `<nav class="ccu-nav${config.compact ? ' compact' : ''}${labels ? '' : ' nolabels'}">${html}</nav>`;
   // sticky: bara rămâne fixă jos, pe ecran, cât derulezi pagina; un spațiu gol în pagină (spacer) o împiedică să acopere ultimul card
   if (config.sticky) return `${config.spacer === false ? '' : '<div class="ccu-nav-spacer"></div>'}<div class="ccu-nav-fixed">${nav}</div>${notes(opts.warnings)}`;

@@ -27,13 +27,25 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 ## Gallery
 
 <table>
-<tr><td valign="top"><img src="docs/img/buttons.png" width="380" alt="buttons"></td><td valign="top"><img src="docs/img/chips.png" width="380" alt="chips"></td></tr>
-<tr><td valign="top"><img src="docs/img/controls.png" width="380" alt="controls"></td><td valign="top"><img src="docs/img/controls-more.png" width="380" alt="controls-more"></td></tr>
-<tr><td valign="top"><img src="docs/img/radio.png" width="380" alt="radio"></td><td valign="top"><img src="docs/img/remote.png" width="380" alt="remote"></td></tr>
-<tr><td valign="top"><img src="docs/img/flow.png" width="380" alt="flow"></td><td valign="top"><img src="docs/img/battery.png" width="380" alt="battery"></td></tr>
-<tr><td valign="top"><img src="docs/img/graph.png" width="380" alt="graph"></td><td valign="top"><img src="docs/img/weather.png" width="380" alt="weather"></td></tr>
-<tr><td valign="top"><img src="docs/img/weather-rain.png" width="380" alt="weather-rain"></td><td valign="top"><img src="docs/img/people.png" width="380" alt="people"></td></tr>
+<tr><td valign="top"><img src="docs/img/hero.png" width="380" alt="hero"></td><td valign="top"><img src="docs/img/buttons.png" width="380" alt="buttons"></td></tr>
+<tr><td valign="top"><img src="docs/img/chips.png" width="380" alt="chips"></td><td valign="top"><img src="docs/img/controls.png" width="380" alt="controls"></td></tr>
+<tr><td valign="top"><img src="docs/img/controls-more.png" width="380" alt="controls-more"></td><td valign="top"><img src="docs/img/radio.png" width="380" alt="radio"></td></tr>
+<tr><td valign="top"><img src="docs/img/remote.png" width="380" alt="remote"></td><td valign="top"><img src="docs/img/flow.png" width="380" alt="flow"></td></tr>
+<tr><td valign="top"><img src="docs/img/battery.png" width="380" alt="battery"></td><td valign="top"><img src="docs/img/graph.png" width="380" alt="graph"></td></tr>
+<tr><td valign="top"><img src="docs/img/weather.png" width="380" alt="weather"></td><td valign="top"><img src="docs/img/weather-rain.png" width="380" alt="weather-rain"></td></tr>
+<tr><td valign="top"><img src="docs/img/people.png" width="380" alt="people"></td><td valign="top"><img src="docs/img/vehicles.png" width="380" alt="vehicles"></td></tr>
+
+<img src="docs/img/hero.png" width="360" alt="header and hero tile">
+
+<img src="docs/img/nav.png" width="420" alt="bottom menu">
+<tr><td valign="top"><img src="docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
 </table>
+
+## Animated icons
+
+The icons move only when it makes sense, and only while the device is on: the fan of an A/C turns while it is actually cooling, a bulb glows, a heater flickers, a pump or a speaker pulses. Animations stop on “reduce motion” (or with `animations: false`).
+
+<img src="docs/img/animated-icons.png" width="472" alt="animated icons">
 
 ## Installation
 
@@ -180,6 +192,19 @@ waste:                                                    # chips from a waste-c
     - { match: 'Waste: General', label: General, icon: mdi:trash-can, exact: true }
 ```
 
+A **low batteries** chip that finds the devices on batteries by itself (battery sensors; phones and tablets are left out):
+
+```yaml
+type: custom:ccu-chips-card
+low_batteries:
+  threshold: 20                 # low = up to this percentage (default 20)
+  exclude: [inverter, car]      # words in the name / entity_id to leave out
+  tap_action: { action: navigate, navigation_path: /dashboard-home/batteries }   # default: more-info of the lowest one
+```
+
+It shows only when something is low: the count (“Low batteries 3”) or, with a single one, its name and level.
+
+
 ### ccu-controls-card
 
 <img src="docs/img/controls.png" width="360" alt="controls">
@@ -213,6 +238,38 @@ playing: input_boolean.radio_playing        # optional
 play: script.radio_play                     # optional: your scripts; without them the card sends the stream URL to the chosen speaker
 stop: script.radio_stop
 hide: [Custom]                              # hide stations containing these words
+```
+
+### ccu-vehicle-card
+
+<img src="docs/img/vehicles.png" width="360" alt="vehicles">
+
+Insurance, inspection, road tax and service deadlines per vehicle: days left, a bar that turns orange `alert_days` before and red after the date, and dates you change from the card itself.
+
+```yaml
+type: custom:ccu-vehicle-card
+alert_days: 3                   # orange (and in the chip) this many days before
+vehicles:
+  - name: Family car
+    plate: AB 12 XYZ            # optional
+    icon: mdi:car
+    documents:
+      - { label: Insurance, entity: input_datetime.car_insurance }       # a date helper: tap the row to pick a new date
+      - { label: Service, entity: sensor.car_service_date }               # a sensor with a date: read-only
+      - label: Oil
+        odometer: sensor.car_odometer
+        last_km: input_number.car_oil_km                                   # odometer at the last change; the "Changed now" button sets it
+        interval_km: 10000                                                 # or: remaining: sensor.km_until_oil
+```
+
+Chip for chips-card (a chip only while something is close or expired; the single deadline or the count):
+
+```yaml
+type: custom:ccu-chips-card
+deadlines:
+  alert_days: 3
+  vehicles: [...]               # same format as above
+  tap_action: { action: navigate, navigation_path: /dashboard-home/vehicles }
 ```
 
 ### ccu-remote-card
@@ -272,6 +329,15 @@ entities:
   - { entity: sensor.tablet_battery_level, name: Tablet }
   - sensor.phone_battery_level
 ```
+
+`auto` finds every device with a battery sensor (`device_class: battery`) in Home Assistant, without phones, tablets and browsers; `only_low: true` lists just the low ones:
+
+```yaml
+type: custom:ccu-batteries-card
+title: Devices on batteries
+auto: { threshold: 20, exclude: [inverter, car], include: [sensor.some_battery] }
+```
+
 
 ### ccu-graph-card
 
@@ -339,6 +405,8 @@ items:
   - { back: true, icon: back, label: Back }
   - { icon: home, label: Home, path: /dashboard-home/0 }
   - { icon: camera, label: Cams, path: /dashboard-home/cams, badge: [binary_sensor.cam1_person] }
+
+  - { icon: bulb, label: Lights, path: /light, badge: [sensor.lights_on], badge_style: light }   # yellow badge with the number of lights on (a numeric sensor adds its value)
   - { icon: tablet, label: Tablet, path: /dashboard-home/tablet, visible_if: { entity: sensor.browser_user, state: Tablet } }
 ```
 

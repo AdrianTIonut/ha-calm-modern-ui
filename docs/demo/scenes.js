@@ -48,6 +48,8 @@
     'binary_sensor.grid_present': A('on', { friendly_name: 'Grid' }), 'binary_sensor.grid_down': A('off', { friendly_name: 'Grid (outage)' }),
     // device batteries
     'sensor.tablet_battery': A('82', { unit_of_measurement: '%', friendly_name: 'Tablet' }), 'sensor.phone_battery': A('45', { unit_of_measurement: '%', friendly_name: 'Phone' }),
+    'sensor.toothbrush_battery': A('0', { unit_of_measurement: '%', device_class: 'battery', friendly_name: 'Toothbrush Battery' }), 'sensor.water_sensor_battery': A('20', { unit_of_measurement: '%', device_class: 'battery', friendly_name: 'Kitchen water sensor Battery' }),
+    'sensor.smoke_battery': A('74', { unit_of_measurement: '%', device_class: 'battery', friendly_name: 'Smoke detector Battery' }), 'sensor.mower_battery': A('100', { unit_of_measurement: '%', device_class: 'battery', friendly_name: 'Mower Battery' }),
     'sensor.car_battery': A('18', { unit_of_measurement: '%', friendly_name: 'Car' }), 'sensor.remote_battery': A('8', { unit_of_measurement: '%', friendly_name: 'Remote' }),
     // people
     'person.ana': A('home', { friendly_name: 'Ana' }), 'person.maria': A('not_home', { friendly_name: 'Maria' }), 'person.alex': A('home', { friendly_name: 'Alex' }),
@@ -60,6 +62,14 @@
     'sensor.rain_rate': A('0', { unit_of_measurement: 'mm/h' }), 'sensor.rain_rate_rain': A('3.4', { unit_of_measurement: 'mm/h' }), 'sensor.rain_today': A('1.2', { unit_of_measurement: 'mm' }), 'sensor.rain_today_rain': A('6.8', { unit_of_measurement: 'mm' }),
     'binary_sensor.raining': A('off'), 'binary_sensor.raining_rain': A('on'),
     'sensor.pressure': A('1014', { unit_of_measurement: 'hPa' }), 'sensor.uv': A('3', { unit_of_measurement: 'UV index' }), 'sensor.radiation': A('420', { unit_of_measurement: 'W/m²' }),
+    'sensor.house_delta': A('-0.36', { unit_of_measurement: 'kW', friendly_name: 'House change' }),
+    // animated icons / nav
+    'switch.gas_heater': A('on', { friendly_name: 'Heating' }), 'switch.ev_charger': A('on', { friendly_name: 'EV charger' }), 'switch.solar_inverter': A('on', { friendly_name: 'Solar' }),
+    'sensor.lights_on': A('3', { friendly_name: 'Lights on' }), 'binary_sensor.cam1_person': A('on', { friendly_name: 'Cam 1' }), 'binary_sensor.cam2_person': A('on', { friendly_name: 'Cam 2' }),
+    // vehicles
+    'input_datetime.car_insurance': A(ymd(60), { has_date: true, has_time: false }), 'input_datetime.car_inspection': A(ymd(3), { has_date: true, has_time: false }), 'input_datetime.car_road_tax': A(ymd(-2), { has_date: true, has_time: false }),
+    'sensor.car_service_date': A(ymd(320), { device_class: 'date' }), 'sensor.car_odometer': A('52490', { unit_of_measurement: 'km' }), 'input_number.car_oil_km': A('52090', { unit_of_measurement: 'km' }),
+    'input_datetime.van_insurance': A(ymd(200), { has_date: true, has_time: false }), 'input_datetime.van_inspection': A('1970-01-01', { has_date: true, has_time: false }), 'input_datetime.van_road_tax': A(ymd(14), { has_date: true, has_time: false }),
     'calendar.waste': A('on', { friendly_name: 'Waste' }),
   };
 
@@ -94,7 +104,7 @@
       { type: 'custom:ccu-buttons-card', columns: 1, entities: [BTN('sensor.house_power', 'Consumption', 'mdi:flash', { size: 'xl', spark: { hours: 6 } })] },
       { type: 'custom:ccu-buttons-card', columns: 4, density: 'xs', entities: [BTN('light.kitchen', 'Light', 'mdi:lightbulb'), BTN('lock.front_door', 'Door', 'mdi:lock'), BTN('switch.pool_pump', 'Pump', 'mdi:pump'), BTN('light.bedroom', 'Bedroom', 'mdi:bed-double')] },
     ] },
-    chips: { w: 480, cards: [{ type: 'custom:ccu-chips-card', entities: [BTN('climate.living_ac', 'A/C', 'mdi:air-conditioner'), BTN('binary_sensor.rain', 'Rain', 'mdi:weather-rainy', { hide_off: true }), BTN('sensor.feels_like', 'Feels like', 'mdi:thermometer-alert', { show_state: true, alert_above: 32, hide_off: true }), BTN('switch.pool_pump', 'Pool pump', 'mdi:pump', { hide_off: true }), BTN('light.pool', 'Pool light', 'mdi:lightbulb', { hide_off: true }), { entity: 'sensor.washer_status', name: 'Washer', icon: 'mdi:washing-machine', hide_off: true, show_state: true, on_states: ['running', 'spinning', 'rinsing'], text_map: { spinning: 'Spin', running: 'Wash' }, secondary: { entity: 'sensor.washer_remaining' } }, BTN('group.all_lights', 'Lights', 'mdi:lightbulb', { count: true, hide_off: true })], waste: { calendar: 'calendar.waste', next_days: 1, hide_today_after: '23:59', patterns: [{ match: 'Waste: General', label: 'General', icon: 'mdi:trash-can', exact: true }, { match: 'Waste: Plastic', label: 'Plastic', icon: 'mdi:recycle', exact: true }] } }] },
+    chips: { w: 480, cards: [{ type: 'custom:ccu-chips-card', entities: [BTN('climate.living_ac', 'A/C', 'mdi:air-conditioner'), BTN('binary_sensor.rain', 'Rain', 'mdi:weather-rainy', { hide_off: true }), BTN('sensor.feels_like', 'Feels like', 'mdi:thermometer-alert', { show_state: true, alert_above: 32, hide_off: true }), BTN('switch.pool_pump', 'Pool pump', 'mdi:pump', { hide_off: true }), BTN('light.pool', 'Pool light', 'mdi:lightbulb', { hide_off: true }), { entity: 'sensor.washer_status', name: 'Washer', icon: 'mdi:washing-machine', hide_off: true, show_state: true, on_states: ['running', 'spinning', 'rinsing'], text_map: { spinning: 'Spin', running: 'Wash' }, secondary: { entity: 'sensor.washer_remaining' } }, BTN('group.all_lights', 'Lights', 'mdi:lightbulb', { count: true, hide_off: true })], low_batteries: { threshold: 20, tap_action: { action: 'none' } }, deadlines: { alert_days: 3, vehicles: [{ name: 'Family car', documents: [{ label: 'Inspection', entity: 'input_datetime.car_inspection' }, { label: 'Road tax', entity: 'input_datetime.car_road_tax' }] }] }, waste: { calendar: 'calendar.waste', next_days: 1, hide_today_after: '23:59', patterns: [{ match: 'Waste: General', label: 'General', icon: 'mdi:trash-can', exact: true }, { match: 'Waste: Plastic', label: 'Plastic', icon: 'mdi:recycle', exact: true }] } }] },
     controls: { w: 440, cards: [{ type: 'custom:ccu-controls-card', columns: 1, title: 'Living room', items: [{ entity: 'climate.living_ac', name: 'Living A/C' }, { entity: 'light.living_lamp', name: 'Living lamp' }] }] },
     'controls-more': { w: 440, cards: [{ type: 'custom:ccu-controls-card', columns: 1, title: 'More controls', items: [{ entity: 'fan.ventilation', name: 'Ventilation' }, { entity: 'media_player.living_tv', name: 'Living TV' }, { entity: 'number.timer', name: 'Timer' }, { entity: 'select.program', name: 'Program' }] }] },
     radio: { w: 440, cards: [{ type: 'custom:ccu-radio-card', title: 'Pool radio', stations: 'input_select.radio_favorite', player: 'media_player.pool_speaker', speakers: ['media_player.pool_speaker', 'media_player.living_speaker'], playing: 'input_boolean.radio_playing', hide: ['Custom'] }] },
@@ -104,6 +114,7 @@
       { type: 'custom:ccu-battery-card', soc: 'sensor.battery_soc', capacity_kwh: 10, load: 'sensor.load_power', grid_present: 'binary_sensor.grid_present', reserve_pct: 20, shutdown_pct: 10 },
       { type: 'custom:ccu-battery-card', soc: 'sensor.battery_soc', capacity_kwh: 10, load: 'sensor.load_power', grid_present: 'binary_sensor.grid_down', reserve_pct: 20, shutdown_pct: 10 },
       { type: 'custom:ccu-batteries-card', title: 'Device batteries', entities: ['sensor.tablet_battery', 'sensor.phone_battery', 'sensor.car_battery', 'sensor.remote_battery'] },
+      { type: 'custom:ccu-batteries-card', title: 'Batteries found automatically', auto: { threshold: 20 } },
     ] },
     graph: { w: 480, cards: [
       { type: 'custom:ccu-graph-card', title: 'Energy (last 24 h)', range: '24h', tabs: ['6h', '24h', '7d'], height: 150, series: [{ entity: 'sensor.house_power', name: 'Consumption', color: 'accent', kind: 'area' }, { entity: 'sensor.solar_power', name: 'Solar', color: 'yellow', kind: 'line' }] },
@@ -112,6 +123,26 @@
     weather: { w: 480, cards: [{ type: 'custom:ccu-weather-card', title: 'Weather', weather: 'weather.home', sensors: { temperature: 'sensor.temp', feels_like: 'sensor.feels', humidity: 'sensor.hum', wind_speed: 'sensor.wind', wind_gust: 'sensor.gust', wind_direction: 'sensor.dir', rain_rate: 'sensor.rain_rate', rain_today: 'sensor.rain_today', rain_state: 'binary_sensor.raining', pressure: 'sensor.pressure', uv: 'sensor.uv', radiation: 'sensor.radiation' }, tiles: ['humidity', 'wind', 'rain', 'pressure', 'uv', 'radiation'], days: 5 }] },
     'weather-rain': { w: 480, cards: [{ type: 'custom:ccu-weather-card', title: 'Weather', weather: 'weather.home_rain', sensors: { temperature: 'sensor.temp_rain', feels_like: 'sensor.feels', humidity: 'sensor.hum_rain', wind_speed: 'sensor.wind_rain', wind_gust: 'sensor.gust', wind_direction: 'sensor.dir', rain_rate: 'sensor.rain_rate_rain', rain_today: 'sensor.rain_today_rain', rain_state: 'binary_sensor.raining_rain', pressure: 'sensor.pressure', uv: 'sensor.uv', radiation: 'sensor.radiation' }, tiles: ['humidity', 'wind', 'rain', 'pressure'], days: 5 }] },
     people: { w: 440, cards: [{ type: 'custom:ccu-people-card', people: ['person.ana', 'person.maria', 'person.alex'] }, { type: 'custom:ccu-people-card', layout: 'family', title: 'Family', people: ['person.ana', 'person.maria', 'person.alex'] }] },
+    vehicles: { w: 440, cards: [{ type: 'custom:ccu-vehicle-card', title: 'Vehicles', alert_days: 3, vehicles: [
+      { name: 'Family car', plate: 'AB 12 XYZ', icon: 'mdi:car', documents: [{ label: 'Insurance', entity: 'input_datetime.car_insurance', icon: 'mdi:shield-car' }, { label: 'Inspection', entity: 'input_datetime.car_inspection', icon: 'mdi:car-wrench' }, { label: 'Road tax', entity: 'input_datetime.car_road_tax', icon: 'mdi:highway' }, { label: 'Service', entity: 'sensor.car_service_date' }, { label: 'Oil', odometer: 'sensor.car_odometer', last_km: 'input_number.car_oil_km', interval_km: 10000, icon: 'mdi:oil' }] },
+      { name: 'Van', icon: 'mdi:van-utility', documents: [{ label: 'Insurance', entity: 'input_datetime.van_insurance', icon: 'mdi:shield-car' }, { label: 'Inspection', entity: 'input_datetime.van_inspection', icon: 'mdi:car-wrench' }, { label: 'Road tax', entity: 'input_datetime.van_road_tax', icon: 'mdi:highway' }] },
+    ] }] },
+    // header + hero tile (big value, change vs. before, sparkline)
+    hero: { w: 480, cards: [
+      { type: 'custom:ccu-header-card', header: { icon: 'home', values: [{ entity: 'sensor.living_temperature', icon: 'thermo', color: 'accent' }, { entity: 'sensor.solar_power', icon: 'bolt', color: 'on' }, { entity: 'sensor.battery_soc', icon: 'battery', color: 'ok' }] } },
+      { type: 'custom:ccu-buttons-card', columns: 1, entities: [{ entity: 'sensor.house_power', name: 'House consumption', icon: 'mdi:home', size: 'xl', active: true, delta: { entity: 'sensor.house_delta' }, spark: { hours: 6 } }] },
+    ] },
+    // the same animations as in a dashboard, each tile "on"; docs/demo/capture.mjs records them into docs/img/animated-icons.png
+    animated: { w: 440, cards: [
+      { type: 'custom:ccu-chips-card', entities: [{ entity: 'climate.living_ac', name: 'A/C cooling', icon: 'mdi:air-conditioner' }, { entity: 'sensor.washer_status', name: 'Washer', icon: 'mdi:washing-machine', on_states: ['spinning'] }] },
+      { type: 'custom:ccu-buttons-card', columns: 4, density: 's', entities: [
+        { entity: 'light.kitchen', name: 'Light', icon: 'mdi:lightbulb' }, { entity: 'fan.ventilation', name: 'Fan', icon: 'mdi:fan' }, { entity: 'switch.gas_heater', name: 'Heating', icon: 'mdi:fire' }, { entity: 'switch.ev_charger', name: 'Charging', icon: 'mdi:flash' },
+        { entity: 'switch.pool_pump', name: 'Pump', icon: 'mdi:water' }, { entity: 'switch.solar_inverter', name: 'Solar', icon: 'mdi:white-balance-sunny' }, { entity: 'media_player.living_tv', name: 'Speaker', icon: 'mdi:speaker' }, { entity: 'lock.front_door', name: 'Door', icon: 'mdi:lock' }] },
+    ] },
+    nav: { w: 520, cards: [
+      { type: 'custom:ccu-nav-card', spacer: false, items: [{ icon: 'home', label: 'Home', path: '/demo', match: location.pathname }, { icon: 'sun', label: 'Solar', path: '/solar' }, { icon: 'bulb', label: 'Lights', path: '/lights', badge: ['sensor.lights_on'], badge_style: 'light' }, { icon: 'camera', label: 'Cams', path: '/cams', badge: ['binary_sensor.cam1_person', 'binary_sensor.cam2_person'] }, { icon: 'audi', label: 'Car', path: '/car' }, { icon: 'warehouse', label: 'Shed', path: '/shed' }, { icon: 'pool', label: 'Pool', path: '/pool' }] },
+      { type: 'custom:ccu-nav-card', compact: true, spacer: false, items: [{ back: true, icon: 'back', label: 'Back' }, { icon: 'tablet', label: 'Tablet', path: '/tablet' }, { icon: 'home', label: 'Home', path: '/demo', match: location.pathname }] },
+    ] },
     layout: { w: 440, cards: [
       { type: 'custom:ccu-title-card', title: 'Kitchen', subtitle: 'Climate · lights', icon: 'pot' },
       { type: 'custom:ccu-header-card', header: { icon: 'home', values: [{ entity: 'sensor.house_power', icon: 'bolt', color: 'accent', label: 'Load' }, { entity: 'sensor.solar_power', icon: 'sun', color: 'on', label: 'Solar' }, { entity: 'sensor.battery_soc', icon: 'battery', color: 'ok', label: 'Battery' }], right: { entity: 'sensor.temp', label: 'outside' } } },

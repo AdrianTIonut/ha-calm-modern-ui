@@ -8,11 +8,12 @@ import { runAction, toggleEntity } from './actions.mjs';
 import { attachGestures } from './gestures.mjs';
 import { defineEditors, detectEnergy } from './editor.mjs';
 import { normalizeRadio, radioModel, renderRadio, stationUrl } from './radio.mjs';
+import { normalizeVehicles, buildVehiclesModel, renderVehicles, normalizeDeadlines, dueDocuments, parseDate } from './vehicles.mjs';
 import { applyPreset } from './presets.mjs';
 import { normalizeGraphConfig, buildGraphModel, renderGraphCard, nearestPoint, rangeHours, thin, formatValue } from './graph-card.mjs';
 import { parseMinimalResponse, formatTimeLabel } from './graph-data.mjs';
 import { normalizeWeatherConfig, buildWeatherModel, renderWeather } from './weather.mjs';
-import { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries } from './energy.mjs';
+import { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel } from './energy.mjs';
 import { normalizeControls, controlModel, renderControls, sliderValue, normalizeTitle, renderTitle, normalizeRemote, renderRemote } from './controls.mjs';
 import { formatNumber } from './state.mjs';
 import { normalizeWaste, renderButtons, renderChips, renderHeader, renderNav, renderPeople, normalizePeople, normalizeHeader, normalizeNav, sparkPath, patchNodes, defaultTap } from './render.mjs';
@@ -182,13 +183,46 @@ class CcuChipsCard extends CcuBase {
   static getConfigElement() { return document.createElement('ccu-chips-editor'); }
   _build(cfg) {
     const waste = normalizeWaste(cfg && cfg.waste);
-    this._allowEmpty = !!waste;
+    const low = normalizeLowBatteries(cfg && cfg.low_batteries);
+    const dl = normalizeDeadlines(cfg && cfg.deadlines);
+    this._allowEmpty = !!waste || !!low || !!dl;
     const r = normalizeConfig(cfg);
     r.config.waste = waste;
-    if (waste) r.warnings = r.warnings.filter((w) => !/entit/i.test(w));
+    r.config.low_batteries = low;
+    r.config.deadlines = dl;
+    if (waste || low || dl) r.warnings = r.warnings.filter((w) => !/entit/i.test(w));
     return r;
   }
-  _html() { return renderChips(this._config, this._hass, { warnings: this._warnings, events: this._events, now: new Date() }); }
+  _html() { return renderChips(this._config, this._hass, { warnings: this._warnings, events: this._events, now: new Date(), lowBat: lowBatteryModel(this._config.low_batteries, this._hass), due: this._config.deadlines ? dueDocuments(this._config.deadlines, this._hass, new Date()) : null }); }
+  _hasClock() { return !!(this._config && this._config.deadlines); }   // la miezul nopții „zilele rămase” se schimbă
+  // chips-ul „baterii slabe” depinde de toate bateriile din HA: lista lor se reface cel mult o dată la 30 s
+  _entityIds() {
+    let base = super._entityIds();
+    const dl = this._config && this._config.deadlines;
+    if (dl) base = base.concat(vehicleEntityIds(dl));
+    if (!this._config || !this._config.low_batteries || !this._hass) return base;
+    if (!this._batIds || Date.now() - this._batAt > 30000) { this._batAt = Date.now(); this._batIds = discoverBatteries(this._hass, { ...this._config.low_batteries, unavailable: true }).map((r) => r.entity); }
+    return base.concat(this._batIds);
+  }
+  _lowAction(kind) {
+    const lb = this._config && this._config.low_batteries; if (!lb) return null;
+    const own = asAction(lb[kind + '_action']);
+    if (own) return { ...own, entity: own.entity };
+    const m = lowBatteryModel(lb, this._hass);
+    return kind === 'tap' && m && m.low[0] ? { action: 'more-info', entity: m.low[0].entity } : null;
+  }
+  _bind() {
+    super._bind();
+    if (this._batDeleg) return;
+    this._batDeleg = true;
+    const fire = (e) => {
+      const el = e.target && e.target.closest ? e.target.closest('[data-bat],[data-due]') : null; if (!el) return;
+      if (el.hasAttribute('data-due')) { const dl = this._config.deadlines, ta = dl && asAction(dl.tap_action); if (ta) runAction(this._hass, el, ta); return; }
+      const a = this._lowAction('tap'); if (a) runAction(this._hass, el, a);
+    };
+    this._mount.addEventListener('click', fire);
+    this._mount.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.closest && e.target.closest('[data-bat],[data-due]')) { e.preventDefault(); fire(e); } });
+  }
   set hass(h) { this._hass = h; super.hass = h; this._loadWaste(); }
   get hass() { return this._hass; }
   // evenimentele din calendarul de colectare (azi + următoarele zile), reîncărcate din 30 în 30 de minute
@@ -393,7 +427,14 @@ class CcuBatteriesCard extends CcuBase {
   _build(cfg) {
     const b = normalizeBatteriesConfig(cfg);
     const base = normalizeConfig({ ...(cfg || {}), entities: b.items.map((i) => i.entity) });
-    return { config: { ...base.config, entities: b.items, title: b.title, warn_pct: b.warn_pct, low_pct: b.low_pct, sort: b.sort }, warnings: b.warnings.concat(base.warnings.filter((w) => !/entit|Fără/i.test(w))) };
+    this._allowEmpty = !!b.auto;
+    return { config: { ...base.config, entities: b.items, title: b.title, warn_pct: b.warn_pct, low_pct: b.low_pct, sort: b.sort, auto: b.auto, only_low: b.only_low }, warnings: b.warnings.concat(base.warnings.filter((w) => !/entit|Fără/i.test(w))) };
+  }
+  _entityIds() {
+    const base = (this._config.entities || []).map((e) => e.entity);
+    if (!this._config.auto || !this._hass) return base;
+    if (!this._batIds || Date.now() - this._batAt > 30000) { this._batAt = Date.now(); this._batIds = discoverBatteries(this._hass, { ...this._config.auto, unavailable: true }).map((r) => r.entity); }
+    return base.concat(this._batIds);
   }
   _html() { return renderBatteries(this._config, buildBatteriesModel(this._config, this._hass), { warnings: this._warnings }); }
   getCardSize() { return Math.ceil(((this._config && this._config.entities.length) || 4) * 0.55) + 1; }
@@ -783,6 +824,69 @@ class CcuRadioCard extends CcuBase {
   }
 }
 
+// toate entitățile folosite de un config de mașini (pentru redesenare la schimbări)
+function vehicleEntityIds(n) {
+  const o = [];
+  for (const v of (n && n.vehicles) || []) for (const d of v.documents) { if (d.entity) o.push(d.entity); if (d.remaining) o.push(d.remaining); if (d.odometer) o.push(d.odometer); if (d.last_km) o.push(d.last_km); }
+  return o;
+}
+
+class CcuVehicleCard extends CcuBase {
+  static getConfigElement() { return document.createElement('ccu-vehicle-editor'); }
+  _allowEmpty = true;
+  _build(cfg) {
+    const n = normalizeVehicles(cfg);
+    const { config, warnings } = normalizeConfig({ ...(cfg || {}), entities: vehicleEntityIds(n).map((e) => ({ entity: e })) });
+    config.veh = n;
+    return { config, warnings: warnings.filter((w) => !/entit/i.test(w)).concat(n.warnings) };
+  }
+  _entityIds() { return vehicleEntityIds(this._config.veh); }
+  _hasClock() { return true; }   // la miezul nopții „zilele rămase” se schimbă
+  _html(now) { return renderVehicles(this._config.veh, this._hass, { warnings: this._warnings, now }); }
+  // câmpurile de dată (ascunse peste rând) iau valoarea curentă din HA, ca selectorul nativ să se deschidă pe data potrivită
+  _draw(force) { super._draw(force); this._syncDates(); }
+  _syncDates() {
+    if (!this._hass || !this._config) return;
+    this._mount.querySelectorAll('input.dp').forEach((inp) => {
+      const d = this._doc(Number(inp.getAttribute('data-vi')), Number(inp.getAttribute('data-di')));
+      const st = d && this._hass.states && this._hass.states[d.entity], dt = st ? parseDate(st.state) : null;
+      const v = dt ? dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0') : '';
+      if (inp.value !== v && this._root.activeElement !== inp) inp.value = v;
+    });
+  }
+  _doc(vi, di) { const v = this._config.veh.vehicles[vi]; return v && v.documents[di]; }
+  _bind() {
+    this._unbind.forEach((f) => f()); this._unbind = [];
+    if (this._deleg) return;
+    this._deleg = true;
+    const m = this._mount;
+    m.addEventListener('change', (e) => {
+      const inp = e.target.closest && e.target.closest('input.dp'); if (!inp || !inp.value) return;
+      const d = this._doc(Number(inp.getAttribute('data-vi')), Number(inp.getAttribute('data-di')));
+      if (d && d.entity && this._hass && this._hass.callService) this._hass.callService('input_datetime', 'set_datetime', { entity_id: d.entity, date: inp.value });
+    });
+    m.addEventListener('click', (e) => {
+      const btn = e.target.closest && e.target.closest('button.now');
+      if (btn) {
+        const d = this._doc(Number(btn.getAttribute('data-vi')), Number(btn.getAttribute('data-di')));
+        const odo = d && d.odometer && this._hass.states[d.odometer], n = odo ? Number(odo.state) : NaN;
+        if (d && d.last_km && Number.isFinite(n)) this._hass.callService('input_number', 'set_value', { entity_id: d.last_km, value: Math.round(n) });   // „am schimbat uleiul acum”: km curenți devin punctul de plecare
+        return;
+      }
+      const row = e.target.closest && e.target.closest('.vd[data-editable="1"]');
+      const inp = row && row.querySelector('input.dp');
+      // câmpul de dată e transparent peste rând; în Chrome / Edge un clic pe el doar îl focalizează, deci deschidem selectorul explicit (pe iOS se deschide singur)
+      if (inp) { try { inp.showPicker(); } catch (err) { inp.focus(); } }
+    });
+  }
+  getCardSize() { return 3 + ((this._config && this._config.veh.vehicles.length) || 1) * 2; }
+  getGridOptions() { return { columns: 12, min_columns: 5, rows: 'auto' }; }
+  static getStubConfig(hass) {
+    const ids = Object.keys((hass && hass.states) || {}).filter((i) => /^input_datetime\./.test(i));
+    return { vehicles: [{ name: 'Car', icon: 'mdi:car', documents: [{ label: 'Insurance', entity: ids[0] || 'input_datetime.insurance' }, { label: 'Inspection', entity: ids[1] || 'input_datetime.inspection' }] }] };
+  }
+}
+
 if (typeof customElements !== 'undefined') {
   if (!customElements.get('ccu-buttons-card')) customElements.define('ccu-buttons-card', CcuButtonsCard); // fără eroare dacă fișierul e încărcat de două ori
   if (!customElements.get('ccu-chips-card')) customElements.define('ccu-chips-card', CcuChipsCard); // fără eroare dacă fișierul e încărcat de două ori
@@ -798,6 +902,7 @@ if (typeof customElements !== 'undefined') {
   if (!customElements.get('ccu-title-card')) customElements.define('ccu-title-card', CcuTitleCard);
   if (!customElements.get('ccu-remote-card')) customElements.define('ccu-remote-card', CcuRemoteCard);
   if (!customElements.get('ccu-radio-card')) customElements.define('ccu-radio-card', CcuRadioCard);
+  if (!customElements.get('ccu-vehicle-card')) customElements.define('ccu-vehicle-card', CcuVehicleCard);
   defineEditors();
   const reg = (type, name, description) => { (window.customCards = window.customCards || []).push({ type, name, description, preview: false }); };
   reg('ccu-buttons-card', 'Calm Modern — Buttons', 'Grid of tiles (xs–xl) with states, colors and subtle animated icons.');
@@ -811,6 +916,7 @@ if (typeof customElements !== 'undefined') {
   reg('ccu-nav-card', 'Calm Modern — Navigation bar', 'Navigation bar with icons and labels; sticky, compact, back button, badges.');
   reg('ccu-controls-card', 'Calm Modern — Controls', 'Thermostat dial, lights with brightness and colors, fan, media player, number slider and selector.');
   reg('ccu-remote-card', 'Calm Modern — Remote', 'TV remote (remote.send_command): power, volume, channels, menu and arrows.');
+  reg('ccu-vehicle-card', 'Calm Modern — Vehicles', 'Insurance, inspection, road tax and service deadlines per vehicle, with days left, a colored bar and editable dates.');
   reg('ccu-radio-card', 'Calm Modern — Radio', 'Radio with a tuning dial, equalizer display, previous / next station, play / stop and volume.');
   reg('ccu-title-card', 'Calm Modern — Title', 'Section title with icon and subtitle.');
   reg('ccu-header-card', 'Calm Modern — Header', 'Icon, up to 3 values and a clock or outdoor value in one row.');

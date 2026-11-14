@@ -1,6 +1,7 @@
 // src/editor.mjs — editorul vizual al cardurilor (fără YAML). Folosește componentele HA (`ha-form`, selectoare de entități, de iconițe).
 // Partea pură (conversii de config, detectare automată) e exportată și testată în Node; clasele DOM se creează doar în browser, prin defineEditors().
 import { t, setLang } from './i18n.mjs';
+import { discoverBatteries } from './energy.mjs';
 
 // ---------- logică pură ----------
 /** Scoate valorile goale (șir gol, listă goală, false, undefined) dintr-un obiect de config. */
@@ -107,7 +108,7 @@ function h(tag, attrs, ...kids) {
   for (const [k, v] of Object.entries(attrs || {})) {
     if (k === 'class') el.className = v; else if (k === 'text') el.textContent = v; else if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v);
   }
-  for (const k of kids.flat()) if (k != null && k !== false) el.append(k);
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) el.append(k);   // listele din liste (blocuri opționale) se aplatizează complet
   return el;
 }
 
@@ -133,13 +134,20 @@ export function defineEditors() {
     constructor() { super(); this._cfg = {}; this._hass = null; this._root = this.attachShadow({ mode: 'open' }); this._ready = false; this._rows = {}; this._last = ''; }
     setConfig(c) {
       const j = JSON.stringify(c || {});
-      if (j === this._last) return; // HA ne dă înapoi config-ul pe care tocmai l-am emis: nu redesenăm (altfel se pierde cursorul)
+      // HA ne dă înapoi config-ul emis, dar ASINCRON: la o tastare rapidă ecoul primei litere ajunge după a treia. Ignorăm orice config pe care l-am trimis noi
+      // (nu doar ultimul), altfel ecoul vechi suprascrie ce ai scris, editorul se redesenează și cursorul se pierde.
+      if (j === this._last || (this._sent || []).includes(j)) return;
       this._last = j; this._cfg = JSON.parse(j); this._rows = {}; this._init();
     }
     set hass(hass) { this._hass = hass; setLang(hass); this._root.querySelectorAll('ha-form').forEach((f) => { f.hass = hass; }); }
     get hass() { return this._hass; }
     async _init() { if (!this._ready) { this._ready = true; await ensureHaParts(); } this._draw(); }
-    _emit() { this._last = JSON.stringify(this._cfg); this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: this._cfg }, bubbles: true, composed: true })); }
+    _emit() {
+      const j = JSON.stringify(this._cfg);
+      if (j === this._last) return;   // nimic nou (un formular poate emite de mai multe ori pe aceeași tastă)
+      this._last = j; (this._sent = this._sent || []).push(j); if (this._sent.length > 40) this._sent.shift();
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: JSON.parse(j) }, bubbles: true, composed: true }));   // o copie: HA nu poate modifica starea noastră
+    }
     _style() { const s = document.createElement('style'); s.textContent = CSS; return s; }
     _friendly(id) { const s = this._hass && this._hass.states && this._hass.states[id]; return (s && s.attributes && s.attributes.friendly_name) || ''; }
 
@@ -149,7 +157,8 @@ export function defineEditors() {
       f.hass = this._hass; f.schema = schema; f.data = data;
       f.computeLabel = (s) => (labels && labels[s.name]) || s.name;
       f.computeHelper = (s) => (helpers && helpers[s.name]) || '';
-      f.addEventListener('value-changed', (e) => { e.stopPropagation(); onChange(e.detail.value || {}); });
+      // ha-form e „controlat”: dacă nu-i dăm înapoi valoarea nouă, la următoarea actualizare a lui `hass` (HA o trimite des) câmpul revine la valoarea veche și se pierd literele tastate
+      f.addEventListener('value-changed', (e) => { e.stopPropagation(); const v = e.detail.value || {}; f.data = v; onChange(v); });
       return f;
     }
     _obj(path, create) { let o = this._cfg; for (const p of path) { if (!o[p] || typeof o[p] !== 'object') { if (!create) return {}; o[p] = {}; } o = o[p]; } return o; }
@@ -157,7 +166,7 @@ export function defineEditors() {
     _set(path, key, v, keepFalse) {
       const o = this._obj(path, true);
       if (isEmpty(v) && !(keepFalse && v === false)) delete o[key]; else o[key] = v;
-      if (path.length && !Object.keys(o).length) { const parent = this._obj(path.slice(0, -1), true); delete parent[path[path.length - 1]]; }
+      if (path.length && !Object.keys(o).length) { const parent = this._obj(path.slice(0, -1), true), last = path[path.length - 1]; if (path.length === 1 && (last === 'low_batteries' || last === 'auto' || last === 'deadlines')) parent[last] = true; else delete parent[last]; }
       this._emit();
     }
     /** Bloc cu un formular legat de cheile unui obiect din config (rădăcina sau o sub-cheie, ex. ['sensors']). */
@@ -181,8 +190,9 @@ export function defineEditors() {
       };
       const wrap = h('div', { class: 'blk' }, h('h3', {}, title, h('small', { text: L.length + ' / ' + max })), hint ? h('p', { class: 'hint', text: hint }) : null);
       L.forEach((item, i) => {
-        const move = (d) => () => { const j = i + d; if (j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; save(); this._draw(); };
-        const del = () => { L.splice(i, 1); save(); this._draw(); };
+        const reset = () => { Object.keys(this._rows).forEach((k) => { if (k.startsWith(key + '.')) delete this._rows[k]; }); };   // listele din interiorul rândurilor se reiau din config
+        const move = (d) => () => { const j = i + d; if (j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; save(); reset(); this._draw(); };
+        const del = () => { L.splice(i, 1); save(); reset(); this._draw(); };
         const o = typeof item === 'string' ? { entity: item } : item;
         const label = (o && (o.name || o.label)) || (o && o.entity && this._friendly(o.entity)) || rowLabel + ' ' + (i + 1);
         wrap.append(h('div', { class: 'row' },
@@ -201,7 +211,7 @@ export function defineEditors() {
      */
     _items(key, o) {
       const forms = o.forms, ready = o.ready || ((x) => !!(x && x.entity));
-      const rowBuilder = (item, i, onChange) => forms.map((fm) => {
+      const rowBuilder = (item, i, onChange) => [...forms.map((fm) => {
         const ks = names(fm.schema), keep = new Set(fm.defTrue || []);
         const f = this._form(fm.schema, pick(item, ks), fm.labels, (v) => {
           const next = { ...item };
@@ -210,8 +220,35 @@ export function defineEditors() {
           onChange(item);
         }, fm.helpers);
         return fm.details ? h('details', { open: ks.some((k) => !isEmpty(item[k])) }, h('summary', { text: fm.details }), f) : f;
-      });
+      }), ...(o.extra ? [].concat(o.extra(item, i) || []) : [])];
       return this._listBlock(key, o.title, o.hint, o.max, o.addLabel, o.rowLabel, rowBuilder, ready, o.path, (x) => (o.compact !== false && Object.keys(x).length === 1 && x.entity ? x.entity : x));
+    }
+    /** Dispozitivele pe baterii găsite în HA, ca opțiuni pentru „Ignoră” (valoarea = entity_id; se pot scrie și cuvinte). */
+    _batteryIgnore() {
+      const names = (this._cfg.low_batteries && this._cfg.low_batteries.names) || (this._cfg.auto && this._cfg.auto.names) || {};
+      const rows = discoverBatteries(this._hass, { mobile: false, unavailable: true, names });
+      const options = rows.map((r) => ({ value: r.entity, label: r.name + (r.pct === null ? '' : ' · ' + Math.round(r.pct) + '%') }));
+      for (const v of [].concat((this._cfg.low_batteries && this._cfg.low_batteries.exclude) || [], (this._cfg.auto && this._cfg.auto.exclude) || [])) if (v && !options.some((o) => o.value === v)) options.push({ value: v, label: v });
+      return { select: { mode: 'dropdown', multiple: true, custom_value: true, options } };
+    }
+    /** Comutator pentru o funcție opțională a cardului, salvată ca `true` sau ca obiect cu opțiuni (ex. low_batteries, auto). */
+    _feature(key, title, hint, onLabel, optionsBuilder) {
+      const c = this._cfg, on = !!c[key];
+      return h('div', { class: 'blk' },
+        h('h3', {}, this._form([{ name: 'on', selector: BOOL }], { on }, { on: onLabel }, (v) => { if (v.on && !c[key]) c[key] = true; else if (!v.on) delete c[key]; this._emit(); this._draw(); })),
+        on ? [hint ? h('p', { class: 'hint', text: hint }) : null, optionsBuilder()] : null);
+    }
+    /** Mașinile și documentele lor (listă în listă): `path` = [] pentru card, ['deadlines'] pentru chip. */
+    _vehiclesBlock(path) {
+      const P = path || [];
+      const docForms = () => [
+        { schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'entity', selector: ENT({ domain: ['input_datetime', 'sensor'] }) }], labels: { label: t('Document'), icon: t('Iconiță'), entity: t('Data de expirare') }, helpers: { entity: t('Un helper „dată” (se poate modifica din card) sau un senzor cu dată, ex. revizia din mașină.') } },
+        { details: t('Pentru kilometri (ulei, revizie)'), schema: [{ name: 'odometer', selector: SENSOR() }, { name: 'last_km', selector: ENT({ domain: 'input_number' }) }, { name: 'remaining', selector: SENSOR() }, { name: 'interval_km', selector: NUM(1, 1000000, 100) }],
+          labels: { odometer: t('Kilometraj (senzor)'), last_km: t('Kilometri la ultima schimbare (număr)'), remaining: t('sau: kilometri rămași (senzor)'), interval_km: t('Interval (km)') }, helpers: { last_km: t('Cu butonul „Schimbat acum” de pe card primește kilometrajul curent.') } },
+      ];
+      return this._items('vehicles', { path: P, title: t('Mașini'), hint: t('Fiecare mașină are documentele ei: RCA, ITP, rovinietă, revizie / ulei.'), max: 6, addLabel: t('Adaugă mașină'), rowLabel: t('Mașină'), compact: false, ready: (x) => !!(x && x.name),
+        forms: [{ schema: [grid({ name: 'name', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'plate', selector: TXT }], labels: { name: t('Nume'), icon: t('Iconiță'), plate: t('Număr de înmatriculare (opțional)') } }],
+        extra: (item, i) => (item && item.name ? this._items('documents', { path: P.concat(['vehicles', String(i)]), title: t('Documente'), hint: '', max: 10, addLabel: t('Adaugă document'), rowLabel: t('Document'), compact: false, ready: (x) => !!(x && (x.entity || x.odometer || x.remaining)), forms: docForms() }) : h('p', { class: 'hint', text: t('Scrie numele mașinii ca să poți adăuga documente.') })) });
     }
     /** Blocul „Aspect și limbă” (preset, limbă), comun tuturor cardurilor. */
     _common() {
@@ -295,6 +332,14 @@ export function defineEditors() {
   class CcuChipsEditor extends CcuEditor {
     _body() {
       return [
+        this._feature('deadlines', t('Termene mașini'), t('Un chip cât timp un termen (RCA, ITP, rovinietă, ulei) se apropie sau a expirat; arată documentul și termenul, sau numărul.'), t('Arată chip „termene mașini”'), () => [
+          this._fields(['deadlines'], '', '', [grid({ name: 'alert_days', selector: NUM(0, 30) }, { name: 'label', selector: TXT }), { name: 'tap_action', selector: ACTION }], { alert_days: t('Alertă cu câte zile înainte'), label: t('Text (opțional)'), tap_action: t('La atingere (ex. deschide pagina Mașini)') }),
+          this._vehiclesBlock(['deadlines']),
+        ]),
+        this._feature('low_batteries', t('Baterii slabe'), t('Un singur chip, doar când există baterii slabe: arată numărul (sau numele, dacă e una) și, la atingere, deschide ce setezi mai jos.'), t('Arată chip „baterii slabe”'), () => [
+          this._fields(['low_batteries'], '', '', [grid({ name: 'threshold', selector: NUM(0, 100) }, { name: 'label', selector: TXT }), { name: 'exclude', selector: this._batteryIgnore() }, { name: 'include', selector: ENT({ multiple: true }) }, { name: 'mobile', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
+            { threshold: t('Prag baterie slabă (%)'), label: t('Text (opțional)'), exclude: t('Ignoră dispozitivele'), include: t('Adaugă dispozitive'), mobile: t('Exclude telefoanele și tabletele'), tap_action: t('La atingere (ex. deschide lista bateriilor)') }, { exclude: t('Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.'), include: t('Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).') }, { defTrue: ['mobile'] }),
+        ]),
         this._items('entities', { title: t('Chips'), hint: t('Etichete mici de stare; pot apărea doar când sunt active.'), max: 40, addLabel: t('Adaugă chip'), rowLabel: t('Chip'),
           forms: entityForms([{ schema: [grid({ name: 'icon_color', selector: SEL(COLORS) }, { name: 'on_as', selector: SEL(['alert']) }), grid({ name: 'show_state', selector: BOOL }, { name: 'hide_off', selector: BOOL })], labels: { icon_color: t('Culoarea iconiței'), on_as: t('Când e pornit arată ca'), show_state: t('Arată valoarea'), hide_off: t('Ascunde când e oprit') } }]) }),
       ];
@@ -317,7 +362,8 @@ export function defineEditors() {
       return [
         this._fields([], t('Meniu'), '', [grid({ name: 'sticky', selector: BOOL }, { name: 'compact', selector: BOOL })], { sticky: t('Fixat jos pe ecran'), compact: t('Compact') }),
         this._items('items', { title: t('Butoane meniu'), hint: t('Fiecare buton duce la o pagină (cale completă, ex. /dashboard-casa/camere).'), max: 8, addLabel: t('Adaugă buton'), rowLabel: t('Buton'), compact: false, ready: (x) => !!(x && x.path),
-          forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } }] }),
+          forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } },
+            { details: t('Insignă cu număr'), schema: [{ name: 'badge', selector: ENT({ multiple: true }) }, { name: 'badge_style', selector: SEL(['light']) }], labels: { badge: t('Entități numărate'), badge_style: t('Aspect insignă') }, helpers: { badge: t('Numără entitățile pornite; un senzor numeric adaugă valoarea lui (ex. „becuri aprinse”).'), badge_style: t('„light” = galben, pentru lumini; implicit roșu (alertă).') } }] }),
       ];
     }
   }
@@ -350,6 +396,11 @@ export function defineEditors() {
       return [
         this._fields([], t('Baterii dispozitive'), '', [{ name: 'title', selector: TXT }, grid({ name: 'warn_pct', selector: NUM(0, 100) }, { name: 'low_pct', selector: NUM(0, 100) }), { name: 'sort', selector: SEL(['asc', 'none']) }],
           { title: t('Titlu (opțional)'), warn_pct: t('Avertisment sub (%)'), low_pct: t('Critic sub (%)'), sort: t('Ordine') }),
+        this._feature('auto', t('Găsește singur bateriile'), t('Caută în Home Assistant toate dispozitivele cu baterie (senzori „battery”), fără telefoane și tablete.'), t('Descoperire automată'), () => [
+          this._fields(['auto'], '', '', [{ name: 'threshold', selector: NUM(0, 100) }, { name: 'exclude', selector: this._batteryIgnore() }, { name: 'include', selector: ENT({ multiple: true }) }, { name: 'mobile', selector: BOOL }],
+            { threshold: t('Prag baterie slabă (%)'), exclude: t('Ignoră dispozitivele'), include: t('Adaugă dispozitive'), mobile: t('Exclude telefoanele și tabletele') }, { exclude: t('Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.'), include: t('Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).') }, { defTrue: ['mobile'] }),
+          this._fields([], '', '', [{ name: 'only_low', selector: BOOL }], { only_low: t('Arată doar bateriile slabe') }),
+        ]),
         this._items('entities', { title: t('Dispozitive'), hint: t('Senzori de nivel baterie: telefoane, tablete, mașină…'), max: 30, addLabel: t('Adaugă dispozitiv'), rowLabel: t('Dispozitiv'),
           forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, { name: 'name', selector: TXT }], labels: { entity: t('Senzor'), name: t('Nume') } }] }),
       ];
@@ -417,7 +468,17 @@ export function defineEditors() {
     }
   }
 
+  class CcuVehicleEditor extends CcuEditor {
+    _body() {
+      return [
+        this._fields([], t('Mașini'), '', [{ name: 'title', selector: TXT }, grid({ name: 'alert_days', selector: NUM(0, 30) }, { name: 'alert_km', selector: NUM(0, 5000, 50) })],
+          { title: t('Titlu (opțional)'), alert_days: t('Alertă cu câte zile înainte'), alert_km: t('Alertă la câți km rămași') }, { alert_days: t('Termenul devine portocaliu (și apare în chip) cu atâtea zile înainte.') }),
+        this._vehiclesBlock([]),
+      ];
+    }
+  }
+
   const defs = { 'ccu-flow-editor': CcuFlowEditor, 'ccu-buttons-editor': CcuButtonsEditor, 'ccu-chips-editor': CcuChipsEditor, 'ccu-header-editor': CcuHeaderEditor, 'ccu-nav-editor': CcuNavEditor, 'ccu-graph-editor': CcuGraphEditor,
-    'ccu-battery-editor': CcuBatteryEditor, 'ccu-batteries-editor': CcuBatteriesEditor, 'ccu-people-editor': CcuPeopleEditor, 'ccu-weather-editor': CcuWeatherEditor, 'ccu-title-editor': CcuTitleEditor, 'ccu-controls-editor': CcuControlsEditor, 'ccu-remote-editor': CcuRemoteEditor, 'ccu-radio-editor': CcuRadioEditor };
+    'ccu-battery-editor': CcuBatteryEditor, 'ccu-batteries-editor': CcuBatteriesEditor, 'ccu-people-editor': CcuPeopleEditor, 'ccu-weather-editor': CcuWeatherEditor, 'ccu-title-editor': CcuTitleEditor, 'ccu-controls-editor': CcuControlsEditor, 'ccu-remote-editor': CcuRemoteEditor, 'ccu-radio-editor': CcuRadioEditor, 'ccu-vehicle-editor': CcuVehicleEditor };
   for (const [tag, cls] of Object.entries(defs)) if (!customElements.get(tag)) customElements.define(tag, cls);
 }

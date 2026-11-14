@@ -216,6 +216,11 @@ export const CCU_THEME = `
   background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-alert) 30%, transparent), color-mix(in srgb, var(--ccu-alert) 8%, transparent) 65%), color-mix(in srgb, var(--ccu-alert) 11%, var(--ccu-bg));
   box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-alert) 16%, transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-alert) 38%, transparent); }
 .ccu-nav-item[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-alert) 45%, transparent)); }
+.ccu-badge.lit { background: var(--ccu-c-yellow); color: #1c1500; box-shadow: 0 0 0 2px var(--ccu-bg), 0 0 10px color-mix(in srgb, var(--ccu-c-yellow) 60%, transparent); }
+.ccu-nav-item[data-state="lit"] { color: var(--ccu-c-yellow); border-color: color-mix(in srgb, var(--ccu-c-yellow) 55%, transparent);
+  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-c-yellow) 26%, transparent), color-mix(in srgb, var(--ccu-c-yellow) 7%, transparent) 65%), color-mix(in srgb, var(--ccu-c-yellow) 9%, var(--ccu-bg));
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-c-yellow) 14%, transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-c-yellow) 34%, transparent); }
+.ccu-nav-item[data-state="lit"] .ccu-ico { color: var(--ccu-c-yellow); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-c-yellow) 45%, transparent)); }
 .ccu-nav-item:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 1px; }
 .ccu-nav-item[data-state="on"] { color: var(--ccu-on-hi); border-color: color-mix(in srgb, var(--ccu-on) 72%, transparent);
   background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-on) 32%, transparent), color-mix(in srgb, var(--ccu-on) 8%, transparent) 65%), color-mix(in srgb, var(--ccu-on) 13%, var(--ccu-bg));
@@ -352,7 +357,7 @@ export const CCU_THEME = `
 .ccu-bat-shell .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 10px; min-width: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -8px 12px -8px rgba(0,0,0,.35), 0 0 16px -2px rgba(246,195,67,.4); transition: width .6s ease; }
 .ccu-bat-shell[data-state="backup"] .fill { box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 16px -2px rgba(244,105,75,.55); }
 .ccu-bat-shell .pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
-.ccu-bat-info { display: grid; gap: 6px; font-size: 13px; min-width: 0; } .ccu-bat-info .a { color: var(--ccu-muted); } .ccu-bat-info .a b { color: var(--ccu-text); font-weight: 600; }
+.ccu-bat-info { display: grid; gap: 6px; font-size: 13px; min-width: 0; } .ccu-bat-info .a { color: var(--ccu-muted); } .ccu-bat-info .a b { color: var(--ccu-text); font-weight: 600; } .ccu-bat-info .e { white-space: nowrap; } .ccu-bat-info .u, .ccu-bat-info .a, .ccu-bat-info .d { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; } .ccu-bat-info i { font-style: normal; } .ccu-bat-info b { white-space: nowrap; } .ccu-bat-info .u, .ccu-bat-info .d { color: var(--ccu-muted); } .ccu-bat-info .u b, .ccu-bat-info .d b { color: var(--ccu-text); font-weight: 600; } .ccu-bat-info .d { font-size: 12px; }
 .ccu-bat-slider { position: relative; margin: 20px 10px 58px; }
 .ccu-bat-slider .tr { height: 4px; border-radius: 2px; background: rgba(148,163,184,.26); } .ccu-bat-slider .fl { height: 100%; border-radius: 2px; background: var(--ccu-c-yellow); box-shadow: 0 0 8px color-mix(in srgb, var(--ccu-c-yellow) 50%, transparent); }
 .ccu-bat-slider .mk { position: absolute; top: -4px; transform: translateX(-50%); display: grid; justify-items: center; }
@@ -607,6 +612,26 @@ export const CCU_THEME = `
 .ccu-radio .sp.on { color: var(--ccu-text); border-color: color-mix(in srgb, var(--ccu-on) 60%, transparent); background: color-mix(in srgb, var(--ccu-on) 14%, var(--ccu-surface-2)); }
 .ccu-radio .sp:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 .ccu-radio[data-state="na"] { opacity: .55; }
+/* mașini: panou pe mașină, rânduri cu termen (zile rămase), bară colorată după stare */
+.ccu-veh { display: grid; gap: 14px; }
+.ccu-veh .vh { display: grid; gap: 6px; }
+.ccu-veh .hd { display: flex; align-items: center; gap: 10px; padding: 0 2px 2px; } .ccu-veh .hd .ccu-ico { --ico: 24px; color: var(--ccu-accent); } .ccu-veh .hd b { font-size: 15px; font-weight: 650; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccu-veh .hd .pl { font-size: 11px; letter-spacing: .08em; padding: 3px 8px; border-radius: 7px; color: var(--ccu-muted); border: var(--ccu-bw) solid var(--ccu-line); background: color-mix(in srgb, var(--ccu-text) 5%, transparent); }
+.ccu-veh .vh[data-state="soon"] .hd .ccu-ico { color: var(--ccu-alert-hi); } .ccu-veh .vh[data-state="expired"] .hd .ccu-ico { color: var(--ccu-c-red); }
+.ccu-veh .vd { position: relative; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 4px 12px; padding: 10px 14px 12px; border-radius: 14px; overflow: hidden;
+  background: var(--ccu-gloss), var(--ccu-surface-2); border: var(--ccu-bw) solid var(--ccu-line); box-shadow: var(--ccu-edge); }
+.ccu-veh .vd .ccu-ico { --ico: 22px; color: var(--ccu-muted); } .ccu-veh .vd .nm { display: grid; min-width: 0; font-size: 14px; font-weight: 600; } .ccu-veh .vd .nm small { font-size: 11.5px; font-weight: 400; color: var(--ccu-muted); }
+.ccu-veh .vd > b { font-size: 14px; font-weight: 700; white-space: nowrap; text-align: right; }
+.ccu-veh .vd .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--ccu-text) 10%, transparent); overflow: hidden; } .ccu-veh .vd .bar i { display: block; height: 100%; border-radius: 2px; background: var(--ccu-on); transition: width .4s ease; }
+.ccu-veh .vd[data-state="ok"] .ccu-ico { color: var(--ccu-on-hi); }
+.ccu-veh .vd[data-state="soon"] { border-color: color-mix(in srgb, var(--ccu-alert) 65%, transparent); background: radial-gradient(130% 160% at 50% 0%, color-mix(in srgb, var(--ccu-alert) 22%, transparent), color-mix(in srgb, var(--ccu-alert) 6%, transparent) 65%), color-mix(in srgb, var(--ccu-alert) 9%, var(--ccu-bg)); }
+.ccu-veh .vd[data-state="soon"] .ccu-ico, .ccu-veh .vd[data-state="soon"] > b { color: var(--ccu-alert-hi); } .ccu-veh .vd[data-state="soon"] .bar i { background: var(--ccu-alert); }
+.ccu-veh .vd[data-state="expired"] { border-color: color-mix(in srgb, var(--ccu-c-red) 70%, transparent); background: radial-gradient(130% 160% at 50% 0%, color-mix(in srgb, var(--ccu-c-red) 26%, transparent), color-mix(in srgb, var(--ccu-c-red) 7%, transparent) 65%), color-mix(in srgb, var(--ccu-c-red) 10%, var(--ccu-bg)); }
+.ccu-veh .vd[data-state="expired"] .ccu-ico, .ccu-veh .vd[data-state="expired"] > b { color: var(--ccu-c-red); } .ccu-veh .vd[data-state="expired"] .bar i { background: var(--ccu-c-red); width: 100% !important; }
+.ccu-veh .vd[data-state="unset"] { border-style: dashed; } .ccu-veh .vd[data-state="unset"] > b { color: var(--ccu-muted); font-weight: 600; } .ccu-veh .vd[data-state="unset"] .bar { opacity: .4; }
+.ccu-veh .vd[data-editable="1"] { cursor: pointer; } .ccu-veh .vd .dp { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.ccu-veh .vd .now { all: unset; box-sizing: border-box; cursor: pointer; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 9px; color: var(--ccu-text); border: var(--ccu-bw) solid var(--ccu-line); background: color-mix(in srgb, var(--ccu-text) 7%, transparent); position: relative; z-index: 1; }
+.ccu-veh .vd .now:active { transform: scale(.96); } .ccu-veh .vd .now:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 /* titlu de secțiune */
 .ccu-ttl { display: flex; align-items: center; gap: 12px; padding: 2px 4px; } .ccu-ttl .ccu-ico { --ico: 28px; color: var(--ccu-accent); filter: drop-shadow(0 0 8px color-mix(in srgb, var(--ccu-accent) 45%, transparent)); }
 .ccu-ttl .tx { display: grid; gap: 1px; } .ccu-ttl b { font-size: 20px; font-weight: 650; letter-spacing: -.01em; } .ccu-ttl small { font-size: 12.5px; color: var(--ccu-muted); }

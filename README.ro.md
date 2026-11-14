@@ -20,13 +20,25 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 ## Galerie
 
 <table>
-<tr><td valign="top"><img src="docs/img/buttons.png" width="380" alt="buttons"></td><td valign="top"><img src="docs/img/chips.png" width="380" alt="chips"></td></tr>
-<tr><td valign="top"><img src="docs/img/controls.png" width="380" alt="controls"></td><td valign="top"><img src="docs/img/controls-more.png" width="380" alt="controls-more"></td></tr>
-<tr><td valign="top"><img src="docs/img/radio.png" width="380" alt="radio"></td><td valign="top"><img src="docs/img/remote.png" width="380" alt="remote"></td></tr>
-<tr><td valign="top"><img src="docs/img/flow.png" width="380" alt="flow"></td><td valign="top"><img src="docs/img/battery.png" width="380" alt="battery"></td></tr>
-<tr><td valign="top"><img src="docs/img/graph.png" width="380" alt="graph"></td><td valign="top"><img src="docs/img/weather.png" width="380" alt="weather"></td></tr>
-<tr><td valign="top"><img src="docs/img/weather-rain.png" width="380" alt="weather-rain"></td><td valign="top"><img src="docs/img/people.png" width="380" alt="people"></td></tr>
+<tr><td valign="top"><img src="docs/img/hero.png" width="380" alt="hero"></td><td valign="top"><img src="docs/img/buttons.png" width="380" alt="buttons"></td></tr>
+<tr><td valign="top"><img src="docs/img/chips.png" width="380" alt="chips"></td><td valign="top"><img src="docs/img/controls.png" width="380" alt="controls"></td></tr>
+<tr><td valign="top"><img src="docs/img/controls-more.png" width="380" alt="controls-more"></td><td valign="top"><img src="docs/img/radio.png" width="380" alt="radio"></td></tr>
+<tr><td valign="top"><img src="docs/img/remote.png" width="380" alt="remote"></td><td valign="top"><img src="docs/img/flow.png" width="380" alt="flow"></td></tr>
+<tr><td valign="top"><img src="docs/img/battery.png" width="380" alt="battery"></td><td valign="top"><img src="docs/img/graph.png" width="380" alt="graph"></td></tr>
+<tr><td valign="top"><img src="docs/img/weather.png" width="380" alt="weather"></td><td valign="top"><img src="docs/img/weather-rain.png" width="380" alt="weather-rain"></td></tr>
+<tr><td valign="top"><img src="docs/img/people.png" width="380" alt="people"></td><td valign="top"><img src="docs/img/vehicles.png" width="380" alt="vehicles"></td></tr>
+
+<img src="docs/img/hero.png" width="360" alt="header and hero tile">
+
+<img src="docs/img/nav.png" width="420" alt="bottom menu">
+<tr><td valign="top"><img src="docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
 </table>
+
+## Iconițe animate
+
+Iconițele se mișcă doar când are sens și doar cât aparatul e pornit: ventilatorul unui aparat de aer condiționat se învârte cât timp chiar răcește, becul strălucește, centrala pâlpâie, pompa sau boxa pulsează. Animațiile se opresc la „reduce motion” (sau cu `animations: false`).
+
+<img src="docs/img/animated-icons.png" width="472" alt="animated icons">
 
 ## Instalare
 
@@ -233,6 +245,15 @@ entities:
   - sensor.nff_battery_level
 ```
 
+`auto` găsește toate dispozitivele cu senzor de baterie (`device_class: battery`), fără telefoane, tablete și browsere; `only_low: true` arată doar bateriile slabe:
+
+```yaml
+type: custom:ccu-batteries-card
+title: Dispozitive pe baterii
+auto: { threshold: 20, exclude: [invertor, audi], include: [sensor.alta_baterie] }
+```
+
+
 ## ccu-people-card
 
 <img src="docs/img/people.png" width="360" alt="people">
@@ -305,6 +326,19 @@ waste:                                                  # chips din calendarul d
     - { match: 'Gunoi: Menajer', label: Menajer, icon: mdi:trash-can, exact: true }
 ```
 
+Chip **baterii slabe**, care găsește singur dispozitivele pe baterii (senzori de baterie; telefoanele și tabletele sunt lăsate deoparte):
+
+```yaml
+type: custom:ccu-chips-card
+low_batteries:
+  threshold: 20                 # slabă = până la acest procent (implicit 20)
+  exclude: [invertor, audi]     # cuvinte din nume / entity_id care se exclud
+  tap_action: { action: navigate, navigation_path: /dashboard-casa/baterii }   # implicit: more-info pe cea mai slabă
+```
+
+Apare doar când ceva e slab: numărul („Baterii slabe 3”) sau, dacă e una singură, numele și nivelul ei.
+
+
 Pe butoane, `text_map` traduce textul stării (când nu e dat `secondary`).
 
 ## ccu-nav-card — opțiuni suplimentare
@@ -318,6 +352,8 @@ items:
   - { back: true, icon: back, label: Înapoi }                                          # history.back
   - { icon: tablet, label: Tableta, path: /dashboard-casa/calm, visible_if: { entity: sensor.browser_user, state: Tableta } }   # se vede doar când starea se potrivește
   - { icon: camera, label: Cam, path: /dashboard-casa/camere, badge: [binary_sensor.cam1_person, binary_sensor.cam2_person] }  # insignă cu câte entități sunt „on”; butonul devine portocaliu
+
+  - { icon: bulb, label: Lumini, path: /light, badge: [sensor.becuri_aprinse], badge_style: light }   # insignă galbenă cu numărul de becuri aprinse (un senzor numeric adaugă valoarea lui)
 ```
 
 ## ccu-graph-card — opțiuni suplimentare
@@ -378,6 +414,26 @@ items:
 ```
 
 Atingerea titlului aprinde/stinge; apăsarea lungă nu e necesară (butonul rotund face același lucru). Valorile trimise rămân afișate „optimist” ~3 s, până revine starea din HA.
+
+## ccu-vehicle-card
+
+<img src="docs/img/vehicles.png" width="360" alt="vehicles">
+
+Termene pe mașină (RCA, ITP, rovinietă, revizie / ulei): zile rămase, bară care devine portocalie cu `alert_days` zile înainte și roșie după dată, iar datele se schimbă chiar din card.
+
+```yaml
+type: custom:ccu-vehicle-card
+alert_days: 3
+vehicles:
+  - name: Audi A3
+    plate: B 00 XYZ
+    documents:
+      - { label: RCA, entity: input_datetime.audi_rca }              # un helper „dată”: atingi rândul și alegi data nouă
+      - { label: Revizie, entity: sensor.audi_service_date }          # senzor cu dată: doar afișare
+      - { label: Ulei, odometer: sensor.audi_odometer, last_km: input_number.audi_ulei_km, interval_km: 10000 }   # butonul „Schimbat acum” pune kilometrajul curent
+```
+
+Chip pe cardul de chips-uri: `deadlines: { alert_days: 3, vehicles: [...], tap_action: {...} }`; apare doar cât timp ceva se apropie sau a expirat.
 
 ## ccu-remote-card
 

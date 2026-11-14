@@ -200,14 +200,19 @@ export function buildBatteryModel(config, hass) {
   const total = capE !== null && capE > 0 ? capE : (config.capacity_kwh || null);
   const now = soc !== null && total ? (soc / 100) * total : null;
   const loadW = toWatts(st(config.load));
-  let autonomyH = null;
-  if (soc !== null && total && loadW !== null && loadW >= THRESH_W) autonomyH = (Math.max(0, soc - config.reserve_pct) / 100 * total * 1000) / loadW;
   const gp = st(config.grid_present);
   const backup = !!gp && gp.state === 'off';
+  // banda utilizabilă = [prag, 100]%: cu rețea pragul e rezerva (reserve_pct), fără rețea (backup) pragul de oprire (shutdown_pct).
+  // Toate valorile se calculează exact din procente și capacitate; se rotunjește doar la afișare.
+  const floor = backup ? config.shutdown_pct : config.reserve_pct;
+  const bandTotal = total ? ((100 - floor) / 100) * total : null;                       // ex. 37,7 kWh × (100 − 20)% = 30,16 kWh
+  const usable = soc !== null && total ? (Math.max(0, soc - floor) / 100) * total : null; // ex. 37,7 kWh × (53 − 20)% = 12,441 kWh
+  let autonomyH = null;
+  if (usable !== null && loadW !== null && loadW >= THRESH_W) autonomyH = (usable * 1000) / loadW;
   const state = soc === null ? 'na' : backup ? 'backup' : soc <= config.reserve_pct ? 'low' : 'ok';
   const hh = (h) => (h === null ? '—' : h >= 100 ? '>99 h' : `~${formatNumber(Math.round(h * 10) / 10)} h`);
-  return { soc, total, now, autonomyH, state, backup, socText: soc === null ? '—' : `${Math.round(soc)}%`,
-    energyText: now !== null && total ? t('{a} kWh din {b} kWh', { a: formatNumber(now), b: formatNumber(total) }) : (total ? t('— din {b} kWh', { b: formatNumber(total) }) : ''),
+  return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, socText: soc === null ? '—' : `${Math.round(soc)}%`,
+    energyText: usable !== null && bandTotal !== null ? t('{a} kWh din {b} kWh', { a: formatNumber(Math.round(usable * 10) / 10), b: formatNumber(Math.round(bandTotal * 10) / 10) }) : (bandTotal !== null ? t('— din {b} kWh', { b: formatNumber(Math.round(bandTotal * 10) / 10) }) : ''),
     autonomyText: hh(autonomyH) };
 }
 
@@ -218,18 +223,91 @@ export function renderBattery(config, m, opts = {}) {
   const [c0, c1] = m.state === 'backup' ? ['#f4694b', '#a32a1f'] : m.state === 'low' ? ['#fbbf24', '#d97706'] : BAT_FILL[config.color];
   const pct = m.soc === null ? 0 : m.soc;
   // prima etichetă (oprire) se trage spre stânga, a doua (rezervă) spre dreapta: nu se mai suprapun nici pe telefon
-  const marks = [{ p: config.shutdown_pct, label: t('oprire invertor'), c: 'var(--ccu-c-red)', sh: '-48%' }, { p: config.reserve_pct, label: t('rezervă'), c: 'var(--ccu-c-yellow)', sh: '34%' }];
+  // pragul de oprire (10%) contează doar când rețeaua e căzută (backup): altfel se vede doar rezerva (20%)
+  const marks = m.backup
+    ? [{ p: config.shutdown_pct, label: t('oprire invertor'), c: 'var(--ccu-c-red)', sh: '-48%' }, { p: config.reserve_pct, label: t('rezervă'), c: 'var(--ccu-c-yellow)', sh: '34%' }]
+    : [{ p: config.reserve_pct, label: t('rezervă'), c: 'var(--ccu-c-yellow)', sh: '0%' }];
   const mk = marks.map((k) => `<span class="mk" style="left:${k.p}%"><i style="background:${k.c}"></i><span class="lb" style="--sh:${k.sh}"><b>${Math.round(k.p)}%</b><small>(${esc(k.label)})</small></span></span>`).join('');
   const head = m.state === 'backup'
     ? `<div class="ccu-bat-head backup"><span class="ccu-ico">${iconSvg('bolt')}</span><span>${t('Backup activ · Rețeaua este oprită')}</span></div>`
     : (config.show_title === false ? '' : `<div class="ccu-bat-head"><span class="ccu-ico">${iconSvg('battery')}</span><span>${esc(config.title)}</span></div>`);   // show_title: false = fără titlu „Baterie” + iconiță
   const body = `<div class="ccu-bat-body"><div class="ccu-bat-shell" data-state="${m.state}"><div class="fill" style="width:${pct}%;background:linear-gradient(180deg,${c0},${c1})"></div><span class="pct">${esc(m.socText)}</span></div>`
-    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span><span class="a">${t('Autonomie')} <b>${esc(m.autonomyText)}</b></span></div></div>`;
+    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span><span class="a"><i>${t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span></div></div>`;
   const slider = `<div class="ccu-bat-slider"><div class="tr"><div class="fl" style="width:${pct}%"></div></div>${mk}</div>`;
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
   return `<div class="ccu-card panel ccu-bat" data-state="${m.state}" data-id="0" data-entity="${esc(config.soc)}">${head}${body}${slider}${notes}</div>`;
 }
 
+
+// ============================================================ BATERII: DESCOPERIRE AUTOMATĂ ==
+const MOBILE_PLATFORMS = ['mobile_app', 'fully_kiosk', 'browser_mod'];
+const MOBILE_MODEL = /iphone|ipad|ipod|tablet|\btab\b|pixel|galaxy|sm-[a-z]\d/i;
+const strList = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(String).map((x) => x.trim()).filter(Boolean);
+
+/**
+ * `auto` (carduri baterii / chips): true sau { exclude, include, threshold, unavailable, mobile }.
+ *  - exclude: cuvinte căutate în entity_id și în nume (ex. „deye”, „audi”); include: entity_id forțate;
+ *  - threshold: „slabă” = până la acest procent (implicit 20); unavailable: true = păstrează și dispozitivele indisponibile;
+ *  - mobile (implicit true): lasă deoparte telefoanele, tabletele și browserele (aplicația HA, Fully Kiosk, Browser Mod).
+ */
+export function normalizeAutoBatteries(v) {
+  if (!v) return null;
+  const o = v === true ? {} : typeof v === 'object' ? v : null;
+  if (!o) return null;
+  const th = Number(o.threshold);
+  const names = o.names && typeof o.names === 'object' && !Array.isArray(o.names) ? Object.fromEntries(Object.entries(o.names).filter(([k, v]) => okId(k) && v).map(([k, v]) => [k, String(v)])) : {};
+  return { exclude: strList(o.exclude), include: strList(o.include).filter(okId), threshold: Number.isFinite(th) && th >= 0 && th <= 100 ? th : 20, unavailable: o.unavailable === true, mobile: o.mobile !== false, names };
+}
+
+/** Bateriile găsite în HA (senzori cu device_class „battery”; binary_sensor „on” = slabă), crescător după nivel. */
+export function discoverBatteries(hass, auto) {
+  const a = normalizeAutoBatteries(auto);
+  const S = (hass && hass.states) || {};
+  if (!a) return [];
+  const ex = a.exclude.map((x) => x.toLowerCase());
+  const out = [];
+  for (const [id, s] of Object.entries(S)) {
+    if (!/^(sensor|binary_sensor)\./.test(id) || !s) continue;
+    const at = s.attributes || {}, forced = a.include.includes(id);
+    // senzori cu device_class „battery” sau, dacă producătorul nu l-a pus, senzori în % al căror id se termină în „battery” / „battery_level” (ex. un senzor Tuya de temperatură / umiditate; nu „…_soh” sau „…_battery_health”)
+    const looksBattery = at.device_class === 'battery' || (!at.device_class && at.unit_of_measurement === '%' && id.startsWith('sensor.') && /(^|_)batt(ery)?(_level)?$/i.test(id));
+    if (!looksBattery && !forced) continue;
+    const friendly = String(at.friendly_name || '');
+    if (!forced && ex.some((x) => id.toLowerCase().includes(x) || friendly.toLowerCase().includes(x))) continue;
+    if (a.mobile && !forced) {
+      const ent = hass.entities && hass.entities[id], dev = ent && ent.device_id && hass.devices && hass.devices[ent.device_id];
+      if ((ent && MOBILE_PLATFORMS.includes(ent.platform)) || (dev && MOBILE_MODEL.test(String(dev.model || ''))) || /browser_mod/.test(id)) continue;
+    }
+    const gone = s.state === 'unavailable' || s.state === 'unknown' || s.state === '';
+    if (gone && !a.unavailable) continue;
+    const name = a.names[id] || friendly.replace(/\s*battery(\s*level)?\s*$/i, '').trim() || friendly || id.split('.')[1].replace(/_/g, ' ');
+    if (id.startsWith('binary_sensor.')) { out.push({ entity: id, name, pct: null, low: s.state === 'on', binary: true }); continue; }
+    if (at.unit_of_measurement && at.unit_of_measurement !== '%') continue;
+    const n = Number(s.state);
+    const pct = !gone && Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null;
+    if (pct === null && !gone) continue;
+    out.push({ entity: id, name, pct, low: pct !== null && pct <= a.threshold, binary: false });
+  }
+  const key = (r) => (r.binary ? (r.low ? -1 : 101) : r.pct === null ? 102 : r.pct);
+  return out.sort((x, y) => key(x) - key(y) || x.name.localeCompare(y.name));
+}
+
+/** Chip-ul „baterii slabe”: true sau { …auto, label, tap_action }. */
+export function normalizeLowBatteries(v) {
+  if (!v) return null;
+  const auto = normalizeAutoBatteries(v);
+  if (!auto) return null;
+  const o = v === true ? {} : v;
+  return { ...auto, label: o.label ? String(o.label) : '', tap_action: o.tap_action, hold_action: o.hold_action };
+}
+
+/** Modelul chip-ului: câte baterii sunt slabe și care (cea mai slabă prima). */
+export function lowBatteryModel(config, hass) {
+  if (!config) return null;
+  const rows = discoverBatteries(hass, config);
+  const low = rows.filter((r) => r.low);
+  return { rows, low, count: low.length };
+}
 
 // ============================================================ BATERII DISPOZITIVE ==
 /** Lista nivelurilor de baterie ale dispozitivelor (telefoane, tablete, mașină…), sortată crescător. */
@@ -243,7 +321,7 @@ export function normalizeBatteriesConfig(cfg) {
   });
   if (items.length > 12) { items.length = 12; warnings.push(t('Baterii: maximum 12; restul sunt ignorate.')); }
   const n = (k, d) => (Number.isFinite(Number(src[k])) && src[k] >= 0 && src[k] <= 100 ? Number(src[k]) : d);
-  return { items, title: src.title ? String(src.title) : 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', warnings };
+  return { items, title: src.title ? String(src.title) : 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', auto: normalizeAutoBatteries(src.auto), only_low: src.only_low === true, warnings };
 }
 
 export function buildBatteriesModel(config, hass) {
@@ -256,8 +334,19 @@ export function buildBatteriesModel(config, hass) {
     const lvl = pct === null ? 'na' : pct < config.low_pct ? 'low' : pct < config.warn_pct ? 'warn' : 'ok';
     return { idx: i, entity: e.entity, name, pct, text: pct === null ? '—' : `${Math.round(pct)}%`, lvl };
   });
-  if (config.sort !== 'none') rows.sort((a, b) => (a.pct === null ? 101 : a.pct) - (b.pct === null ? 101 : b.pct));
-  return rows;
+  // `auto`: bateriile găsite singure în HA, fără cele deja listate
+  if (config.auto) {
+    const have = new Set(rows.map((r) => r.entity));
+    discoverBatteries(hass, config.auto).filter((d) => !have.has(d.entity)).forEach((d) => {
+      let lvl = d.binary ? (d.low ? 'low' : 'ok') : d.pct === null ? 'na' : d.pct < config.low_pct ? 'low' : d.pct < config.warn_pct ? 'warn' : 'ok';
+      if (d.low && lvl === 'ok') lvl = 'warn';   // ce numără chip-ul ca „slabă” (≤ prag) nu apare niciodată ca „în regulă” în listă
+      rows.push({ idx: rows.length, entity: d.entity, name: d.name, pct: d.binary ? (d.low ? 0 : 100) : d.pct, text: d.binary ? (d.low ? t('slabă') : 'OK') : d.pct === null ? '—' : `${Math.round(d.pct)}%`, lvl });
+    });
+  }
+  let out = rows;
+  if (config.only_low) out = rows.filter((r) => r.lvl === 'low' || r.lvl === 'warn');   // doar bateriile slabe (sub pragul de avertisment)
+  if (config.sort !== 'none') out.sort((a, b) => (a.pct === null ? 101 : a.pct) - (b.pct === null ? 101 : b.pct));
+  return out;
 }
 
 export function renderBatteries(config, rows, opts = {}) {
