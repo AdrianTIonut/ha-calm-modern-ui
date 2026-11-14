@@ -320,6 +320,13 @@ reserve_pct: 20
 shutdown_pct: 10
 ```
 
+How the numbers are computed (exactly, from percentages and capacity; rounding only when shown):
+
+- **With grid**: the usable band is `reserve_pct` → 100 %. The card shows the energy in that band, “X kWh of Y kWh”, with Y = (100 − reserve)% × capacity, and the runtime until the reserve at the current load.
+- **Without grid (backup active)**: the band becomes `shutdown_pct` → 100 %, the same “X kWh of Y kWh” and the runtime until the shutdown level. Only then the card shows “Backup active” and the shutdown marker.
+- Change `reserve_pct` (for example 20 → 30) and everything follows. The big percentage is always the real state of charge.
+
+
 ```yaml
 type: custom:ccu-batteries-card
 title: Device batteries

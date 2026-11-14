@@ -232,6 +232,13 @@ shutdown_pct: 10
 color: yellow                                            # yellow | green | blue | orange
 ```
 
+Cum se calculează (exact, din procente și capacitate; se rotunjește doar la afișare):
+
+- **Cu rețea**: banda utilizabilă e `reserve_pct` → 100 %. Cardul arată energia din bandă, „X kWh din Y kWh”, cu Y = (100 − rezervă)% × capacitate, și autonomia până la rezervă, la consumul curent.
+- **Fără rețea (backup activ)**: banda devine `shutdown_pct` → 100 %, același „X kWh din Y kWh” și autonomia până la pragul de oprire. Doar atunci apar „Backup activ” și marcajul de oprire.
+- Schimbi `reserve_pct` (de exemplu 20 → 30) și totul se recalculează. Procentul mare e mereu starea reală de încărcare.
+
+
 ## ccu-batteries-card
 
 ```yaml
