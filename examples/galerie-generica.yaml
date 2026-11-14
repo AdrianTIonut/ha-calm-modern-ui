@@ -1,0 +1,133 @@
+# Galerie de exemple — fiecare card ccu cu entități-substituent. Înlocuiește entitățile cu ale tale.
+# Se lipește în editorul brut al unui view de tip "sections" (⋮ → Editor brut). Resursa /local/ccu/ccu.js trebuie adăugată înainte.
+title: Galerie ccu
+path: galerie
+type: sections
+max_columns: 2
+sections:
+- type: grid
+  cards:
+  # --- titlu și meniu fix jos (înapoi / acasă / insignă cu persoane detectate) ---
+  - type: custom:ccu-title-card
+    title: Casa mea
+    subtitle: exemplu
+    icon: home
+  - type: custom:ccu-nav-card
+    sticky: true
+    compact: true            # capsulă îngustă (fără: bară pe toată lățimea); labels: false = doar iconițe
+    items:
+    - {back: true, icon: back, label: Înapoi}
+    - {icon: home, label: Acasă, path: /lovelace/0}
+    - {icon: camera, label: Camere, path: /lovelace/camere, badge: [binary_sensor.camera_1_person, binary_sensor.camera_2_person]}
+
+  # --- chips care apar doar când sunt active ---
+  - type: custom:ccu-chips-card
+    entities:
+    - {entity: climate.ac_living, name: A/C living, icon: mdi:air-conditioner, hide_off: true}      # rece = albastru, încălzire = roșu; ventilatorul se învârte
+    - {entity: switch.purificator, name: Purificator, icon: mdi:fan, hide_off: true}
+    - {entity: sensor.temperatura_simtita, name: Se simte, icon: mdi:thermometer-alert, show_state: true, alert_above: 32, hide_off: true}
+    - entity: sensor.masina_spalat_stare
+      name: Mașină de spălat
+      icon: mdi:washing-machine
+      hide_off: true
+      show_state: true
+      on_states: [running, spinning]
+      text_map: {running: Spală, spinning: Centrifugă}
+
+  # --- butoane / plăcuțe ---
+  - type: custom:ccu-buttons-card
+    title: Lumini și prize
+    columns: 2
+    entities:
+    - {entity: light.living, name: Living, icon: mdi:lightbulb}          # becurile primesc stilul „lampă”
+    - {entity: switch.priza_terasa, name: Terasă, icon: mdi:power-socket}
+    - {entity: sensor.consum_casa, name: Consum, icon: mdi:flash, spark: {hours: 6}, size: xl}
+    - entity: binary_sensor.camera_1_person
+      name: Camere
+      icon: mdi:cctv
+      group: [binary_sensor.camera_1_person, binary_sensor.camera_2_person]
+      group_text: Persoane pe {n} camere
+      group_idle: Fără activitate
+
+  # --- controale: termostat / A/C (cadran), bec RGB, ventilator, media, număr, selector ---
+  - type: custom:ccu-controls-card
+    title: Control
+    columns: 1
+    items:
+    - {entity: climate.ac_living, name: A/C living}           # style: simple = varianta compactă
+    - {entity: light.banda_rgb, name: Bandă RGB}              # orb, luminozitate, temperatură de culoare, culori rapide
+    - {entity: fan.recuperator, name: Recuperator}
+    - {entity: media_player.tv_living, name: TV}
+    - {entity: number.timer_lampa, name: Temporizator}
+    - {entity: select.program_masina, name: Program}
+
+  # --- telecomandă TV (remote.send_command) ---
+  - type: custom:ccu-remote-card
+    entity: remote.tv_living
+    # commands: {power: KEY_POWER, volu: KEY_VOLUP}   # pentru alte mărci
+    # rows: [[power, mute], [vold, volu, chd, chu]]
+    # extra: [{label: Netflix, icon: play, command: KEY_11}]
+    # dpad: false
+
+- type: grid
+  cards:
+  # --- header ---
+  - type: custom:ccu-header-card
+    header:
+      icon: home
+      values:
+      - {entity: sensor.consum_casa, icon: bolt, color: accent, label: Consum}
+      - {entity: sensor.productie_solara, icon: sun, color: 'on', label: Solar}
+      - {entity: sensor.baterie_procent, icon: battery, color: ok, label: Baterie}
+      right: {entity: sensor.temperatura_exterioara, label: afară}
+
+  # --- flux de energie (solar, rețea, baterie → consumatori) ---
+  - type: custom:ccu-flow-card
+    solar: sensor.productie_solara
+    grid: {entity: sensor.putere_retea, invert: true}                 # invert: true dacă senzorul tău e „+” la export
+    battery: {entity: sensor.putere_baterie, soc: sensor.baterie_procent}
+    consumers:
+    - {entity: sensor.consum_casa, subtract: [sensor.consum_piscina], name: Casă, icon: mdi:home}
+    - {entities: [sensor.hala_faza_a, sensor.hala_faza_b, sensor.hala_faza_c], name: Hală, icon: mdi:warehouse}      # sumă de entități
+    - {entity: sensor.consum_piscina, name: Piscină, icon: mdi:pool}
+    stats:
+    - {entity: sensor.import_zilnic, label: Import azi, icon: mdi:transmission-tower}
+    - {entity: sensor.export_zilnic, label: Export azi, icon: mdi:flash}
+    - {entity: sensor.import_lunar, label: Import lună, icon: mdi:home}
+
+  # --- baterie ---
+  - type: custom:ccu-battery-card
+    soc: sensor.baterie_procent
+    capacity_kwh: 10
+    load: sensor.consum_casa
+    grid_present: binary_sensor.retea_prezenta
+    reserve_pct: 20
+    shutdown_pct: 10
+    # show_title: false
+
+  # --- grafic ---
+  - type: custom:ccu-graph-card
+    title: Energie (ultimele 6 h)
+    range: 6h
+    tabs: [6h, 24h]
+    # height: 90 + compact: true = card mai scund
+    series:
+    - {entity: sensor.consum_casa, name: Consum, color: accent}
+    - {entity: sensor.productie_solara, name: Solar, color: yellow, kind: line}
+
+  # --- vreme: valori din stația ta + prognoză + scenă animată ---
+  - type: custom:ccu-weather-card
+    weather: weather.acasa
+    sensors: {temperature: sensor.exterior_temperatura, humidity: sensor.exterior_umiditate, wind_speed: sensor.exterior_vant}
+    tiles: [humidity, wind]
+    days: 5
+
+  # --- persoane și baterii dispozitive ---
+  - type: custom:ccu-people-card
+    layout: family
+    people: [person.ana, person.mihai]
+  - type: custom:ccu-batteries-card
+    title: Baterii dispozitive
+    entities:
+    - {entity: sensor.telefon_ana_baterie, name: Telefon Ana}
+    - sensor.tableta_baterie

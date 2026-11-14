@@ -1,0 +1,6 @@
+node_modules/
+*.log
+.DS_Store
+.publish-marker
+docs/demo/.chrome-profile-*
+docs/demo/.palette.html

@@ -1,0 +1,18 @@
+name: Bug
+description: A card does not look or behave as it should
+labels: [bug]
+body:
+  - type: input
+    attributes: { label: ccu version, description: "From the /local/ccu/ccu.js resource or from HACS" }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Home Assistant version }
+    validations: { required: true }
+  - type: dropdown
+    attributes:
+      label: Card
+      options: [ccu-buttons-card, ccu-chips-card, ccu-controls-card, ccu-radio-card, ccu-remote-card, ccu-header-card, ccu-nav-card, ccu-graph-card, ccu-flow-card, ccu-battery-card, ccu-batteries-card, ccu-people-card, ccu-weather-card, ccu-title-card, other]
+  - type: textarea
+    attributes: { label: Card configuration (YAML, without personal data), render: yaml }
+  - type: textarea
+    attributes: { label: What you expected and what happens, description: "If you can, add a screenshot and the browser console messages" }

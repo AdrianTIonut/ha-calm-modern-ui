@@ -1,0 +1,100 @@
+// tests/energy.test.mjs — energy.mjs (flux + baterie). Rulare: node tests/energy.test.mjs
+import { setLang } from '../src/i18n.mjs'; setLang('ro');   // testele verifică textele în română (limba sursă)
+import { toWatts, toKwh, fmtPower, normalizeFlowConfig, buildFlowModel, layoutFlow, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries } from '../src/energy.mjs';
+
+let pass = 0, fail = 0;
+const t = (n, f) => { try { const r = f(); if (r === true) { pass++; console.log('✔ ' + n); } else { fail++; console.log('✖ ' + n + ': ' + r); } } catch (e) { fail++; console.log('✖ ' + n + ': ' + e.message); } };
+const st = (state, attributes = {}) => ({ state, attributes });
+const nb = (s) => String(s).replace(/ /g, ' ');
+
+t('toWatts: W, kW, MW, fără unitate = W', () => toWatts(st('450', { unit_of_measurement: 'W' })) === 450 && toWatts(st('1.5', { unit_of_measurement: 'kW' })) === 1500 && toWatts(st('2', { unit_of_measurement: 'MW' })) === 2e6 && toWatts(st('7')) === 7 || 'unități');
+t('toWatts: indisponibil/gol/NaN/lipsă → null', () => toWatts(st('unavailable')) === null && toWatts(st('')) === null && toWatts(st('abc')) === null && toWatts(null) === null && toWatts(st(null)) === null || 'null');
+t('toKwh: Wh, kWh, MWh', () => toKwh(st('500', { unit_of_measurement: 'Wh' })) === 0.5 && toKwh(st('3', { unit_of_measurement: 'kWh' })) === 3 && toKwh(st('2', { unit_of_measurement: 'MWh' })) === 2000 || 'unități');
+t('fmtPower: W/kW, semn, null', () => nb(fmtPower(450)) === '0,45 kW' && nb(fmtPower(45)) === '45 W' && nb(fmtPower(1820)) === '1,82 kW' && nb(fmtPower(-1100, true)) === '−1,10 kW' && nb(fmtPower(3200, true)) === '+3,20 kW' && fmtPower(null) === '—' && fmtPower(NaN) === '—' || nb(fmtPower(-1100, true)));
+
+const FC = { solar: 'sensor.solar', grid: { entity: 'sensor.grid' }, battery: { entity: 'sensor.bat', soc: 'sensor.soc' }, consumers: [{ entity: 'sensor.casa', name: 'Casă', icon: 'home' }, { entity: 'sensor.ev', name: 'EV' }, { entity: 'sensor.ac', name: 'A/C' }], stats: [{ entity: 'sensor.imp', label: 'Import azi' }] };
+const H = { states: { 'sensor.solar': st('3200', { unit_of_measurement: 'W' }), 'sensor.grid': st('-1100', { unit_of_measurement: 'W' }), 'sensor.bat': st('-0.6', { unit_of_measurement: 'kW' }), 'sensor.soc': st('62'), 'sensor.casa': st('900', { unit_of_measurement: 'W' }), 'sensor.ev': st('2.9', { unit_of_measurement: 'kW' }), 'sensor.ac': st('450', { unit_of_measurement: 'W' }), 'sensor.imp': st('9.73', { unit_of_measurement: 'kWh' }) } };
+const nc = (o = FC) => normalizeFlowConfig(o);
+
+t('config flux: forma scurtă și lungă, liste plate', () => { const c = nc(); return (c.items.length === 7 && c.items[0].kind === 'solar' && c.items[1].kind === 'grid' && c.items[2].soc === 'sensor.soc' && c.warnings.length === 0) || JSON.stringify(c.items.map((i) => i.kind)); });
+t('config flux: entity invalid eliminat + avertisment', () => { const c = nc({ solar: 'fara_punct', consumers: [{ entity: 'xyz' }, { entity: 'sensor.a' }] }); return (c.items.length === 1 && c.warnings.length === 2) || JSON.stringify(c); });
+t('config flux: max 6 consumatori', () => { const c = nc({ consumers: Array.from({ length: 9 }, (_, i) => 'sensor.c' + i) }); return (c.items.length === 6 && c.warnings.length === 1) || c.items.length; });
+t('config flux: gol/nul nu aruncă', () => normalizeFlowConfig(undefined).items.length === 0 && normalizeFlowConfig({ consumers: 5 }).items.length === 0 && normalizeFlowConfig(null).items.length === 0 || 'gol');
+
+const model = (hass = H) => buildFlowModel(nc().items, hass);
+t('model: total = suma consumatorilor', () => model().total === 900 + 2900 + 450 || model().total);
+t('model: procente din total, sortare descrescătoare', () => { const m = model(); return (m.right[0].name === 'EV' && m.right[0].pct === Math.round(2900 / 4250 * 100) && m.right.map((r) => r.pct).reduce((a, b) => a + b, 0) >= 99 && m.right.map((r) => r.pct).reduce((a, b) => a + b, 0) <= 101) || JSON.stringify(m.right.map((r) => [r.name, r.pct])); });
+t('model: direcții (solar in, rețea out la export, baterie out la încărcare)', () => { const m = model(); return (m.left[0].dir === 'in' && m.left[1].dir === 'out' && m.left[2].dir === 'out') || JSON.stringify(m.left.map((l) => l.dir)); });
+t('model: semne afișate invers față de flux (rețea/baterie: + = export/încărcare, − = import/descărcare) și SOC', () => { const m = model(); return (nb(m.left[0].text) === '+3,20 kW' && nb(m.left[1].text) === '+1,10 kW' && nb(m.left[2].text) === '+0,60 kW' && m.left[2].suffix === ' (62%)') || JSON.stringify(m.left.map((l) => nb(l.text))); });
+t('model: invert întoarce semnul', () => { const items = nc({ grid: { entity: 'sensor.grid', invert: true } }).items; return buildFlowModel(items, H).left[0].w === 1100 || 'invert'; });
+t('model: sub 50 W = repaus', () => { const h = { states: { ...H.states, 'sensor.grid': st('20', { unit_of_measurement: 'W' }) } }; return buildFlowModel(nc().items, h).left[1].dir === 'idle' || 'repaus'; });
+t('model: senzor indisponibil → na și „—”, fără NaN', () => { const h = { states: { ...H.states, 'sensor.grid': st('unavailable') } }; const m = buildFlowModel(nc().items, h); return (m.left[1].dir === 'na' && m.left[1].text === '—' && !/NaN/.test(JSON.stringify(m))) || JSON.stringify(m.left[1]); });
+t('model: hass nul nu aruncă', () => { const m = buildFlowModel(nc().items, null); return (m.left.every((l) => l.text === '—') && m.total === 0 && m.idle === true) || 'hass nul'; });
+t('model: total < 50 W → „fără flux”', () => { const h = { states: { ...H.states, 'sensor.casa': st('10', { unit_of_measurement: 'W' }), 'sensor.ev': st('0', { unit_of_measurement: 'W' }), 'sensor.ac': st('0', { unit_of_measurement: 'W' }) } }; return buildFlowModel(nc().items, h).totalText === 'fără flux' || 'text'; });
+t('model: consumator sub 10 W nu se mai afișează (hide_idle)', () => { const h = { states: { ...H.states, 'sensor.ac': st('4', { unit_of_measurement: 'W' }) } }; return !buildFlowModel(nc().items, h).right.some((r) => r.name === 'A/C') || 'încă e în listă'; });
+t('model: hide_idle: false îl păstrează, dim', () => { const c = { solar: 'sensor.solar', consumers: [{ entity: 'sensor.ac', name: 'A/C', hide_idle: false }] }; const h = { states: { ...H.states, 'sensor.ac': st('4', { unit_of_measurement: 'W' }) } }; const r = buildFlowModel(normalizeFlowConfig(c).items, h).right; return (r.length === 1 && r[0].dim === true) || 'păstrat'; });
+t('model: consumator indisponibil se ascunde', () => { const c = { consumers: [{ entity: 'sensor.zz', name: 'Z' }] }; return buildFlowModel(normalizeFlowConfig(c).items, { states: {} }).right.length === 0 || 'încă vizibil'; });
+const sh = { states: { 'sensor.casa': st('1300', { unit_of_measurement: 'W' }), 'sensor.pisc': st('300', { unit_of_measurement: 'W' }), 'sensor.fa': st('0.05', { unit_of_measurement: 'kW' }), 'sensor.fb': st('0', { unit_of_measurement: 'kW' }), 'sensor.fc': st('2.125', { unit_of_measurement: 'kW' }), 'sensor.ev': st('0', { unit_of_measurement: 'W' }) } };
+const shCfg = { consumers: [{ entity: 'sensor.casa', subtract: ['sensor.pisc'], name: 'Casă' }, { entities: ['sensor.fa', 'sensor.fb', 'sensor.fc'], subtract: ['sensor.ev'], name: 'Hală' }, { entity: 'sensor.pisc', name: 'Piscină' }, { entity: 'sensor.ev', name: 'EV' }] };
+t('consumatori: sumă de entități (3 faze, kW) − scădere (EV); casă − piscină', () => { const m = buildFlowModel(nc(shCfg).items, sh); const g = (n) => m.right.find((r) => r.name === n); return (Math.round(g('Hală').w) === 2175 && g('Casă').w === 1000 && g('Piscină').w === 300) || JSON.stringify(m.right.map((r) => [r.name, r.w])); });
+t('consumatori: total = suma celor afișate; scăderea nu coboară sub 0', () => { const m = buildFlowModel(nc(shCfg).items, sh); const h2 = { states: { ...sh.states, 'sensor.ev': st('3000', { unit_of_measurement: 'W' }) } }; const m2 = buildFlowModel(nc(shCfg).items, h2); return (Math.round(m.total) === 3475 && m2.right.find((r) => r.name === 'Hală' && r.w === 0) === undefined && m2.right.some((r) => r.name === 'EV')) || [m.total, JSON.stringify(m2.right.map((r) => [r.name, r.w]))]; });
+t('consumatori: entitățile din sumă / scădere se urmăresc (config.items)', () => { const it = nc(shCfg).items.find((i) => i.name === 'Hală'); return (it.sum.length === 3 && it.subtract[0] === 'sensor.ev') || JSON.stringify(it); });
+t('geometrie: coloanele de text sunt înguste (panglici lângă valori), cercul mai mare', () => { const g = layoutFlow(model(), 333); return (g.colL <= 333 * 0.38 && g.colL >= 333 * 0.2 && g.r >= 40) || JSON.stringify([g.colL, g.colR, g.r]); });
+
+t('model: fără consumatori → total = surse', () => { const m = buildFlowModel(nc({ solar: 'sensor.solar', grid: 'sensor.grid' }).items, H); return m.total === 3200 || m.total; });
+t('model: statistici cu unitate', () => nb(model().stats[0].text) === '9,73 kWh' || model().stats[0].text);
+
+t('geometrie: coordonate finite și în limite (340/392/500/800)', () => { for (const W of [340, 392, 500, 800]) { const g = layoutFlow(model(), W); const nums = [...g.left, ...g.right].flatMap((r) => (r.d.match(/-?\d+\.?\d*/g) || []).map(Number)); if (!nums.every((n) => Number.isFinite(n) && n >= -0.1 && n <= g.W + 0.1)) return 'în afara la ' + W; if (g.cx !== g.W / 2) return 'hub'; } return true; });
+t('geometrie: înălțime crește cu numărul de consumatori', () => { const a = layoutFlow(buildFlowModel(nc({ solar: 'sensor.solar', consumers: ['sensor.casa'] }).items, H), 392).H; const b = layoutFlow(model(), 392).H; return b >= a || [a, b]; });
+t('geometrie: grosimea în [4, 23] și proporțională', () => { const g = layoutFlow(model(), 392); const ts = [...g.left, ...g.right].map((r) => r.t); return (ts.every((x) => x >= 4 && x <= 23) && g.right[0].t >= g.right[2].t) || ts; });
+t('geometrie: toate zero → fără NaN', () => { const h = { states: {} }; const m = buildFlowModel(nc().items, h); return !/NaN/.test(JSON.stringify(layoutFlow(m, 392))) || 'NaN'; });
+
+const cfgF = () => { const n = nc(); return { entities: n.items, title: 'Flux energie' }; };
+t('render flux: structură și data-id-uri', () => { const h = renderFlow(cfgF(), model(), 392); return (h.includes('ccu-flow') && h.includes('ccu-hub') && (h.match(/class="ccu-fi left"/g) || []).length === 3 && (h.match(/class="ccu-fi right/g) || []).length === 3 && h.includes('data-id="0"') && h.includes('class="ccu-flow-stats"')) || h.slice(0, 300); });
+t('render flux: Total în nod și în titlu', () => { const h = nb(renderFlow(cfgF(), model(), 392)); return (h.includes('<b>4,25 kW</b>') && h.includes('Total 4,25 kW')) || h.slice(0, 400); });
+t('render flux: fără NaN/undefined', () => !/NaN|undefined/.test(renderFlow(cfgF(), model(), 392)) || 'valori invalide');
+t('render flux: nume periculos scăpat', () => { const n = nc({ consumers: [{ entity: 'sensor.casa', name: '<img src=x onerror=1>' }] }); const h = renderFlow({ entities: n.items }, buildFlowModel(n.items, H), 392); return (!h.includes('<img') && h.includes('&lt;img')) || 'escape'; });
+t('render flux: senzor lipsă → fără panglică, dar cu rând', () => { const h = { states: { ...H.states, 'sensor.grid': st('unavailable') } }; const html = renderFlow(cfgF(), buildFlowModel(nc().items, h), 392); return ((html.match(/class="rb"/g) || []).length === 5 && html.includes('—')) || (html.match(/class="rb"/g) || []).length; });
+t('render flux: sursa fără schimb de energie nu desenează panglică (solar noaptea, rețea / baterie la ~0)', () => { const h = { states: { ...H.states, 'sensor.solar': st('0', { unit_of_measurement: 'W' }), 'sensor.grid': st('15', { unit_of_measurement: 'W' }), 'sensor.bat': st('0', { unit_of_measurement: 'W' }) } }; const html = renderFlow(cfgF(), buildFlowModel(nc().items, h), 392); const left = html.split('class="ccu-flow-body"')[1]; const svg = html.slice(html.indexOf('<svg'), html.indexOf('</svg>')); const ribL = (svg.match(/url\(#fl\d\)/g) || []).length; return (ribL === 0 && html.includes('class="ccu-fi left"')) || ribL; });
+t('render flux: sursa care dă sau ia energie are panglică', () => { const html = renderFlow(cfgF(), model(), 392); return (html.match(/url\(#fl\d\)/g) || []).length === 3 || 'panglici'; });
+t('render flux: direcția animației (in/out)', () => { const html = renderFlow(cfgF(), model(), 392); return (html.includes('data-dir="in"') && html.includes('data-dir="out"')) || 'dir'; });
+
+// ---- baterie ----
+const nbc = (o) => normalizeBatteryConfig({ soc: 'sensor.soc', capacity_kwh: 38.6, load: 'sensor.load', ...o });
+const BH = (o = {}) => ({ states: { 'sensor.soc': st('62'), 'sensor.load': st('1000', { unit_of_measurement: 'W' }), 'binary_sensor.grid': st('on'), ...o } });
+t('config baterie: implicite', () => { const c = nbc().config; return (c.reserve_pct === 20 && c.shutdown_pct === 10 && c.title === 'Baterie' && c.color === 'yellow') || JSON.stringify(c); });
+t('config baterie: soc lipsă → avertisment', () => normalizeBatteryConfig({}).warnings.length >= 1);
+t('config baterie: entitate invalidă ignorată', () => { const r = nbc({ load: 'fara_punct' }); return (r.config.load === '' && r.warnings.length === 1) || JSON.stringify(r); });
+t('config baterie: praguri inversate se corectează', () => { const r = nbc({ shutdown_pct: 30, reserve_pct: 15 }); return (r.config.shutdown_pct === 15 && r.config.reserve_pct === 30 && r.warnings.length === 1) || JSON.stringify(r.config); });
+t('config baterie: valori în afara limitelor → implicit', () => { const c = nbc({ reserve_pct: 500, capacity_kwh: -3 }).config; return (c.reserve_pct === 20 && c.capacity_kwh === 0) || JSON.stringify(c); });
+t('model baterie: SOC, energie, autonomie până la rezervă', () => { const m = buildBatteryModel(nbc().config, BH()); return (m.soc === 62 && nb(m.energyText) === '23,9 kWh din 38,6 kWh' && Math.abs(m.autonomyH - ((62 - 20) / 100 * 38.6 * 1000) / 1000) < 1e-6 && m.state === 'ok') || JSON.stringify(m); });
+t('model baterie: autonomie „~16,2 h”', () => nb(buildBatteryModel(nbc().config, BH()).autonomyText) === '~16,2 h' || buildBatteryModel(nbc().config, BH()).autonomyText);
+t('model baterie: consum mic → autonomie „—”', () => buildBatteryModel(nbc().config, BH({ 'sensor.load': st('10', { unit_of_measurement: 'W' }) })).autonomyText === '—');
+t('model baterie: SOC sub rezervă → low și autonomie 0', () => { const m = buildBatteryModel(nbc().config, BH({ 'sensor.soc': st('15') })); return (m.state === 'low' && m.autonomyH === 0) || JSON.stringify(m); });
+t('model baterie: rețea oprită → backup', () => buildBatteryModel(nbc({ grid_present: 'binary_sensor.grid' }).config, BH({ 'binary_sensor.grid': st('off') })).state === 'backup');
+t('model baterie: rețea indisponibilă NU declanșează backup', () => buildBatteryModel(nbc({ grid_present: 'binary_sensor.grid' }).config, BH({ 'binary_sensor.grid': st('unavailable') })).state === 'ok');
+t('model baterie: SOC indisponibil → na, „—”', () => { const m = buildBatteryModel(nbc().config, BH({ 'sensor.soc': st('unavailable') })); return (m.state === 'na' && m.socText === '—' && !/NaN/.test(JSON.stringify(m))) || JSON.stringify(m); });
+t('model baterie: capacitate din entitate (Wh)', () => { const m = buildBatteryModel(nbc({ capacity_entity: 'sensor.cap', capacity_kwh: undefined }).config, BH({ 'sensor.cap': st('40000', { unit_of_measurement: 'Wh' }) })); return m.total === 40 || m.total; });
+t('model baterie: SOC peste 100 / sub 0 limitat', () => buildBatteryModel(nbc().config, BH({ 'sensor.soc': st('150') })).soc === 100 && buildBatteryModel(nbc().config, BH({ 'sensor.soc': st('-5') })).soc === 0 || 'limite');
+t('model baterie: hass nul nu aruncă', () => buildBatteryModel(nbc().config, null).state === 'na');
+t('render baterie: procent, marcaje, informații', () => { const c = nbc().config; const h = nb(renderBattery(c, buildBatteryModel(c, BH()))); return (h.includes('62%') && h.includes('(oprire invertor)') && h.includes('(rezervă)') && h.includes('left:10%') && h.includes('left:20%') && h.includes('23,9 kWh din 38,6 kWh') && h.includes('Autonomie <b>~16,2 h</b>')) || h.slice(0, 300); });
+t('render baterie: backup → titlu roșu și text', () => { const c = nbc({ grid_present: 'binary_sensor.grid' }).config; const h = renderBattery(c, buildBatteryModel(c, BH({ 'binary_sensor.grid': st('off') }))); return (h.includes('Backup activ') && h.includes('data-state="backup"') && h.includes('#f4694b')) || h.slice(0, 200); });
+t('render baterie: lățimea umplerii = SOC', () => { const c = nbc().config; return renderBattery(c, buildBatteryModel(c, BH())).includes('width:62%') || 'width'; });
+t('render baterie: titlu escapat, fără NaN', () => { const c = nbc({ title: '<b>x</b>' }).config; const h = renderBattery(c, buildBatteryModel(c, BH())); return (h.includes('&lt;b&gt;') && !/NaN|undefined/.test(h)) || 'escape'; });
+t('render baterie: SOC indisponibil → bară goală, fără excepție', () => { const c = nbc().config; const h = renderBattery(c, buildBatteryModel(c, BH({ 'sensor.soc': st('unavailable') }))); return (h.includes('width:0%') && h.includes('—')) || h.slice(0, 200); });
+
+// ---- baterii dispozitive ----
+const BT = { states: { 'sensor.deye': st('19', { friendly_name: 'Invertor Deye Battery' }), 'sensor.audi': st('62', { friendly_name: 'Audi battery level' }), 'sensor.ipad': st('8', { friendly_name: 'iPad battery level' }), 'sensor.ion': st('unavailable') } };
+const bcfg = (o) => { const n = normalizeBatteriesConfig({ entities: ['sensor.deye', { entity: 'sensor.audi', name: 'Audi A3 TFSIe' }, 'sensor.ipad', 'sensor.ion'], ...o }); return { entities: n.items, title: n.title, warn_pct: n.warn_pct, low_pct: n.low_pct, sort: n.sort }; };
+t('baterii: config — valide, invalide eliminate, max 12', () => { const n = normalizeBatteriesConfig({ entities: ['sensor.a', 'fara_punct', 5, ...Array.from({ length: 14 }, (_, i) => 'sensor.x' + i)] }); return (n.items.length === 12 && n.warnings.length === 3) || JSON.stringify(n.warnings); });
+t('baterii: praguri implicite 20/10, valori ciudate → implicit', () => { const n = normalizeBatteriesConfig({ entities: [], warn_pct: 500, low_pct: 'x' }); return (n.warn_pct === 20 && n.low_pct === 10) || JSON.stringify(n); });
+t('baterii: sortate crescător, indisponibilul la sfârșit', () => { const r = buildBatteriesModel(bcfg(), BT); return r.map((x) => x.pct).join() === '8,19,62,' || r.map((x) => x.pct).join(); });
+t('baterii: nivelurile (low < 10, warn < 20, ok)', () => { const r = buildBatteriesModel(bcfg(), BT); return (r[0].lvl === 'low' && r[1].lvl === 'warn' && r[2].lvl === 'ok' && r[3].lvl === 'na') || r.map((x) => x.lvl).join(); });
+t('baterii: numele curățat de „battery level”, cel din config are prioritate', () => { const r = buildBatteriesModel(bcfg(), BT); const nm = (e) => r.find((x) => x.entity === e).name; return (nm('sensor.deye') === 'Invertor Deye' && nm('sensor.ipad') === 'iPad' && nm('sensor.audi') === 'Audi A3 TFSIe') || r.map((x) => x.name).join(); });
+t('baterii: sort none păstrează ordinea din config', () => buildBatteriesModel(bcfg({ sort: 'none' }), BT)[0].entity === 'sensor.deye');
+t('baterii: valori peste 100 / sub 0 limitate', () => { const r = buildBatteriesModel(bcfg(), { states: { 'sensor.deye': st('150'), 'sensor.audi': st('-5') } }); return r.some((x) => x.pct === 100) && r.some((x) => x.pct === 0) || 'limite'; });
+t('baterii: render — rânduri, procente, bară, fără NaN', () => { const c = bcfg(); const h = renderBatteries(c, buildBatteriesModel(c, BT)); return ((h.match(/class="br"/g) || []).length === 4 && h.includes('width:62%') && h.includes('>—</b>') && h.includes('data-lvl="low"') && !/NaN|undefined/.test(h)) || h.slice(0, 300); });
+t('baterii: titlu și nume escapate; hass nul nu aruncă', () => { const c = bcfg({ title: '<b>x</b>' }); const h = renderBatteries(c, buildBatteriesModel(c, null)); return (h.includes('&lt;b&gt;') && h.includes('>—</b>')) || 'escape'; });
+
+console.log(`\n${pass} / ${pass + fail} teste OK`);
+process.exit(fail ? 1 : 0);

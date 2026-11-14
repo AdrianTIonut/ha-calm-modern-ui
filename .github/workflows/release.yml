@@ -1,0 +1,20 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node tests/run-all.mjs
+      - run: node build.mjs
+      - name: Publish a release with ccu.js attached (HACS downloads it from here)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ccu.js
+          generate_release_notes: true

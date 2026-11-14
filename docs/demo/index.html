@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calm Modern UI — demo</title>
+<style>
+  body { margin: 0; padding: 16px; box-sizing: border-box; font-family: system-ui, sans-serif; }
+  .wrap { display: grid; gap: 12px; margin: 0 auto; }
+  .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .tcol { display: grid; gap: 10px; padding: 12px; border-radius: 18px; align-content: start; }
+  .tcol h4 { margin: 0 2px; font: 600 12px/1 system-ui; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+</style></head>
+<body>
+<div id="out"></div>
+<script src="../../ccu.js"></script>
+<script src="scenes.js"></script>
+<script>
+// Demo with a fake Home Assistant (invented entities). Parameters: scene, preset, lang (en|ro), w (width in px). scene=themes shows the six themes side by side.
+const q = new URLSearchParams(location.search);
+const D = window.CCU_DEMO, lang = q.get('lang') || 'en', preset = q.get('preset') || 'green', sceneName = q.get('scene') || 'buttons';
+const BG = { green: '#0b1220', calm: '#152028', contrast: '#0b1217', mono: '#14181c', warm: '#221a16', light: '#e9f0f7' };
+const hass = D.makeHass(lang);
+const make = (cfg, into) => {
+  const el = document.createElement(cfg.type.replace('custom:', ''));
+  el.setConfig({ language: lang, ...cfg });
+  el.hass = hass;
+  into.append(el);
+};
+const out = document.getElementById('out');
+if (sceneName === 'themes') {
+  document.body.style.background = '#0a0d12';
+  out.className = 'themes'; out.style.width = (+q.get('w') || 1320) + 'px';
+  D.PRESETS.forEach((p) => { const c = document.createElement('div'); c.className = 'tcol'; c.style.background = BG[p]; c.innerHTML = '<h4 style="color:' + (p === 'light' ? '#14233a' : '#e6edf7') + '">' + p + '</h4>'; D.themeCards(p).forEach((cfg) => make(cfg, c)); out.append(c); });
+} else {
+  const s = D.scenes[sceneName];
+  document.body.style.background = BG[preset] || BG.green;
+  out.className = 'wrap'; out.style.width = (+q.get('w') || s.w) + 'px';
+  s.cards.forEach((cfg) => make({ preset, ...cfg }, out));
+}
+document.title = 'ready';
+</script>
+</body></html>
