@@ -5,6 +5,8 @@ Română · [English](README.md)
 Set de carduri pentru Home Assistant, într-un stil calm și modern: plăci sticloase, verde pentru „activ”, albastru pentru informație,
 portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără rețea, fără biblioteci externe, fără `INTERNET` către terți.
 
+<img src="docs/img/devices.png" alt="Calm Modern UI pe tabletă și pe telefon (date demo inventate)">
+
 | Card | Ce face |
 |---|---|
 | `ccu-buttons-card` | Grilă de butoane xs–xl: pastile, plăci orizontale, rând cu comutator, card „erou” cu variație și grafic mic |
@@ -39,6 +41,25 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 Iconițele se mișcă doar când are sens și doar cât aparatul e pornit: ventilatorul unui aparat de aer condiționat se învârte cât timp chiar răcește, becul strălucește, centrala pâlpâie, pompa sau boxa pulsează. Animațiile se opresc la „reduce motion” (sau cu `animations: false`).
 
 <img src="docs/img/animated-icons.png" width="472" alt="animated icons">
+
+### Mișcare și baterie
+
+Animațiile continue țin ecranul ocupat, ceea ce consumă baterie pe telefon. Fiecare card are opțiunea `motion` (și în editorul vizual, la *Aspect și limbă*):
+
+| `motion` | Ce face |
+|---|---|
+| `auto` (implicit) | tabletă și PC: `full`; telefon (latura mică a ecranului sub 600 px): `calm` |
+| `full` | animații continue, ca înainte |
+| `calm` | aceleași animații, dar doar câteva cicluri (cam 6–10 s) după fiecare schimbare de stare, apoi static până la următoarea schimbare sau reîmprospătare. Ploaia, ninsoarea, vântul și fulgerele din cardul meteo sunt ascunse |
+| `off` | nimic nu se mișcă |
+
+```yaml
+motion: full            # de ex. mișcare completă și pe telefon
+weather_effects: off    # cardul meteo: auto | on | off (ploaie, ninsoare, nori)
+flow_animation: auto    # cardul de flux: auto | on | off (punctele care curg pe panglici)
+```
+
+`weather_effects` și `flow_animation` urmează `motion`, dacă nu le setezi. `animations: false` oprește tot, ca înainte. „Reduce motion” din setările sistemului rămâne respectat.
 
 ## Instalare
 

@@ -65,7 +65,7 @@ export function detectEnergy(states) {
   const solar = pick(power, [[/solar|pv|fotovolt|panou/, 3], [/total/, 1], [/power|putere/, 1]], /today|daily|zilnic|lunar|monthly|import|export|grid|battery|baterie|load|consum|phase|faza/);
   const grid = pick(power, [[/power_meter|contor|smart_meter|grid|re[tț]ea/, 3], [/active/, 1], [/power|putere/, 1]], /solar|pv|battery|baterie|phase|faza|load|consum|today|daily/);
   const battery = pick(power, [[/batter|baterie/, 3], [/power|putere/, 1]], /today|daily|solar|pv|grid|load|charge_|discharge_|limit|max/);
-  const soc = pick(pct, [[/batter|baterie|soc/, 3]], /phone|tablet|ipad|telefon|audi|car|remote|mouse|sensor_battery/);
+  const soc = pick(pct, [[/batter|baterie|soc/, 3], [/(^|_)soc$/, 2], [/\.(\w+_)?battery$/, 2]], /phone|tablet|ipad|telefon|audi|car|remote|mouse|sensor_battery|soh|health|limit|battery_\d|_pack|_cell/);
   const r = { hint: { solar, grid, battery, soc } };
   if (solar[0]) r.solar = solar[0];
   if (grid[0]) r.grid = grid[0];
@@ -252,10 +252,17 @@ export function defineEditors() {
     }
     /** Blocul „Aspect și limbă” (preset, limbă), comun tuturor cardurilor. */
     _common() {
-      const c = this._cfg;
-      return h('details', { class: 'blk', open: !!(c.preset || c.language) }, h('summary', { text: t('Aspect și limbă') }),
-        this._form([grid({ name: 'preset', selector: SEL(['green', 'calm', 'contrast', 'mono', 'warm', 'light']) }, { name: 'language', selector: SEL(['en', 'ro']) })], pick(c, ['preset', 'language']),
-          { preset: t('Temă'), language: t('Limbă') }, (v) => { this._set([], 'preset', v.preset); this._set([], 'language', v.language); }));
+      const c = this._cfg, type = String(c.type || '');
+      const mv = [{ value: 'auto', label: t('Automat (tabletă: complet, telefon: calm)') }, { value: 'full', label: t('Complet (animații continue)') }, { value: 'calm', label: t('Calm (câteva secunde, apoi static)') }, { value: 'off', label: t('Oprit') }];
+      const sw = [{ value: 'auto', label: t('Ca mișcarea cardului') }, { value: 'on', label: t('Mereu pornit') }, { value: 'off', label: t('Oprit') }];
+      const fields = [{ name: 'motion', selector: SEL(mv) }];
+      const labels = { preset: t('Temă'), language: t('Limbă'), motion: t('Mișcare (economie de baterie)'), weather_effects: t('Efecte vreme (ploaie, nori)'), flow_animation: t('Animația fluxului') };
+      const keys = ['preset', 'language', 'motion'];
+      if (type.includes('weather')) { fields.push({ name: 'weather_effects', selector: SEL(sw) }); keys.push('weather_effects'); }
+      if (type.includes('flow')) { fields.push({ name: 'flow_animation', selector: SEL(sw) }); keys.push('flow_animation'); }
+      return h('details', { class: 'blk', open: !!(c.preset || c.language || c.motion) }, h('summary', { text: t('Aspect și limbă') }),
+        this._form([grid({ name: 'preset', selector: SEL(['green', 'calm', 'contrast', 'mono', 'warm', 'light']) }, { name: 'language', selector: SEL(['en', 'ro']) }), ...fields], { motion: 'auto', weather_effects: 'auto', flow_animation: 'auto', ...pick(c, keys) },
+          labels, (v) => { this._set([], 'preset', v.preset); this._set([], 'language', v.language); for (const k of keys.slice(2)) this._set([], k, v[k] === 'auto' ? '' : v[k]); }));
     }
     _draw() { this._root.replaceChildren(this._style(), h('div', { class: 'ed' }, this._body(), this._common())); }
     _body() { return []; }

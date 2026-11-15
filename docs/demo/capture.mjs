@@ -89,6 +89,21 @@ async function shot(file, query, width) {
 }
 
 await send('Page.enable');
+// ONLY=devices: just the tablet + phone mock-up (docs/img/devices.png)
+if (process.env.ONLY === 'devices') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1800, height: 1000, deviceScaleFactor: 2, mobile: false });
+  await send('Page.navigate', { url: pathToFileURL(join(here, 'devices.html')).href });
+  for (let i = 0; i < 40; i++) { if ((await evalJs('document.title')) === 'ready') break; await sleep(150); }
+  await sleep(2200);
+  const box = await evalJs('(() => { const r = document.body.getBoundingClientRect(); return { x: 0, y: 0, width: Math.ceil(document.getElementById("out").getBoundingClientRect().right + 64), height: Math.ceil(r.height) }; })()');
+  const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...box, scale: 1 } });
+  writeFileSync(join(out, 'devices.png'), Buffer.from(data, 'base64'));
+  console.log('✔ devices.png', box.width + '×' + box.height);
+  await send('Browser.close').catch(() => {});
+  proc.kill(); await sleep(500);
+  try { rmSync(profile, { recursive: true, force: true }); } catch (e) { /* ignore */ }
+  process.exit(0);
+}
 // card galleries (dark default theme)
 const SCENES = [['buttons', 472], ['chips', 512], ['controls', 472], ['controls-more', 472], ['radio', 472], ['remote', 372], ['flow', 512], ['battery', 472], ['graph', 512], ['weather', 512], ['weather-rain', 512], ['people', 472], ['vehicles', 472], ['hero', 512], ['nav', 552], ['layout', 472]];
 for (const [s, w] of SCENES) await shot(s + '.png', `scene=${s}&lang=en`, w);

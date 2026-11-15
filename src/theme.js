@@ -683,4 +683,14 @@ export const CCU_THEME = `
 :host([data-anim="off"]) .ccu-scene *, :host([data-anim="off"]) .ccu-scene *::before, :host([data-anim="off"]) .ccu-ico svg * { animation: none !important; }
 :host([data-anim="off"]) .ccu-scene :is(.rain, .snow, .windl, .flash) { display: none !important; }
 :host([data-anim="off"]) .ccu-ico svg, :host([data-anim="off"]) .ccu-ico .rot { animation: none !important; }
+/* ---- mișcare „calm”: aceleași animații, dar doar câteva cicluri (≈ 6–10 s) la fiecare schimbare de stare, apoi static; „off” oprește tot ---- */
+:host([data-anim="calm"]) :is(.ccu-ico svg, .ccu-ico .rot, .rd-eq i, .wx-fall, .wx-drift, .wx-flash, .wx-twinkle) { animation-iteration-count: 3 !important; }
+:host([data-anim="calm"]) :is(.ccu-ico.a-spin svg, .wx-spin) { animation-iteration-count: 1 !important; }
+:host([data-anim="off"]) :is(.rd-eq i, .wx-fall, .wx-drift, .wx-flash, .wx-twinkle, .wx-spin) { animation: none !important; }
+:host([data-fx="calm"]) :is(.ccu-scene .stars i, .ccu-scene .clouds i, .ccu-scene .fog i) { animation-iteration-count: 1 !important; }
+:host([data-fx="calm"]) .ccu-scene .sun::before { animation: none !important; }
+:host([data-fx="calm"]) .ccu-scene :is(.rain, .snow, .windl, .flash), :host([data-fx="off"]) .ccu-scene :is(.rain, .snow, .windl, .flash) { display: none !important; }
+:host([data-fx="off"]) .ccu-scene *, :host([data-fx="off"]) .ccu-scene *::before { animation: none !important; }
+:host([data-flow="calm"]) .ccu-flow-svg .pulse { animation-iteration-count: 3 !important; }
+:host([data-flow="off"]) .ccu-flow-svg .pulse { animation: none !important; }
 `;

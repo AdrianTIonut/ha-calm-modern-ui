@@ -20,7 +20,7 @@ const BG = { green: '#0b1220', calm: '#152028', contrast: '#0b1217', mono: '#141
 const hass = D.makeHass(lang);
 const make = (cfg, into) => {
   const el = document.createElement(cfg.type.replace('custom:', ''));
-  el.setConfig({ language: lang, ...cfg });
+  el.setConfig({ language: lang, ...(q.get('motion') ? { motion: q.get('motion') } : {}), ...cfg });
   el.hass = hass;
   into.append(el);
 };

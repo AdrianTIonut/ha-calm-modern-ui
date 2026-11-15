@@ -3,7 +3,7 @@
 // un singur interval pentru ceas (curățat la disconnect), gesturi pe pointer events, fără rețea.
 import { CCU_THEME } from './theme.js';
 import { setLang } from './i18n.mjs';
-import { normalizeConfig } from './config.mjs';
+import { normalizeConfig, resolveMotion } from './config.mjs';
 import { runAction, toggleEntity } from './actions.mjs';
 import { attachGestures } from './gestures.mjs';
 import { defineEditors, detectEnergy } from './editor.mjs';
@@ -55,6 +55,13 @@ class CcuBase extends HTMLElement {
   // limba: `language:` din card, altfel a lui HA (hass.locale.language), altfel atributul lang al paginii, altfel engleza
   _lang() { return (this._config && this._config.language) || (this._hass && ((this._hass.locale && this._hass.locale.language) || this._hass.language)) || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'en'; }
 
+  /** Mișcarea: data-anim (icoane), data-fx (vreme), data-flow (fluxul) = „calm” | „off”; lipsa atributului = animații continue. Telefon (latura mică a ecranului < 600 px) → calm, dacă nu e setat altfel. */
+  _applyMotion(cfg) {
+    const narrow = typeof screen !== 'undefined' && screen && Math.min(screen.width || 9999, screen.height || 9999) < 600;
+    const m = resolveMotion(cfg || {}, narrow);
+    for (const [attr, v] of [['data-anim', m.anim], ['data-fx', m.fx], ['data-flow', m.flow]]) { if (v === 'full') this.removeAttribute(attr); else this.setAttribute(attr, v); }
+  }
+
   setConfig(cfg) {
     setLang((cfg && cfg.language) || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'en');
     const { config, warnings } = this._build(cfg);
@@ -62,7 +69,7 @@ class CcuBase extends HTMLElement {
     if (!config.entities.length && !this._allowEmpty) throw new Error('The configuration has no valid entity (entities).');
     this._config = config; this._warnings = warnings;
     applyPreset(this, config.preset, config.colors);
-    if (config.animations === false) this.setAttribute('data-anim', 'off'); else this.removeAttribute('data-anim');
+    this._applyMotion(cfg);
     this._lastRefs = null;
     this._draw(true);
   }

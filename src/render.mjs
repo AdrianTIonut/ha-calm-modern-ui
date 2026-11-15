@@ -227,7 +227,7 @@ export function renderChips(config, hass, opts = {}) {
   const lowChip = lb ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-bat="1" data-entity="${esc(lb.low[0].entity)}"><span class="ccu-ico">${iconSvg('battery')}</span>${lb.count === 1 && !(config.low_batteries && config.low_batteries.label) ? `${esc(lb.low[0].name)} <b>${lb.low[0].binary ? esc(t('slabă')) : Math.round(lb.low[0].pct) + '%'}</b>` : `${esc((config.low_batteries && config.low_batteries.label) || t('Baterii slabe'))} <b>${lb.count}</b>`}</span>` : '';
   // termene (RCA, ITP, rovinietă, ulei…): un chip cât timp ceva se apropie sau a expirat; cu unul singur arată documentul și termenul, altfel numărul
   const due = opts.due && opts.due.length ? opts.due : null, dl = config.deadlines;
-  const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1">${iconSvg('calendar')}${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
+  const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1"><span class="ccu-ico">${iconSvg('calendar')}</span>${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
   return `<div class="ccu-chips">${dueChip}${lowChip}${waste}${items}</div>${notes(opts.warnings)}`;
 }
 

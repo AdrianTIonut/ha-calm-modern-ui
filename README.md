@@ -7,6 +7,8 @@ orange for attention. **One JavaScript file** (`ccu.js`), no external libraries,
 
 Every card can be configured **from the Home Assistant UI** (no YAML needed), speaks **English and Romanian**, and works on phone, tablet and wall panels.
 
+<img src="docs/img/devices.png" alt="Calm Modern UI on a tablet and a phone (invented demo data)">
+
 | Card | What it does |
 |---|---|
 | `ccu-buttons-card` | Grid of tiles (xs–xl): pills, horizontal tiles, switch rows, a “hero” tile with delta and sparkline, alert groups |
@@ -46,6 +48,25 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 The icons move only when it makes sense, and only while the device is on: the fan of an A/C turns while it is actually cooling, a bulb glows, a heater flickers, a pump or a speaker pulses. Animations stop on “reduce motion” (or with `animations: false`).
 
 <img src="docs/img/animated-icons.png" width="472" alt="animated icons">
+
+### Motion and battery
+
+Continuous animations keep the screen busy, which costs battery on a phone. Every card has a `motion` option (also in the visual editor, under *Look and language*):
+
+| `motion` | What happens |
+|---|---|
+| `auto` (default) | tablet and PC: `full`; phone (the short side of the screen is under 600 px): `calm` |
+| `full` | animations run continuously, as before |
+| `calm` | the same animations, but only a few cycles (about 6–10 s) after each change of state, then still until the next change or refresh. Rain, snow, wind and lightning in the weather card are hidden |
+| `off` | nothing moves |
+
+```yaml
+motion: full            # e.g. keep full motion on your phone as well
+weather_effects: off    # weather card: auto | on | off (rain, snow, clouds)
+flow_animation: auto    # flow card: auto | on | off (the moving dots on the ribbons)
+```
+
+`weather_effects` and `flow_animation` follow `motion` unless you set them. `animations: false` still turns everything off. “Reduce motion” in the system settings is respected as before.
 
 ## Installation
 

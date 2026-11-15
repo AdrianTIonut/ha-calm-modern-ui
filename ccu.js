@@ -688,6 +688,16 @@ const CCU_THEME = `
 :host([data-anim="off"]) .ccu-scene *, :host([data-anim="off"]) .ccu-scene *::before, :host([data-anim="off"]) .ccu-ico svg * { animation: none !important; }
 :host([data-anim="off"]) .ccu-scene :is(.rain, .snow, .windl, .flash) { display: none !important; }
 :host([data-anim="off"]) .ccu-ico svg, :host([data-anim="off"]) .ccu-ico .rot { animation: none !important; }
+/* ---- mișcare „calm”: aceleași animații, dar doar câteva cicluri (≈ 6–10 s) la fiecare schimbare de stare, apoi static; „off” oprește tot ---- */
+:host([data-anim="calm"]) :is(.ccu-ico svg, .ccu-ico .rot, .rd-eq i, .wx-fall, .wx-drift, .wx-flash, .wx-twinkle) { animation-iteration-count: 3 !important; }
+:host([data-anim="calm"]) :is(.ccu-ico.a-spin svg, .wx-spin) { animation-iteration-count: 1 !important; }
+:host([data-anim="off"]) :is(.rd-eq i, .wx-fall, .wx-drift, .wx-flash, .wx-twinkle, .wx-spin) { animation: none !important; }
+:host([data-fx="calm"]) :is(.ccu-scene .stars i, .ccu-scene .clouds i, .ccu-scene .fog i) { animation-iteration-count: 1 !important; }
+:host([data-fx="calm"]) .ccu-scene .sun::before { animation: none !important; }
+:host([data-fx="calm"]) .ccu-scene :is(.rain, .snow, .windl, .flash), :host([data-fx="off"]) .ccu-scene :is(.rain, .snow, .windl, .flash) { display: none !important; }
+:host([data-fx="off"]) .ccu-scene *, :host([data-fx="off"]) .ccu-scene *::before { animation: none !important; }
+:host([data-flow="calm"]) .ccu-flow-svg .pulse { animation-iteration-count: 3 !important; }
+:host([data-flow="off"]) .ccu-flow-svg .pulse { animation: none !important; }
 `;
 
 return { CCU_THEME };
@@ -950,6 +960,14 @@ const EN = {
  "Caută în Home Assistant toate dispozitivele cu baterie (senzori „battery”), fără telefoane și tablete.": "Looks in Home Assistant for every device with a battery (“battery” sensors), without phones and tablets.",
  "Descoperire automată": "Auto-discovery",
  "Arată doar bateriile slabe": "Show only low batteries",
+ "Automat (tabletă: complet, telefon: calm)": "Automatic (tablet: full, phone: calm)",
+ "Complet (animații continue)": "Full (continuous animations)",
+ "Calm (câteva secunde, apoi static)": "Calm (a few seconds, then still)",
+ "Ca mișcarea cardului": "Same as the card's motion",
+ "Mereu pornit": "Always on",
+ "Mișcare (economie de baterie)": "Motion (battery saving)",
+ "Efecte vreme (ploaie, nori)": "Weather effects (rain, clouds)",
+ "Animația fluxului": "Flow animation",
  "Radio: „{k}” nu e un entity_id valid.": "Radio: “{k}” is not a valid entity_id.",
  "Radio: „{k}” trebuie să fie din domeniul {d}.": "Radio: “{k}” must be from the {d} domain.",
  "Radio: lipsește „stations” (un select cu posturile).": "Radio: “stations” is missing (a select with the stations).",
@@ -1490,8 +1508,27 @@ function validateAction(a) {
 }
 
 // Export pentru testare (funcțiile neexportate direct)
+/** `motion`: auto | full | calm | off (altceva → auto). `weather_effects` / `flow_animation`: auto | on | off. */
+const MOTION_VALUES = ['auto', 'full', 'calm', 'off'];
+function normalizeMotion(v) { const s = String(v === undefined || v === null ? 'auto' : v).toLowerCase(); return MOTION_VALUES.includes(s) ? s : 'auto'; }
+function normalizeSwitch(v) { const s = String(v === undefined || v === null ? 'auto' : v).toLowerCase(); return s === 'on' || s === 'true' ? 'on' : s === 'off' || s === 'false' ? 'off' : 'auto'; }
 
-return { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeConfig, normalizeAction };
+/**
+ * Cât de mult se mișcă cardul. `narrow` = ecran de telefon (latura mică < 600 px).
+ * motion: full (animații continue) | calm (câteva secunde, apoi static până la o nouă schimbare) | off | auto (tabletă/PC → full, telefon → calm).
+ * `animations: false` = off peste tot. weather_effects / flow_animation: on = full, off = off, auto = ca motion.
+ * Întoarce { anim, fx, flow }, fiecare 'full' | 'calm' | 'off'.
+ */
+function resolveMotion(cfg, narrow) {
+  const c = cfg && typeof cfg === 'object' ? cfg : {};
+  if (c.animations === false || c.animations === 'off') return { anim: 'off', fx: 'off', flow: 'off' };
+  const m = normalizeMotion(c.motion);
+  const base = m === 'auto' ? (narrow ? 'calm' : 'full') : m;
+  const pick = (v) => { const s = normalizeSwitch(v); return s === 'on' ? 'full' : s === 'off' ? 'off' : base; };
+  return { anim: base, fx: pick(c.weather_effects), flow: pick(c.flow_animation) };
+}
+
+return { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeMotion, normalizeSwitch, normalizeConfig, normalizeAction, resolveMotion };
 })();
 
 __m["state"] = (() => {
@@ -2627,7 +2664,7 @@ function renderChips(config, hass, opts = {}) {
   const lowChip = lb ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-bat="1" data-entity="${esc(lb.low[0].entity)}"><span class="ccu-ico">${iconSvg('battery')}</span>${lb.count === 1 && !(config.low_batteries && config.low_batteries.label) ? `${esc(lb.low[0].name)} <b>${lb.low[0].binary ? esc(t('slabă')) : Math.round(lb.low[0].pct) + '%'}</b>` : `${esc((config.low_batteries && config.low_batteries.label) || t('Baterii slabe'))} <b>${lb.count}</b>`}</span>` : '';
   // termene (RCA, ITP, rovinietă, ulei…): un chip cât timp ceva se apropie sau a expirat; cu unul singur arată documentul și termenul, altfel numărul
   const due = opts.due && opts.due.length ? opts.due : null, dl = config.deadlines;
-  const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1">${iconSvg('calendar')}${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
+  const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1"><span class="ccu-ico">${iconSvg('calendar')}</span>${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
   return `<div class="ccu-chips">${dueChip}${lowChip}${waste}${items}</div>${notes(opts.warnings)}`;
 }
 
@@ -4515,7 +4552,7 @@ function detectEnergy(states) {
   const solar = pick(power, [[/solar|pv|fotovolt|panou/, 3], [/total/, 1], [/power|putere/, 1]], /today|daily|zilnic|lunar|monthly|import|export|grid|battery|baterie|load|consum|phase|faza/);
   const grid = pick(power, [[/power_meter|contor|smart_meter|grid|re[tț]ea/, 3], [/active/, 1], [/power|putere/, 1]], /solar|pv|battery|baterie|phase|faza|load|consum|today|daily/);
   const battery = pick(power, [[/batter|baterie/, 3], [/power|putere/, 1]], /today|daily|solar|pv|grid|load|charge_|discharge_|limit|max/);
-  const soc = pick(pct, [[/batter|baterie|soc/, 3]], /phone|tablet|ipad|telefon|audi|car|remote|mouse|sensor_battery/);
+  const soc = pick(pct, [[/batter|baterie|soc/, 3], [/(^|_)soc$/, 2], [/\.(\w+_)?battery$/, 2]], /phone|tablet|ipad|telefon|audi|car|remote|mouse|sensor_battery|soh|health|limit|battery_\d|_pack|_cell/);
   const r = { hint: { solar, grid, battery, soc } };
   if (solar[0]) r.solar = solar[0];
   if (grid[0]) r.grid = grid[0];
@@ -4702,10 +4739,17 @@ function defineEditors() {
     }
     /** Blocul „Aspect și limbă” (preset, limbă), comun tuturor cardurilor. */
     _common() {
-      const c = this._cfg;
-      return h('details', { class: 'blk', open: !!(c.preset || c.language) }, h('summary', { text: t('Aspect și limbă') }),
-        this._form([grid({ name: 'preset', selector: SEL(['green', 'calm', 'contrast', 'mono', 'warm', 'light']) }, { name: 'language', selector: SEL(['en', 'ro']) })], pick(c, ['preset', 'language']),
-          { preset: t('Temă'), language: t('Limbă') }, (v) => { this._set([], 'preset', v.preset); this._set([], 'language', v.language); }));
+      const c = this._cfg, type = String(c.type || '');
+      const mv = [{ value: 'auto', label: t('Automat (tabletă: complet, telefon: calm)') }, { value: 'full', label: t('Complet (animații continue)') }, { value: 'calm', label: t('Calm (câteva secunde, apoi static)') }, { value: 'off', label: t('Oprit') }];
+      const sw = [{ value: 'auto', label: t('Ca mișcarea cardului') }, { value: 'on', label: t('Mereu pornit') }, { value: 'off', label: t('Oprit') }];
+      const fields = [{ name: 'motion', selector: SEL(mv) }];
+      const labels = { preset: t('Temă'), language: t('Limbă'), motion: t('Mișcare (economie de baterie)'), weather_effects: t('Efecte vreme (ploaie, nori)'), flow_animation: t('Animația fluxului') };
+      const keys = ['preset', 'language', 'motion'];
+      if (type.includes('weather')) { fields.push({ name: 'weather_effects', selector: SEL(sw) }); keys.push('weather_effects'); }
+      if (type.includes('flow')) { fields.push({ name: 'flow_animation', selector: SEL(sw) }); keys.push('flow_animation'); }
+      return h('details', { class: 'blk', open: !!(c.preset || c.language || c.motion) }, h('summary', { text: t('Aspect și limbă') }),
+        this._form([grid({ name: 'preset', selector: SEL(['green', 'calm', 'contrast', 'mono', 'warm', 'light']) }, { name: 'language', selector: SEL(['en', 'ro']) }), ...fields], { motion: 'auto', weather_effects: 'auto', flow_animation: 'auto', ...pick(c, keys) },
+          labels, (v) => { this._set([], 'preset', v.preset); this._set([], 'language', v.language); for (const k of keys.slice(2)) this._set([], k, v[k] === 'auto' ? '' : v[k]); }));
     }
     _draw() { this._root.replaceChildren(this._style(), h('div', { class: 'ed' }, this._body(), this._common())); }
     _body() { return []; }
@@ -4942,7 +4986,7 @@ __m["cards"] = (() => {
 // un singur interval pentru ceas (curățat la disconnect), gesturi pe pointer events, fără rețea.
 const { CCU_THEME } = __m["theme"];
 const { setLang } = __m["i18n"];
-const { normalizeConfig } = __m["config"];
+const { normalizeConfig, resolveMotion } = __m["config"];
 const { runAction, toggleEntity } = __m["actions"];
 const { attachGestures } = __m["gestures"];
 const { defineEditors, detectEnergy } = __m["editor"];
@@ -4993,6 +5037,13 @@ class CcuBase extends HTMLElement {
   // limba: `language:` din card, altfel a lui HA (hass.locale.language), altfel atributul lang al paginii, altfel engleza
   _lang() { return (this._config && this._config.language) || (this._hass && ((this._hass.locale && this._hass.locale.language) || this._hass.language)) || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'en'; }
 
+  /** Mișcarea: data-anim (icoane), data-fx (vreme), data-flow (fluxul) = „calm” | „off”; lipsa atributului = animații continue. Telefon (latura mică a ecranului < 600 px) → calm, dacă nu e setat altfel. */
+  _applyMotion(cfg) {
+    const narrow = typeof screen !== 'undefined' && screen && Math.min(screen.width || 9999, screen.height || 9999) < 600;
+    const m = resolveMotion(cfg || {}, narrow);
+    for (const [attr, v] of [['data-anim', m.anim], ['data-fx', m.fx], ['data-flow', m.flow]]) { if (v === 'full') this.removeAttribute(attr); else this.setAttribute(attr, v); }
+  }
+
   setConfig(cfg) {
     setLang((cfg && cfg.language) || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'en');
     const { config, warnings } = this._build(cfg);
@@ -5000,7 +5051,7 @@ class CcuBase extends HTMLElement {
     if (!config.entities.length && !this._allowEmpty) throw new Error('The configuration has no valid entity (entities).');
     this._config = config; this._warnings = warnings;
     applyPreset(this, config.preset, config.colors);
-    if (config.animations === false) this.setAttribute('data-anim', 'off'); else this.removeAttribute('data-anim');
+    this._applyMotion(cfg);
     this._lastRefs = null;
     this._draw(true);
   }

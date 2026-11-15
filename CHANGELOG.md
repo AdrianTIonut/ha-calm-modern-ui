@@ -1,5 +1,10 @@
 # Istoric versiuni
 
+## 0.9.1
+- **Mișcare și baterie:** opțiunea `motion` pe fiecare card (`auto` | `full` | `calm` | `off`, și în editorul vizual). Implicit `auto`: pe tabletă și PC animațiile merg continuu, pe telefon (latura mică a ecranului sub 600 px) sunt `calm` — câteva secunde la fiecare schimbare de stare, apoi static. `weather_effects` și `flow_animation` (`auto` | `on` | `off`) controlează separat efectele din vreme și punctele din flux. `animations: false` și „reduce motion” funcționează ca înainte.
+- **Reparat:** chip-ul de termene mașini avea un pătrat negru în loc de iconița calendarului.
+- **Documentație:** captură nouă cu cardurile pe o tabletă și un telefon (date inventate), secțiune despre mișcare și baterie în README.
+
 ## 0.9.0 (pregătit pentru prima publicare)
 - **Card nou:** `ccu-vehicle-card` (termene pe mașină: RCA, ITP, rovinietă, revizie / ulei pe kilometri, cu date editabile din card) și chip `deadlines`; iconițe noi „road” și „van”.
 - **Baterii slabe:** `low_batteries` pe chips (un chip cu numărul bateriilor slabe sau numele ei, la atingere deschide ce setezi) și `auto` / `only_low` pe cardul de baterii (găsește singur dispozitivele pe baterii, fără telefoane și tablete).

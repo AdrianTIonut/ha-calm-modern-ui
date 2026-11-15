@@ -288,4 +288,24 @@ function validateAction(a) {
 }
 
 // Export pentru testare (funcțiile neexportate direct)
-export { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction };
+/** `motion`: auto | full | calm | off (altceva → auto). `weather_effects` / `flow_animation`: auto | on | off. */
+const MOTION_VALUES = ['auto', 'full', 'calm', 'off'];
+function normalizeMotion(v) { const s = String(v === undefined || v === null ? 'auto' : v).toLowerCase(); return MOTION_VALUES.includes(s) ? s : 'auto'; }
+function normalizeSwitch(v) { const s = String(v === undefined || v === null ? 'auto' : v).toLowerCase(); return s === 'on' || s === 'true' ? 'on' : s === 'off' || s === 'false' ? 'off' : 'auto'; }
+
+/**
+ * Cât de mult se mișcă cardul. `narrow` = ecran de telefon (latura mică < 600 px).
+ * motion: full (animații continue) | calm (câteva secunde, apoi static până la o nouă schimbare) | off | auto (tabletă/PC → full, telefon → calm).
+ * `animations: false` = off peste tot. weather_effects / flow_animation: on = full, off = off, auto = ca motion.
+ * Întoarce { anim, fx, flow }, fiecare 'full' | 'calm' | 'off'.
+ */
+export function resolveMotion(cfg, narrow) {
+  const c = cfg && typeof cfg === 'object' ? cfg : {};
+  if (c.animations === false || c.animations === 'off') return { anim: 'off', fx: 'off', flow: 'off' };
+  const m = normalizeMotion(c.motion);
+  const base = m === 'auto' ? (narrow ? 'calm' : 'full') : m;
+  const pick = (v) => { const s = normalizeSwitch(v); return s === 'on' ? 'full' : s === 'off' ? 'off' : base; };
+  return { anim: base, fx: pick(c.weather_effects), flow: pick(c.flow_animation) };
+}
+
+export { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeMotion, normalizeSwitch };
