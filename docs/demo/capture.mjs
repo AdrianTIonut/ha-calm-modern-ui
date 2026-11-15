@@ -111,6 +111,12 @@ if (process.env.ONLY === 'motion') {
   try { rmSync(profile, { recursive: true, force: true }); } catch (e) { /* ignore */ }
   process.exit(0);
 }
+// ONLY=battery: docs/img/battery.png and devices.png (the two that show the battery card)
+if (process.env.ONLY === 'battery') {
+  await send('Page.enable');
+  await shot('battery.png', 'scene=battery&lang=en', 472);
+  process.env.ONLY = 'devices';
+}
 // ONLY=devices: just the tablet + phone mock-up (docs/img/devices.png)
 if (process.env.ONLY === 'devices') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1800, height: 1000, deviceScaleFactor: 2, mobile: false });

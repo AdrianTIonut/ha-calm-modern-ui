@@ -1,5 +1,9 @@
 # Istoric versiuni
 
+## 0.9.3
+- **Baterie:** autonomia se calculează la suma consumului din `load` și din noua listă `load_entities` (pentru bateria care alimentează mai multe circuite; se alege și din editor). Dacă un senzor nu are valoare, nu se mai afișează o autonomie prea optimistă.
+- **Baterie, cât timp se încarcă:** cu senzorul `power` (+ = descărcare, − = încărcare; `power_invert` îl întoarce) cardul arată „Plin în” (timpul până la 100 % la puterea de încărcare de acum), iar autonomia are eticheta „la consum”, ca să nu fie luată drept timp de descărcare.
+
 ## 0.9.2
 - **Mișcare și baterie:** opțiunea `motion` pe fiecare card (`auto` | `full` | `calm` | `off`, și în editorul vizual). Implicit `auto`: pe tabletă și PC animațiile merg continuu, pe telefon (latura mică a ecranului sub 600 px) sunt `calm` — câteva secunde la fiecare schimbare de stare, apoi static. `weather_effects` și `flow_animation` (`auto` | `on` | `off`) controlează separat efectele din vreme și punctele din flux. `animations: false` și „reduce motion” funcționează ca înainte.
 - **Reparat:** chip-ul de termene mașini avea un pătrat negru în loc de iconița calendarului.

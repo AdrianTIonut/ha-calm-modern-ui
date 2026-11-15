@@ -249,6 +249,8 @@ type: custom:ccu-battery-card
 soc: sensor.invertor_deye_battery
 capacity_entity: sensor.invertor_deye_battery_capacity   # sau capacity_kwh: 38.6
 load: sensor.invertor_deye_load_power                    # pentru autonomie (până la rezervă, la consumul curent)
+load_entities: [sensor.alt_consum]                       # opțional: alte circuite pe baterie, se adună la `load`
+power: sensor.putere_baterie                             # opțional: + = descărcare, − = încărcare (power_invert: true o întoarce)
 grid_present: binary_sensor.invertor_deye_grid           # off = „Backup activ”; unavailable NU declanșează backup
 reserve_pct: 20
 shutdown_pct: 10
@@ -259,6 +261,8 @@ Cum se calculează (exact, din procente și capacitate; se rotunjește doar la a
 
 - **Cu rețea**: banda utilizabilă e `reserve_pct` → 100 %. Cardul arată energia din bandă, „X kWh din Y kWh”, cu Y = (100 − rezervă)% × capacitate, și autonomia până la rezervă, la consumul curent.
 - **Fără rețea (backup activ)**: banda devine `shutdown_pct` → 100 %, același „X kWh din Y kWh” și autonomia până la pragul de oprire. Doar atunci apar „Backup activ” și marcajul de oprire.
+- **Autonomia** = energia utilizabilă împărțită la consumul curent (`load` plus `load_entities`, adunate), ca și cum încărcarea s-ar opri acum. Dacă vreunul dintre senzori nu are valoare, nu se afișează autonomia, în loc să iasă prea optimistă.
+- **Cât timp se încarcă** (cere `power`) cardul arată și „Plin în” (timpul până la 100 % la puterea de încărcare de acum), iar autonomia are eticheta „la consum”.
 - Schimbi `reserve_pct` (de exemplu 20 → 30) și totul se recalculează. Procentul mare e mereu starea reală de încărcare.
 
 

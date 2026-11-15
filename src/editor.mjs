@@ -391,10 +391,10 @@ export function defineEditors() {
     _body() {
       return [
         this._fields([], t('Baterie'), t('Nivelul de încărcare și, opțional, capacitatea și consumul pentru autonomie.'), [
-          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
+          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, { name: 'load_entities', selector: SENSOR({ multiple: true }) }, grid({ name: 'power', selector: SENSOR() }, { name: 'power_invert', selector: BOOL }), grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
           grid({ name: 'reserve_pct', selector: NUM(0, 100) }, { name: 'shutdown_pct', selector: NUM(0, 100) }), grid({ name: 'color', selector: SEL(['yellow', 'green', 'blue', 'orange']) }, { name: 'show_title', selector: BOOL })],
-          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
-          { grid_present: t('Când e oprit, cardul arată „Backup activ”.') }, { defTrue: ['show_title'] }),
+          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), load_entities: t('Alți consumatori (se adună la consum)'), power: t('Putere baterie (W)'), power_invert: t('Inversează semnul puterii'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
+          { grid_present: t('Când e oprit, cardul arată „Backup activ”.'), load_entities: t('Dacă bateria alimentează mai multe circuite, adaugă-le aici: autonomia se calculează la suma lor.'), power: t('+ = descărcare, − = încărcare. Cât timp se încarcă, cardul arată „Plin în”.') }, { defTrue: ['show_title'] }),
       ];
     }
   }

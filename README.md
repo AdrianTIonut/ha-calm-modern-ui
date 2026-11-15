@@ -338,6 +338,8 @@ type: custom:ccu-battery-card
 soc: sensor.battery_soc
 capacity_entity: sensor.battery_capacity      # or capacity_kwh: 38.6
 load: sensor.load_power                       # for the runtime estimate
+load_entities: [sensor.other_load]            # optional: more loads on the battery, added to `load`
+power: sensor.battery_power                   # optional: + = discharging, − = charging (power_invert: true flips it)
 grid_present: binary_sensor.grid              # off = “Backup active”
 reserve_pct: 20
 shutdown_pct: 10
@@ -347,6 +349,8 @@ How the numbers are computed (exactly, from percentages and capacity; rounding o
 
 - **With grid**: the usable band is `reserve_pct` → 100 %. The card shows the energy in that band, “X kWh of Y kWh”, with Y = (100 − reserve)% × capacity, and the runtime until the reserve at the current load.
 - **Without grid (backup active)**: the band becomes `shutdown_pct` → 100 %, the same “X kWh of Y kWh” and the runtime until the shutdown level. Only then the card shows “Backup active” and the shutdown marker.
+- **The runtime** is the usable energy divided by the current load (`load` plus `load_entities`, summed), as if the charging stopped now. If any of those sensors has no value, no runtime is shown rather than a too-optimistic one.
+- **While charging** (needs `power`) the card also shows “Full in” (time to 100 % at the current charging power), and the runtime is labelled “at current load”.
 - Change `reserve_pct` (for example 20 → 30) and everything follows. The big percentage is always the real state of charge.
 
 

@@ -717,6 +717,13 @@ const EN = {
  "Utilizabil până la {p}%": "Usable down to {p}%",
  "Pe zi (100→{p}%)": "Per day (100→{p}%)",
  "{a} kWh": "{a} kWh",
+ "Plin în": "Full in",
+ "Autonomie la consum": "Runtime at load",
+ "Alți consumatori (se adună la consum)": "Other loads (added to the load)",
+ "Putere baterie (W)": "Battery power (W)",
+ "Inversează semnul puterii": "Invert the power sign",
+ "Dacă bateria alimentează mai multe circuite, adaugă-le aici: autonomia se calculează la suma lor.": "If the battery feeds several circuits, add them here: the runtime is calculated for their sum.",
+ "+ = descărcare, − = încărcare. Cât timp se încarcă, cardul arată „Plin în”.": "+ = discharging, − = charging. While it charges, the card shows “Full in”.",
  "Încălzire": "Heat",
  "Răcire": "Cool",
  "Uscare": "Dry",
@@ -3596,7 +3603,7 @@ function normalizeBatteryConfig(cfg) {
   const soc = ent('soc');
   if (!soc) warnings.push(t('Baterie: lipsește „soc” (entitatea cu procentul bateriei).'));
   const cfgOut = {
-    soc, capacity_entity: ent('capacity_entity'), power: ent('power'), load: ent('load'), grid_present: ent('grid_present'),
+    soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
     capacity_kwh: num('capacity_kwh', 0, 0.1, 1000), reserve_pct: num('reserve_pct', 20, 0, 100), shutdown_pct: num('shutdown_pct', 10, 0, 100),
     title: src.title ? String(src.title) : t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
   };
@@ -3613,7 +3620,13 @@ function buildBatteryModel(config, hass) {
   const capE = toKwh(st(config.capacity_entity));
   const total = capE !== null && capE > 0 ? capE : (config.capacity_kwh || null);
   const now = soc !== null && total ? (soc / 100) * total : null;
-  const loadW = toWatts(st(config.load));
+  // consumul = `load` + `load_entities` (se adună); dacă una dintre ele nu are valoare, autonomia nu se calculează (altfel ar ieși prea optimistă)
+  const loadIds = [config.load].concat(config.load_entities || []).filter(Boolean);
+  const loadVals = loadIds.map((id) => toWatts(st(id)));
+  const loadW = loadVals.length && loadVals.every((w) => w !== null) ? loadVals.reduce((a, b) => a + b, 0) : null;
+  // încărcare: puterea bateriei are convenția fluxului (+ = descărcare, − = încărcare; `power_invert: true` o întoarce)
+  let pw = toWatts(st(config.power)); if (pw !== null && config.power_invert) pw = -pw;
+  const chargeW = pw !== null && pw < -THRESH_W ? -pw : null;
   const gp = st(config.grid_present);
   const backup = !!gp && gp.state === 'off';
   // banda utilizabilă = [prag, 100]%: cu rețea pragul e rezerva (reserve_pct), fără rețea (backup) pragul de oprire (shutdown_pct).
@@ -3624,8 +3637,10 @@ function buildBatteryModel(config, hass) {
   let autonomyH = null;
   if (usable !== null && loadW !== null && loadW >= THRESH_W) autonomyH = (usable * 1000) / loadW;
   const state = soc === null ? 'na' : backup ? 'backup' : soc <= config.reserve_pct ? 'low' : 'ok';
+  const charging = chargeW !== null && soc !== null && soc < 100;
+  const fullH = charging && total ? (((100 - soc) / 100) * total * 1000) / chargeW : null;   // timp până la 100% la puterea de încărcare de acum
   const hh = (h) => (h === null ? '—' : h >= 100 ? '>99 h' : `~${formatNumber(Math.round(h * 10) / 10)} h`);
-  return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, socText: soc === null ? '—' : `${Math.round(soc)}%`,
+  return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, charging, chargeW, fullH, fullText: hh(fullH), loadW, socText: soc === null ? '—' : `${Math.round(soc)}%`,
     energyText: usable !== null && bandTotal !== null ? t('{a} kWh din {b} kWh', { a: formatNumber(Math.round(usable * 10) / 10), b: formatNumber(Math.round(bandTotal * 10) / 10) }) : (bandTotal !== null ? t('— din {b} kWh', { b: formatNumber(Math.round(bandTotal * 10) / 10) }) : ''),
     autonomyText: hh(autonomyH) };
 }
@@ -3646,10 +3661,10 @@ function renderBattery(config, m, opts = {}) {
     ? `<div class="ccu-bat-head backup"><span class="ccu-ico">${iconSvg('bolt')}</span><span>${t('Backup activ · Rețeaua este oprită')}</span></div>`
     : (config.show_title === false ? '' : `<div class="ccu-bat-head"><span class="ccu-ico">${iconSvg('battery')}</span><span>${esc(config.title)}</span></div>`);   // show_title: false = fără titlu „Baterie” + iconiță
   const body = `<div class="ccu-bat-body"><div class="ccu-bat-shell" data-state="${m.state}"><div class="fill" style="width:${pct}%;background:linear-gradient(180deg,${c0},${c1})"></div><span class="pct">${esc(m.socText)}</span></div>`
-    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span><span class="a"><i>${t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span></div></div>`;
+    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span>${m.charging ? `<span class="a ch"><i>${t('Plin în')}</i><b>${esc(m.fullText)}</b></span>` : ''}<span class="a"><i>${m.charging ? t('Autonomie la consum') : t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span></div></div>`;
   const slider = `<div class="ccu-bat-slider"><div class="tr"><div class="fl" style="width:${pct}%"></div></div>${mk}</div>`;
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
-  return `<div class="ccu-card panel ccu-bat" data-state="${m.state}" data-id="0" data-entity="${esc(config.soc)}">${head}${body}${slider}${notes}</div>`;
+  return `<div class="ccu-card panel ccu-bat" data-state="${m.state}"${m.charging ? ' data-charging="1"' : ''} data-id="0" data-entity="${esc(config.soc)}">${head}${body}${slider}${notes}</div>`;
 }
 
 
@@ -4878,10 +4893,10 @@ function defineEditors() {
     _body() {
       return [
         this._fields([], t('Baterie'), t('Nivelul de încărcare și, opțional, capacitatea și consumul pentru autonomie.'), [
-          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
+          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, { name: 'load_entities', selector: SENSOR({ multiple: true }) }, grid({ name: 'power', selector: SENSOR() }, { name: 'power_invert', selector: BOOL }), grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
           grid({ name: 'reserve_pct', selector: NUM(0, 100) }, { name: 'shutdown_pct', selector: NUM(0, 100) }), grid({ name: 'color', selector: SEL(['yellow', 'green', 'blue', 'orange']) }, { name: 'show_title', selector: BOOL })],
-          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
-          { grid_present: t('Când e oprit, cardul arată „Backup activ”.') }, { defTrue: ['show_title'] }),
+          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), load_entities: t('Alți consumatori (se adună la consum)'), power: t('Putere baterie (W)'), power_invert: t('Inversează semnul puterii'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
+          { grid_present: t('Când e oprit, cardul arată „Backup activ”.'), load_entities: t('Dacă bateria alimentează mai multe circuite, adaugă-le aici: autonomia se calculează la suma lor.'), power: t('+ = descărcare, − = încărcare. Cât timp se încarcă, cardul arată „Plin în”.') }, { defTrue: ['show_title'] }),
       ];
     }
   }
