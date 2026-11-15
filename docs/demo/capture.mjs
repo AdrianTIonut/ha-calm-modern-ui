@@ -89,6 +89,28 @@ async function shot(file, query, width) {
 }
 
 await send('Page.enable');
+// ONLY=motion: docs/img/motion.png — animated PNG comparing motion: full (keeps moving) and motion: calm (a few cycles, then still)
+if (process.env.ONLY === 'motion') {
+  const url = pathToFileURL(join(here, 'motion.html')).href;
+  await send('Emulation.setDeviceMetricsOverride', { width: 960, height: 700, deviceScaleFactor: 1, mobile: false });
+  await send('Page.navigate', { url });
+  for (let i = 0; i < 40; i++) { if ((await evalJs('document.title')) === 'ready') break; await sleep(150); }
+  await sleep(1500);
+  const box = await evalJs('(() => { const r = document.getElementById("out").getBoundingClientRect(); return { x: 0, y: 0, width: Math.ceil(r.right + 16), height: Math.ceil(r.bottom + 16) }; })()');
+  const fps = 5, seconds = 10, frames = [];
+  for (let i = 0; i < seconds * fps; i++) {
+    await evalJs(`${allAnims}.forEach((a) => { a.pause(); a.currentTime = ${Math.round((i * 1000) / fps)}; })`);
+    await sleep(40);
+    frames.push(Buffer.from((await send('Page.captureScreenshot', { format: 'png', clip: { ...box, scale: 0.75 } })).data, 'base64'));
+  }
+  const apng = buildApng(frames, Math.round(1000 / fps));
+  writeFileSync(join(out, 'motion.png'), apng);
+  console.log('✔ motion.png', frames.length + ' frames', (apng.length / 1024).toFixed(0) + ' KB');
+  await send('Browser.close').catch(() => {});
+  proc.kill(); await sleep(500);
+  try { rmSync(profile, { recursive: true, force: true }); } catch (e) { /* ignore */ }
+  process.exit(0);
+}
 // ONLY=devices: just the tablet + phone mock-up (docs/img/devices.png)
 if (process.env.ONLY === 'devices') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1800, height: 1000, deviceScaleFactor: 2, mobile: false });

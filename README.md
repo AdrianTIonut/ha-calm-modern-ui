@@ -51,6 +51,8 @@ The icons move only when it makes sense, and only while the device is on: the fa
 
 ### Motion and battery
 
+<img src="docs/img/motion.png" width="696" alt="motion: full keeps moving, motion: calm stops after a few seconds">
+
 Continuous animations keep the screen busy, which costs battery on a phone. Every card has a `motion` option (also in the visual editor, under *Look and language*):
 
 | `motion` | What happens |

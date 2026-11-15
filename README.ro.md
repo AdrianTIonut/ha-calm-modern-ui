@@ -44,6 +44,8 @@ Iconițele se mișcă doar când are sens și doar cât aparatul e pornit: venti
 
 ### Mișcare și baterie
 
+<img src="docs/img/motion.png" width="696" alt="motion: full continuu, motion: calm se oprește după câteva secunde">
+
 Animațiile continue țin ecranul ocupat, ceea ce consumă baterie pe telefon. Fiecare card are opțiunea `motion` (și în editorul vizual, la *Aspect și limbă*):
 
 | `motion` | Ce face |

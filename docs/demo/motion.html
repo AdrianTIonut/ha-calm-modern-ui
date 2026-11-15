@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calm Modern UI — motion modes</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: #0b1220; font-family: system-ui, sans-serif; color: #e6edf7; }
+  #out { display: grid; grid-template-columns: repeat(2, 440px); gap: 16px; width: max-content; }
+  .col { display: grid; gap: 10px; align-content: start; padding: 14px; border-radius: 18px; background: #101a2c; border: 1px solid rgba(148,163,184,.18); }
+  .col h4 { margin: 0; font: 650 15px/1.2 system-ui; letter-spacing: .01em; }
+  .col h4 code { font: 600 13px/1 ui-monospace, Consolas, monospace; padding: 3px 7px; border-radius: 8px; background: rgba(52,211,153,.14); color: #34d399; margin-right: 8px; }
+  .col p { margin: 0 0 2px; font-size: 12.5px; color: #94a3b8; }
+</style></head>
+<body>
+<div id="out"></div>
+<script src="../../ccu.js"></script>
+<script src="scenes.js"></script>
+<script>
+const D = window.CCU_DEMO, hass = D.makeHass('en'), S = D.scenes;
+const make = (cfg, into) => { const el = document.createElement(cfg.type.replace('custom:', '')); el.setConfig({ language: 'en', preset: 'green', ...cfg }); el.hass = hass; into.append(el); };
+const out = document.getElementById('out');
+for (const [mode, text] of [['full', 'Keeps moving while the device is on (tablet and PC default)'], ['calm', 'A few seconds after each change, then still (phone default)']]) {
+  const c = document.createElement('div'); c.className = 'col';
+  c.innerHTML = '<h4><code>motion: ' + mode + '</code></h4><p>' + text + '</p>';
+  S.animated.cards.forEach((cfg) => make({ ...cfg, motion: mode }, c));
+  out.append(c);
+}
+document.title = 'ready';
+</script>
+</body></html>
