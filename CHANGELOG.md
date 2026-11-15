@@ -1,5 +1,18 @@
 # Istoric versiuni
 
+## 0.9.4
+- **„Plin în” mai stabil:** se calculează implicit după **media puterii pe ultimele 10 minute** (din istoricul HA, citit cel mult o dată pe minut), nu după valoarea de acum, ca cifra să nu sară când trece un nor; `charge_eta: now` păstrează calculul pe valoarea de acum. Cât se încarcă, autonomia se ascunde (`runtime_while_charging: true` o arată), iar peste 99 % „plin în” dispare. În antet, cu bifa, apar două linii sub procent. Cardul de baterie se redesenează acum și la schimbarea senzorilor din `load_entities`.
+- **Antet:** sub o valoare (procentul bateriei) poate apărea autonomia, `runtime_*` pe valoare (sau `runtime: { load, … }`), cu aceleași reguli ca la cardul de baterie; cât timp se încarcă arată „plin în …”. Rămâne vizibilă și pe telefon.
+- **Flux de energie:** `solar_today` și `radiation` pun sub titlu un rând mic, cu iconiță de soare: energia produsă azi și radiația solară (câmpuri noi și în editor).
+- **Grafic „cronologie”** (`timeline: true`): un rând pe serie, cu bare când e pornit, până la 8 rânduri într-un card mic (ventile de încălzire, întrerupătoare, uși); durata scrisă pe fiecare bară și totalul pe rând, perioadele „indisponibil” hașurate în galben, ore rotunde pe axă, interval și durată la atingere; `hide_durations: true` (bifă în editor) le ascunde.
+- **Grafic:** seriile pornit / oprit (ventile, întrerupătoare, senzori binari) se desenează acum ca trepte, cu „Oprit / Pornit” pe axă (înainte nu apărea nimic); intervalul acceptă orice „48h”, „3d” (1 h – 90 de zile); mesajul „Interval necunoscut” nu mai are ghilimele duble.
+- **Editor:** funcțiile opționale au bifă (energia produsă azi, radiația solară, autonomia din antet, „Plin în”, consum din mai multe circuite, adresă diferită pe tabletă / telefon): debifate, dispar din config, ca să nu fie nevoie de o stație meteo sau de un senzor pe care nu-l ai. Textul de lângă valorile din flux se ascunde cu `sun_labels: false`.
+- **Documentație:** tabelul cu carduri din README (în ambele limbi) le listează acum pe toate 15, cu descrieri la zi; cardul de flux are o imagine animată (`flow-animated.png`), cu punctele care curg pe panglici.
+- **Documentație:** imaginea animată a iconițelor (`animated-icons.png`) arată acum **toate** iconițele animate: cele 8 de aparate (cât sunt pornite) și cele 12 de vreme (mereu).
+- **Dashboard exemplu** (`examples/dashboard-calm.yaml`): o pagină de tabletă și una de telefon, cu aceeași bară de jos, cu entități inventate; capturile din README vin din el (`docs/demo/dashboard.html`).
+- **Meniu: apăsare lungă** (`hold_path`, `hold_path_tablet`, `hold_path_phone`): de exemplu Home de pe telefon sare la Home-ul tabletei și invers.
+- **Meniu de jos pe dispozitiv:** un buton poate duce în alt loc pe tabletă și pe telefon (`path_tablet` / `path_phone`, sau `path: { tablet, phone }`), se poate arăta doar pe unul dintre ele (`device: tablet | phone`) și se aprinde pe un grup de pagini (`match` acceptă acum o listă). Telefon = latura mică a ecranului sub 600 px; `device:` pe card forțează alegerea. Editorul are câmpurile noi și acceptă până la 12 butoane.
+
 ## 0.9.3
 - **Baterie:** autonomia se calculează la suma consumului din `load` și din noua listă `load_entities` (pentru bateria care alimentează mai multe circuite; se alege și din editor). Dacă un senzor nu are valoare, nu se mai afișează o autonomie prea optimistă.
 - **Baterie, cât timp se încarcă:** cu senzorul `power` (+ = descărcare, − = încărcare; `power_invert` îl întoarce) cardul arată „Plin în” (timpul până la 100 % la puterea de încărcare de acum), iar autonomia are eticheta „la consum”, ca să nu fie luată drept timp de descărcare.

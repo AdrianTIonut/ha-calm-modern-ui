@@ -111,10 +111,40 @@ if (process.env.ONLY === 'motion') {
   try { rmSync(profile, { recursive: true, force: true }); } catch (e) { /* ignore */ }
   process.exit(0);
 }
+// ONLY=animated: docs/img/animated-icons.png (APNG with every animated icon: devices while on, weather icons always)
+if (process.env.ONLY === 'animated') {
+  await recordApng('animated-icons.png', 'scene=animated&lang=en', 472, 3.2, 8);
+  await recordApng('flow-animated.png', 'scene=flow&lang=en', 512, 2.4, 10);   // the dots flow along the ribbons: one loop = 2.4 s, seamless
+  await send('Browser.close').catch(() => {});
+  proc.kill(); await sleep(500);
+  try { rmSync(profile, { recursive: true, force: true }); } catch (e) { /* ignore */ }
+  process.exit(0);
+}
+// ONLY=dashboard: the example dashboard on a tablet and on a phone (docs/img/dashboard-tablet.png, dashboard-phone.png)
+if (process.env.ONLY === 'dashboard') {
+  for (const [name, w, sw, sh, dsf] of [['tablet', 1280, 1280, 800, 1.5], ['phone', 390, 390, 844, 2]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: 900, deviceScaleFactor: dsf, mobile: false, screenWidth: sw, screenHeight: sh });
+    await send('Page.navigate', { url: pathToFileURL(join(here, 'dashboard.html')).href + '?device=' + name });
+    for (let i = 0; i < 40; i++) { if ((await evalJs('document.title')) === 'ready') break; await sleep(150); }
+    await sleep(2500);
+    const h = Math.ceil(await evalJs('document.body.scrollHeight'));
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dsf, mobile: false, screenWidth: sw, screenHeight: sh });
+    await sleep(500);
+    writeFileSync(join(out, `dashboard-${name}.png`), Buffer.from((await send('Page.captureScreenshot', { format: 'png' })).data, 'base64'));
+    console.log('✔', `dashboard-${name}.png`, w + '×' + h);
+  }
+  await send('Browser.close').catch(() => {});
+  proc.kill(); await sleep(500);
+  try { rmSync(profile, { recursive: true, force: true }); } catch (e) { /* ignore */ }
+  process.exit(0);
+}
 // ONLY=battery: docs/img/battery.png and devices.png (the two that show the battery card)
 if (process.env.ONLY === 'battery') {
   await send('Page.enable');
   await shot('battery.png', 'scene=battery&lang=en', 472);
+  await shot('hero.png', 'scene=hero&lang=en', 512);
+  await shot('graph.png', 'scene=graph&lang=en', 512);
+  await shot('flow.png', 'scene=flow&lang=en', 512);
   process.env.ONLY = 'devices';
 }
 // ONLY=devices: just the tablet + phone mock-up (docs/img/devices.png)

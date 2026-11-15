@@ -240,6 +240,13 @@ export function normalizeHeader(h) {
     if (!o.entity || !/^[a-z_]+\.[a-z0-9_]+$/.test(o.entity)) { warnings.push(t('Valoarea #{n}: entity_id lipsă sau invalid.', { n: i + 1 })); return null; }
     if (o.color === true) o.color = 'on'; // YAML: `color: on` fără ghilimele devine boolean true
     if (o.color && !TOKENS.includes(o.color)) { warnings.push(t('Valoarea #{n}: culoare "{c}" necunoscută (folosește {l}).', { n: i + 1, c: o.color, l: TOKENS.join('/') })); delete o.color; }
+    // autonomia sub valoare (când valoarea e procentul bateriei): chei `runtime_*` (din editor) sau `runtime: { load, … }`
+    const nested = o.runtime && typeof o.runtime === 'object' ? o.runtime : {}, rt = {};
+    for (const k of ['load', 'load_entities', 'capacity_entity', 'capacity_kwh', 'grid_present', 'reserve_pct', 'shutdown_pct', 'power', 'power_invert', 'charge_eta', 'while_charging']) {
+      const v = o['runtime_' + k] !== undefined && o['runtime_' + k] !== '' ? o['runtime_' + k] : nested[k];
+      if (v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)) rt[k] = v;
+    }
+    o.runtimeCfg = rt.load || (Array.isArray(rt.load_entities) && rt.load_entities.length) ? rt : null;
     return o;
   }).filter(Boolean);
   if (Array.isArray(src.values) && src.values.length > 3) warnings.push(t('Header: maximum 3 valori; restul sunt ignorate.'));
@@ -278,11 +285,12 @@ function rightValue(r, hass) {
 /** Header-ul: iconiță, valori colorate cu token, ceas. `now` e dat de apelant (funcția rămâne pură). */
 export function renderHeader(config, hass, now, opts = {}) {
   const h = config.header || normalizeHeader(config).header;
-  const vals = h.values.map((v) => {
+  const vals = h.values.map((v, i) => {
     const t = esc(headerValue(v, hass, h.auto_kw));
     const ico = v.icon ? `<span class="ccu-ico${v.color ? ` c-${v.color}` : ''}">${iconSvg(v.icon)}</span>` : '';
-    // cu etichetă: valoare sus, etichetă mică dedesubt
-    if (v.label) return `<span class="has-label">${ico}<span class="tx"><b${!v.icon && v.color ? ` class="c-${v.color}"` : ''}>${t}</b><small>${esc(v.label)}</small></span></span>`;
+    // cu etichetă: valoare sus, etichetă mică dedesubt; textul de autonomie (opts.subs) ia locul etichetei
+    const sub = opts.subs && opts.subs[i], lab = (Array.isArray(sub) ? sub.join('') : sub) || v.label;   // autonomia / „plin în” (`rt`) rămâne vizibilă și pe telefon; etichetele obișnuite se ascund acolo
+    if (lab) return `<span class="has-label">${ico}<span class="tx"><b${!v.icon && v.color ? ` class="c-${v.color}"` : ''}>${t}</b>${Array.isArray(sub) ? sub.map((x) => `<small class="rt">${esc(x)}</small>`).join('') : `<small${sub ? ' class="rt"' : ''}>${esc(lab)}</small>`}</span></span>`;
     if (v.icon) return `<span>${ico}${t}</span>`;
     return `<span${v.color ? ` class="c-${v.color}"` : ''}>${t}</span>`;
   }).join('');
@@ -298,27 +306,50 @@ export function normalizeNav(cfg) {
   const items = [];
   (Array.isArray(cfg?.items) ? cfg.items : []).forEach((it, i) => {
     const o = it && typeof it === 'object' ? it : null;
-    const path = o && (o.path ?? o.navigation_path);
+    const rawPath = o && (o.path ?? o.navigation_path);
+    const po = rawPath && typeof rawPath === 'object' && !Array.isArray(rawPath) ? rawPath : null;   // path: { tablet, phone, default }
+    const okPath = (p) => (typeof p === 'string' && p.startsWith('/') ? p : '');
+    const path = po ? okPath(po.default) : okPath(rawPath);
+    const paths = o ? { tablet: okPath(o.path_tablet ?? (po && po.tablet)), phone: okPath(o.path_phone ?? (po && po.phone)) } : { tablet: '', phone: '' };
+    const holds = o ? { tablet: okPath(o.hold_path_tablet), phone: okPath(o.hold_path_phone) } : { tablet: '', phone: '' };   // apăsare lungă: unde duce butonul pe fiecare dispozitiv
+    const hold = o ? okPath(o.hold_path) : '';
     const back = !!o && o.back === true;   // `back: true` = „înapoi” (history.back), fără path
-    if (!o || (!back && (typeof path !== 'string' || !path.startsWith('/')))) { warnings.push(t('Meniu #{n}: lipsește „path” (adresă ce începe cu /) sau „back: true”.', { n: i + 1 })); return; }
+    if (!o || (!back && !path && !paths.tablet && !paths.phone)) { warnings.push(t('Meniu #{n}: lipsește „path” (adresă ce începe cu /) sau „back: true”.', { n: i + 1 })); return; }
     const vi = o.visible_if && typeof o.visible_if === 'object' && /^[a-z_]+\.[a-z0-9_]+$/.test(String(o.visible_if.entity)) ? { entity: o.visible_if.entity, state: String(o.visible_if.state) } : null;
     const bl = Array.isArray(o.badge) ? o.badge : (o.badge && Array.isArray(o.badge.entities) ? o.badge.entities : []);
-    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, match: o.match, back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
+    const mt = (Array.isArray(o.match) ? o.match : o.match ? [o.match] : []).map(okPath).filter(Boolean);
+    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, paths: back ? { tablet: '', phone: '' } : paths, hold, holds, match: mt.length ? mt : null, device: o.device === 'tablet' || o.device === 'phone' ? o.device : '', back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
   });
   return { items, warnings };
 }
 
-/** Meniul de jos: o pictogramă + etichetă per element; elementul curent (după adresa paginii) e „activ”. */
+/** Adresa unui buton pe dispozitivul dat: path_phone / path_tablet, apoi path, apoi oricare dintre ele. */
+export function navPath(it, device) {
+  const p = it.paths || {};
+  return p[device === 'phone' ? 'phone' : 'tablet'] || it.path || p.tablet || p.phone || '';
+}
+
+/** Adresa la apăsare lungă pe dispozitivul dat (hold_path_phone / hold_path_tablet, apoi hold_path), sau '' dacă butonul nu are. */
+export function holdTarget(it, device) {
+  const h = it.holds || {};
+  return h[device === 'phone' ? 'phone' : 'tablet'] || it.hold || '';
+}
+
+/** Meniul de jos: o pictogramă + etichetă per element; elementul curent (după adresa paginii) e „activ”. `opts.device` = „phone” | „tablet”. */
 export function renderNav(config, currentPath, opts = {}) {
   const cur = String(currentPath || '');
-  const isOn = (it) => { if (it.back) return false; const p = it.match || it.path; return cur === p || cur.startsWith(p.endsWith('/') ? p : p + '/'); };
+  const device = opts.device === 'phone' ? 'phone' : 'tablet';
+  const forDevice = (it) => !it.device || it.device === device;   // `device: phone` = butonul se vede doar pe telefon
+  const hit = (p) => !!p && (cur === p || cur.startsWith(p.endsWith('/') ? p : p + '/'));
+  // fără `match`, butonul se aprinde pe toate paginile lui (tabletă + telefon + implicită): Home e „aprins” pe ambele pagini home
+  const isOn = (it) => { if (it.back || !forDevice(it)) return false; return it.match && it.match.length ? it.match.some(hit) : [it.path, (it.paths || {}).tablet, (it.paths || {}).phone].some(hit); };
   let on = config.items.findIndex(isOn);
   const hs = opts.hass && opts.hass.states;
   // insignă: câte entități din `badge` sunt „on” (ex. persoane detectate de camere); > 0 → butonul devine roșu (alertă) ca „Persoane pe n camere”
   // un `sensor.*` numeric (ex. un contor „becuri aprinse”) adaugă valoarea lui; orice alt tip de entitate adaugă 1 când e „on”
   const cnt = (it) => (hs && it.badge ? it.badge.reduce((a, id) => { const s = hs[id]; if (!s) return a; if (id.startsWith('sensor.')) { const n = Math.round(Number(s.state)); return a + (Number.isFinite(n) && n > 0 ? n : 0); } return a + (s.state === 'on' ? 1 : 0); }, 0) : 0);
   // visible_if: { entity, state } — elementul se vede doar când entitatea are acea stare (ex. butonul „Tableta” doar pe tabletă)
-  const shown = (it) => !it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state);
+  const shown = (it) => forDevice(it) && (!it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state));
   const labels = config.labels !== false;
   const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? (it.badge_style === 'light' ? 'lit' : 'alert') : 'off';
     return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge${it.badge_style === 'light' ? ' lit' : ''}">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');

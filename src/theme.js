@@ -199,7 +199,7 @@ export const CCU_THEME = `
 .ccu-head .vals > span.has-label { gap: 9px; padding: 0 14px; }
 .ccu-head .vals > span.has-label .ccu-ico { --ico: 22px; }
 .ccu-head .vals .tx { display: grid; line-height: 1.15; } .ccu-head .vals .tx b { font-size: 13.5px; font-weight: 600; }
-.ccu-head .vals .tx small { font-size: 11px; font-weight: 500; color: var(--ccu-muted); }
+.ccu-head .vals .tx small { font-size: 11px; font-weight: 500; color: var(--ccu-muted); } .ccu-head .vals .tx small.rt { font-size: 10.5px; white-space: nowrap; }
 .ccu-head .clock { text-align: right; line-height: 1.1; font-size: 22px; font-weight: 600; letter-spacing: -.01em; padding-left: 12px; border-left: var(--ccu-bw) solid var(--ccu-line); }
 .ccu-head .clock small { display: block; margin-top: 2px; font-size: 11px; font-weight: 500; color: var(--ccu-muted); letter-spacing: 0; }
 .c-accent { color: var(--ccu-c-blue); } .c-on { color: var(--ccu-c-yellow); } .c-alert { color: var(--ccu-c-orange); } .c-ok { color: var(--ccu-c-green); } .c-muted { color: var(--ccu-muted); }
@@ -242,6 +242,7 @@ export const CCU_THEME = `
 .ccu-graph { display: block; width: 100%; height: auto; touch-action: pan-y; }
 .ccu-graph .area { fill: color-mix(in srgb, var(--sc, var(--ccu-series)) 15%, transparent); stroke: none; }
 .ccu-graph .line { fill: none; stroke: var(--sc, var(--ccu-series)); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--sc, var(--ccu-series)) 60%, transparent)); }
+.ccu-graph.timeline .trk { fill: color-mix(in srgb, var(--ccu-muted) 14%, transparent); stroke: none; } .ccu-graph.timeline .on { fill: var(--sc, var(--ccu-on)); opacity: .9; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--sc, var(--ccu-on)) 50%, transparent)); } .ccu-graph.timeline .ln { fill: var(--ccu-text); font-size: 11.5px; } .ccu-graph.timeline .na { stroke: color-mix(in srgb, var(--ccu-c-yellow) 55%, transparent); stroke-width: 1; } .ccu-graph.timeline .dur { fill: var(--ccu-bg); font-size: 10.5px; font-weight: 700; } .ccu-graph.timeline .tot { fill: var(--ccu-muted); font-size: 11px; }
 .ccu-graph .dot { fill: var(--ccu-bg); stroke: var(--sc, var(--ccu-series)); stroke-width: 2; }
 .ccu-graph-wrap { position: relative; }
 .ccu-graph-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 6px; }
@@ -325,6 +326,7 @@ export const CCU_THEME = `
 .ccu-scene[data-id] { cursor: pointer; }
 
 /* ---- flux energie (ccu-flow-card) ---- */
+.ccu-flow-sun { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: -3px 2px 8px; font-size: 12.5px; color: var(--ccu-muted); } .ccu-flow-sun .s { display: inline-flex; align-items: center; gap: 6px; } .ccu-flow-sun .ccu-ico { --ico: 16px; color: var(--ccu-c-yellow); } .ccu-flow-sun b { color: var(--ccu-text); font-weight: 600; }
 .ccu-flow-head { display: flex; align-items: baseline; gap: 6px; margin: 0 2px 8px; font-size: 15px; font-weight: 600; } .ccu-flow-head .tt { color: var(--ccu-muted); font-weight: 500; }
 .ccu-flow-body { position: relative; }
 .ccu-flow-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -454,7 +456,7 @@ export const CCU_THEME = `
 }
 @container (max-width: 520px) {
   .ccu-head { gap: 8px; padding-right: 10px; }
-  .ccu-head .vals > span { padding: 0 8px; } .ccu-head .vals > span.has-label .tx small { display: none; } .ccu-head .vals > span.has-label { padding: 0 8px; }
+  .ccu-head .vals > span { padding: 0 8px; } .ccu-head .vals > span.has-label .tx small:not(.rt) { display: none; } .ccu-head .vals > span.has-label { padding: 0 8px; }
   .ccu-head .clock { font-size: 18px; padding-left: 8px; }
   .ccu-fi .tx b, .ccu-fi .tx .v { font-size: 12px; } .ccu-fi .ccu-ico { --ico: 22px; }
   .ccu-fi .tx .v i { display: block; margin-top: -1px; }
@@ -467,7 +469,11 @@ export const CCU_THEME = `
   .ccu-head .clock { font-size: 17px; padding-left: 8px; }
 }
 @container (max-width: 380px) {
-  .ccu-head > .ccu-ico { display: none; } .ccu-head .vals > span:first-child { padding-left: 0; } .ccu-head .vals .ccu-ico { display: none; }
+  .ccu-head > .ccu-ico { display: none; } .ccu-head .vals > span:first-child { padding-left: 0; }
+  /* telefon îngust: iconițele valorilor rămân (mai mici), spațiile se strâng */
+  .ccu-head .vals { font-size: 12.5px; } .ccu-head .vals > span { padding: 0 4px; gap: 3px; } .ccu-head .vals > span.has-label { padding: 0 4px; gap: 4px; }
+  .ccu-head .vals .ccu-ico, .ccu-head .vals > span.has-label .ccu-ico { --ico: 13px; } .ccu-head .vals .tx b { font-size: 12.5px; } .ccu-head .vals .tx small.rt { font-size: 10px; }
+  .ccu-head .clock { font-size: 16px; padding-left: 6px; }
 }
 
 

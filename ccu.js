@@ -204,7 +204,7 @@ const CCU_THEME = `
 .ccu-head .vals > span.has-label { gap: 9px; padding: 0 14px; }
 .ccu-head .vals > span.has-label .ccu-ico { --ico: 22px; }
 .ccu-head .vals .tx { display: grid; line-height: 1.15; } .ccu-head .vals .tx b { font-size: 13.5px; font-weight: 600; }
-.ccu-head .vals .tx small { font-size: 11px; font-weight: 500; color: var(--ccu-muted); }
+.ccu-head .vals .tx small { font-size: 11px; font-weight: 500; color: var(--ccu-muted); } .ccu-head .vals .tx small.rt { font-size: 10.5px; white-space: nowrap; }
 .ccu-head .clock { text-align: right; line-height: 1.1; font-size: 22px; font-weight: 600; letter-spacing: -.01em; padding-left: 12px; border-left: var(--ccu-bw) solid var(--ccu-line); }
 .ccu-head .clock small { display: block; margin-top: 2px; font-size: 11px; font-weight: 500; color: var(--ccu-muted); letter-spacing: 0; }
 .c-accent { color: var(--ccu-c-blue); } .c-on { color: var(--ccu-c-yellow); } .c-alert { color: var(--ccu-c-orange); } .c-ok { color: var(--ccu-c-green); } .c-muted { color: var(--ccu-muted); }
@@ -247,6 +247,7 @@ const CCU_THEME = `
 .ccu-graph { display: block; width: 100%; height: auto; touch-action: pan-y; }
 .ccu-graph .area { fill: color-mix(in srgb, var(--sc, var(--ccu-series)) 15%, transparent); stroke: none; }
 .ccu-graph .line { fill: none; stroke: var(--sc, var(--ccu-series)); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--sc, var(--ccu-series)) 60%, transparent)); }
+.ccu-graph.timeline .trk { fill: color-mix(in srgb, var(--ccu-muted) 14%, transparent); stroke: none; } .ccu-graph.timeline .on { fill: var(--sc, var(--ccu-on)); opacity: .9; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--sc, var(--ccu-on)) 50%, transparent)); } .ccu-graph.timeline .ln { fill: var(--ccu-text); font-size: 11.5px; } .ccu-graph.timeline .na { stroke: color-mix(in srgb, var(--ccu-c-yellow) 55%, transparent); stroke-width: 1; } .ccu-graph.timeline .dur { fill: var(--ccu-bg); font-size: 10.5px; font-weight: 700; } .ccu-graph.timeline .tot { fill: var(--ccu-muted); font-size: 11px; }
 .ccu-graph .dot { fill: var(--ccu-bg); stroke: var(--sc, var(--ccu-series)); stroke-width: 2; }
 .ccu-graph-wrap { position: relative; }
 .ccu-graph-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 6px; }
@@ -330,6 +331,7 @@ const CCU_THEME = `
 .ccu-scene[data-id] { cursor: pointer; }
 
 /* ---- flux energie (ccu-flow-card) ---- */
+.ccu-flow-sun { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: -3px 2px 8px; font-size: 12.5px; color: var(--ccu-muted); } .ccu-flow-sun .s { display: inline-flex; align-items: center; gap: 6px; } .ccu-flow-sun .ccu-ico { --ico: 16px; color: var(--ccu-c-yellow); } .ccu-flow-sun b { color: var(--ccu-text); font-weight: 600; }
 .ccu-flow-head { display: flex; align-items: baseline; gap: 6px; margin: 0 2px 8px; font-size: 15px; font-weight: 600; } .ccu-flow-head .tt { color: var(--ccu-muted); font-weight: 500; }
 .ccu-flow-body { position: relative; }
 .ccu-flow-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -459,7 +461,7 @@ const CCU_THEME = `
 }
 @container (max-width: 520px) {
   .ccu-head { gap: 8px; padding-right: 10px; }
-  .ccu-head .vals > span { padding: 0 8px; } .ccu-head .vals > span.has-label .tx small { display: none; } .ccu-head .vals > span.has-label { padding: 0 8px; }
+  .ccu-head .vals > span { padding: 0 8px; } .ccu-head .vals > span.has-label .tx small:not(.rt) { display: none; } .ccu-head .vals > span.has-label { padding: 0 8px; }
   .ccu-head .clock { font-size: 18px; padding-left: 8px; }
   .ccu-fi .tx b, .ccu-fi .tx .v { font-size: 12px; } .ccu-fi .ccu-ico { --ico: 22px; }
   .ccu-fi .tx .v i { display: block; margin-top: -1px; }
@@ -472,7 +474,11 @@ const CCU_THEME = `
   .ccu-head .clock { font-size: 17px; padding-left: 8px; }
 }
 @container (max-width: 380px) {
-  .ccu-head > .ccu-ico { display: none; } .ccu-head .vals > span:first-child { padding-left: 0; } .ccu-head .vals .ccu-ico { display: none; }
+  .ccu-head > .ccu-ico { display: none; } .ccu-head .vals > span:first-child { padding-left: 0; }
+  /* telefon îngust: iconițele valorilor rămân (mai mici), spațiile se strâng */
+  .ccu-head .vals { font-size: 12.5px; } .ccu-head .vals > span { padding: 0 4px; gap: 3px; } .ccu-head .vals > span.has-label { padding: 0 4px; gap: 4px; }
+  .ccu-head .vals .ccu-ico, .ccu-head .vals > span.has-label .ccu-ico { --ico: 13px; } .ccu-head .vals .tx b { font-size: 12.5px; } .ccu-head .vals .tx small.rt { font-size: 10px; }
+  .ccu-head .clock { font-size: 16px; padding-left: 6px; }
 }
 
 
@@ -947,6 +953,22 @@ const EN = {
  "Tastă": "Key",
  "Comandă": "Command",
  "Ex. KEY_11 sau numele din integrarea ta.": "E.g. KEY_11 or the name used by your integration.",
+ "autonomie {x}": "runtime {x}",
+ "Media ultimelor 10 minute": "Average of the last 10 minutes",
+ "Puterea de acum": "Current power",
+ "Calculează „Plin în” după": "Calculate “Full in” from",
+ "Arată autonomia și în timpul încărcării": "Also show the runtime while charging",
+ "Media nu sare când trece un nor; citește istoricul din HA.": "The average does not jump when a cloud passes; it reads the HA history.",
+ "plin în {x}": "full in {x}",
+ "Autonomie sub valoare (pentru procentul bateriei)": "Runtime under the value (for the battery percentage)",
+ "Completează consumul și apare autonomia sub procent, ca pe cardul de baterie.": "Fill in the load and the runtime appears under the percentage, as on the battery card.",
+ "+ = descărcare, − = încărcare. Cât timp se încarcă, apare „plin în …”.": "+ = discharging, − = charging. While it charges, “full in …” is shown.",
+ "Apăsare lungă: altă pagină": "Long press: another page",
+ "Adresa la apăsare lungă": "Long-press address",
+ "Pe tabletă": "On a tablet",
+ "Pe telefon": "On a phone",
+ "Merge pe orice dispozitiv; câmpurile de dedesubt au prioritate pe tabletă / telefon.": "Works on any device; the fields below take priority on a tablet / phone.",
+ "Ex. pe telefon, apăsat lung pe Home duce la pagina tabletei.": "E.g. on a phone, a long press on Home goes to the tablet page.",
  "Ignoră dispozitivele": "Ignored devices",
  "Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.": "Pick a device from the list that you no longer use (e.g. a broken toothbrush) or type a word from its name and press Enter.",
  "Adaugă dispozitive": "Add devices",
@@ -975,6 +997,14 @@ const EN = {
  "Mișcare (economie de baterie)": "Motion (battery saving)",
  "Efecte vreme (ploaie, nori)": "Weather effects (rain, clouds)",
  "Animația fluxului": "Flow animation",
+ "Adresa pe tabletă (opțional)": "Address on a tablet (optional)",
+ "Adresa pe telefon (opțional)": "Address on a phone (optional)",
+ "Dacă butonul trebuie să ducă în alt loc pe tabletă (ex. Home).": "If the button must go somewhere else on a tablet (e.g. Home).",
+ "Dacă butonul trebuie să ducă în alt loc pe telefon.": "If the button must go somewhere else on a phone.",
+ "Se vede": "Shown",
+ "Oriunde": "Everywhere",
+ "Doar pe tabletă": "Tablet only",
+ "Doar pe telefon": "Phone only",
  "Radio: „{k}” nu e un entity_id valid.": "Radio: “{k}” is not a valid entity_id.",
  "Radio: „{k}” trebuie să fie din domeniul {d}.": "Radio: “{k}” must be from the {d} domain.",
  "Radio: lipsește „stations” (un select cu posturile).": "Radio: “stations” is missing (a select with the stations).",
@@ -1136,7 +1166,34 @@ const EN = {
  "Grindină": "Hail",
  "Vânt și nori": "Windy and cloudy",
  "Fenomen deosebit": "Exceptional weather",
+ "produs azi": "produced today",
+ "radiație": "radiation",
+ "Producție azi și radiație": "Production today and radiation",
+ "Un rând mic sub titlu, cu iconiță de soare. Opțional.": "A small row under the title, with a sun icon. Optional.",
+ "Energie produsă azi (kWh)": "Energy produced today (kWh)",
+ "Radiație solară (W/m²)": "Solar radiation (W/m²)",
  "La atingere (ex. deschide pagina graficului)": "On tap (e.g. open the graph's page)",
+ "Cronologie: un rând pe serie (pornit / oprit)": "Timeline: one row per series (on / off)",
+ "Până la 8 rânduri, unul pe serie.": "Up to 8 rows, one per series.",
+ "Grafic: maximum 8 serii (cronologie); restul sunt ignorate.": "Graph: at most 8 series (timeline); the rest are ignored.",
+ "indisponibil": "unavailable",
+ "Cronologie: ascunde durata de pe bare și totalul pe rând": "Timeline: hide the duration on the bars and the total per row",
+ "Arată energia produsă azi": "Show the energy produced today",
+ "Rând mic sub titlu, cu iconiță de soare.": "A small row under the title, with a sun icon.",
+ "Senzor energie produsă azi (kWh)": "Energy produced today sensor (kWh)",
+ "Arată radiația solară": "Show the solar radiation",
+ "Doar dacă ai o stație meteo sau un senzor de radiație.": "Only if you have a weather station or a radiation sensor.",
+ "Senzor radiație solară (W/m²)": "Solar radiation sensor (W/m²)",
+ "Consum din mai multe circuite": "Load from several circuits",
+ "Arată „Plin în” cât se încarcă": "Show “Full in” while charging",
+ "+ = descărcare, − = încărcare.": "+ = discharging, − = charging.",
+ "Arată autonomia sub valoare (pentru procentul bateriei)": "Show the runtime under the value (for the battery percentage)",
+ "Adresă diferită pe tabletă și pe telefon": "Different address on a tablet and on a phone",
+ "Adresa pe tabletă": "Address on a tablet",
+ "Adresa pe telefon": "Address on a phone",
+ "Ex. Home duce la pagina tabletei.": "E.g. Home goes to the tablet page.",
+ "Ex. Home duce la pagina telefonului.": "E.g. Home goes to the phone page.",
+ "Arată textul lângă valori („produs azi”, „radiație”)": "Show the text next to the values (“produced today”, “radiation”)",
  "Mașina #{n} nu e un obiect.": "Vehicle #{n} is not an object.",
  "Mașina „{v}”, documentul #{n}: pentru km trebuie „remaining” sau „odometer” + „last_km”.": "Vehicle “{v}”, document #{n}: for km you need “remaining” or “odometer” + “last_km”.",
  "Mașina „{v}”, documentul #{n}: lipsește „entity” (o dată) sau „odometer” / „remaining” (km).": "Vehicle “{v}”, document #{n}: “entity” (a date) or “odometer” / “remaining” (km) is missing.",
@@ -1515,6 +1572,16 @@ function validateAction(a) {
 }
 
 // Export pentru testare (funcțiile neexportate direct)
+/**
+ * Dispozitivul: „phone” când latura mică a ecranului e sub 600 px (indiferent de orientare), altfel „tablet” (și PC / iPad).
+ * `override` = „phone” | „tablet” (opțiunea `device:` a cardului) ocolește detectarea.
+ */
+function deviceKind(override) {
+  if (override === 'phone' || override === 'tablet') return override;
+  const s = typeof screen !== 'undefined' && screen ? screen : null;
+  return s && Math.min(s.width || 9999, s.height || 9999) < 600 ? 'phone' : 'tablet';
+}
+
 /** `motion`: auto | full | calm | off (altceva → auto). `weather_effects` / `flow_animation`: auto | on | off. */
 const MOTION_VALUES = ['auto', 'full', 'calm', 'off'];
 function normalizeMotion(v) { const s = String(v === undefined || v === null ? 'auto' : v).toLowerCase(); return MOTION_VALUES.includes(s) ? s : 'auto'; }
@@ -1535,7 +1602,7 @@ function resolveMotion(cfg, narrow) {
   return { anim: base, fx: pick(c.weather_effects), flow: pick(c.flow_animation) };
 }
 
-return { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeMotion, normalizeSwitch, normalizeConfig, normalizeAction, resolveMotion };
+return { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeMotion, normalizeSwitch, normalizeConfig, normalizeAction, deviceKind, resolveMotion };
 })();
 
 __m["state"] = (() => {
@@ -2684,6 +2751,13 @@ function normalizeHeader(h) {
     if (!o.entity || !/^[a-z_]+\.[a-z0-9_]+$/.test(o.entity)) { warnings.push(t('Valoarea #{n}: entity_id lipsă sau invalid.', { n: i + 1 })); return null; }
     if (o.color === true) o.color = 'on'; // YAML: `color: on` fără ghilimele devine boolean true
     if (o.color && !TOKENS.includes(o.color)) { warnings.push(t('Valoarea #{n}: culoare "{c}" necunoscută (folosește {l}).', { n: i + 1, c: o.color, l: TOKENS.join('/') })); delete o.color; }
+    // autonomia sub valoare (când valoarea e procentul bateriei): chei `runtime_*` (din editor) sau `runtime: { load, … }`
+    const nested = o.runtime && typeof o.runtime === 'object' ? o.runtime : {}, rt = {};
+    for (const k of ['load', 'load_entities', 'capacity_entity', 'capacity_kwh', 'grid_present', 'reserve_pct', 'shutdown_pct', 'power', 'power_invert', 'charge_eta', 'while_charging']) {
+      const v = o['runtime_' + k] !== undefined && o['runtime_' + k] !== '' ? o['runtime_' + k] : nested[k];
+      if (v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)) rt[k] = v;
+    }
+    o.runtimeCfg = rt.load || (Array.isArray(rt.load_entities) && rt.load_entities.length) ? rt : null;
     return o;
   }).filter(Boolean);
   if (Array.isArray(src.values) && src.values.length > 3) warnings.push(t('Header: maximum 3 valori; restul sunt ignorate.'));
@@ -2722,11 +2796,12 @@ function rightValue(r, hass) {
 /** Header-ul: iconiță, valori colorate cu token, ceas. `now` e dat de apelant (funcția rămâne pură). */
 function renderHeader(config, hass, now, opts = {}) {
   const h = config.header || normalizeHeader(config).header;
-  const vals = h.values.map((v) => {
+  const vals = h.values.map((v, i) => {
     const t = esc(headerValue(v, hass, h.auto_kw));
     const ico = v.icon ? `<span class="ccu-ico${v.color ? ` c-${v.color}` : ''}">${iconSvg(v.icon)}</span>` : '';
-    // cu etichetă: valoare sus, etichetă mică dedesubt
-    if (v.label) return `<span class="has-label">${ico}<span class="tx"><b${!v.icon && v.color ? ` class="c-${v.color}"` : ''}>${t}</b><small>${esc(v.label)}</small></span></span>`;
+    // cu etichetă: valoare sus, etichetă mică dedesubt; textul de autonomie (opts.subs) ia locul etichetei
+    const sub = opts.subs && opts.subs[i], lab = (Array.isArray(sub) ? sub.join('') : sub) || v.label;   // autonomia / „plin în” (`rt`) rămâne vizibilă și pe telefon; etichetele obișnuite se ascund acolo
+    if (lab) return `<span class="has-label">${ico}<span class="tx"><b${!v.icon && v.color ? ` class="c-${v.color}"` : ''}>${t}</b>${Array.isArray(sub) ? sub.map((x) => `<small class="rt">${esc(x)}</small>`).join('') : `<small${sub ? ' class="rt"' : ''}>${esc(lab)}</small>`}</span></span>`;
     if (v.icon) return `<span>${ico}${t}</span>`;
     return `<span${v.color ? ` class="c-${v.color}"` : ''}>${t}</span>`;
   }).join('');
@@ -2742,27 +2817,50 @@ function normalizeNav(cfg) {
   const items = [];
   (Array.isArray(cfg?.items) ? cfg.items : []).forEach((it, i) => {
     const o = it && typeof it === 'object' ? it : null;
-    const path = o && (o.path ?? o.navigation_path);
+    const rawPath = o && (o.path ?? o.navigation_path);
+    const po = rawPath && typeof rawPath === 'object' && !Array.isArray(rawPath) ? rawPath : null;   // path: { tablet, phone, default }
+    const okPath = (p) => (typeof p === 'string' && p.startsWith('/') ? p : '');
+    const path = po ? okPath(po.default) : okPath(rawPath);
+    const paths = o ? { tablet: okPath(o.path_tablet ?? (po && po.tablet)), phone: okPath(o.path_phone ?? (po && po.phone)) } : { tablet: '', phone: '' };
+    const holds = o ? { tablet: okPath(o.hold_path_tablet), phone: okPath(o.hold_path_phone) } : { tablet: '', phone: '' };   // apăsare lungă: unde duce butonul pe fiecare dispozitiv
+    const hold = o ? okPath(o.hold_path) : '';
     const back = !!o && o.back === true;   // `back: true` = „înapoi” (history.back), fără path
-    if (!o || (!back && (typeof path !== 'string' || !path.startsWith('/')))) { warnings.push(t('Meniu #{n}: lipsește „path” (adresă ce începe cu /) sau „back: true”.', { n: i + 1 })); return; }
+    if (!o || (!back && !path && !paths.tablet && !paths.phone)) { warnings.push(t('Meniu #{n}: lipsește „path” (adresă ce începe cu /) sau „back: true”.', { n: i + 1 })); return; }
     const vi = o.visible_if && typeof o.visible_if === 'object' && /^[a-z_]+\.[a-z0-9_]+$/.test(String(o.visible_if.entity)) ? { entity: o.visible_if.entity, state: String(o.visible_if.state) } : null;
     const bl = Array.isArray(o.badge) ? o.badge : (o.badge && Array.isArray(o.badge.entities) ? o.badge.entities : []);
-    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, match: o.match, back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
+    const mt = (Array.isArray(o.match) ? o.match : o.match ? [o.match] : []).map(okPath).filter(Boolean);
+    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, paths: back ? { tablet: '', phone: '' } : paths, hold, holds, match: mt.length ? mt : null, device: o.device === 'tablet' || o.device === 'phone' ? o.device : '', back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
   });
   return { items, warnings };
 }
 
-/** Meniul de jos: o pictogramă + etichetă per element; elementul curent (după adresa paginii) e „activ”. */
+/** Adresa unui buton pe dispozitivul dat: path_phone / path_tablet, apoi path, apoi oricare dintre ele. */
+function navPath(it, device) {
+  const p = it.paths || {};
+  return p[device === 'phone' ? 'phone' : 'tablet'] || it.path || p.tablet || p.phone || '';
+}
+
+/** Adresa la apăsare lungă pe dispozitivul dat (hold_path_phone / hold_path_tablet, apoi hold_path), sau '' dacă butonul nu are. */
+function holdTarget(it, device) {
+  const h = it.holds || {};
+  return h[device === 'phone' ? 'phone' : 'tablet'] || it.hold || '';
+}
+
+/** Meniul de jos: o pictogramă + etichetă per element; elementul curent (după adresa paginii) e „activ”. `opts.device` = „phone” | „tablet”. */
 function renderNav(config, currentPath, opts = {}) {
   const cur = String(currentPath || '');
-  const isOn = (it) => { if (it.back) return false; const p = it.match || it.path; return cur === p || cur.startsWith(p.endsWith('/') ? p : p + '/'); };
+  const device = opts.device === 'phone' ? 'phone' : 'tablet';
+  const forDevice = (it) => !it.device || it.device === device;   // `device: phone` = butonul se vede doar pe telefon
+  const hit = (p) => !!p && (cur === p || cur.startsWith(p.endsWith('/') ? p : p + '/'));
+  // fără `match`, butonul se aprinde pe toate paginile lui (tabletă + telefon + implicită): Home e „aprins” pe ambele pagini home
+  const isOn = (it) => { if (it.back || !forDevice(it)) return false; return it.match && it.match.length ? it.match.some(hit) : [it.path, (it.paths || {}).tablet, (it.paths || {}).phone].some(hit); };
   let on = config.items.findIndex(isOn);
   const hs = opts.hass && opts.hass.states;
   // insignă: câte entități din `badge` sunt „on” (ex. persoane detectate de camere); > 0 → butonul devine roșu (alertă) ca „Persoane pe n camere”
   // un `sensor.*` numeric (ex. un contor „becuri aprinse”) adaugă valoarea lui; orice alt tip de entitate adaugă 1 când e „on”
   const cnt = (it) => (hs && it.badge ? it.badge.reduce((a, id) => { const s = hs[id]; if (!s) return a; if (id.startsWith('sensor.')) { const n = Math.round(Number(s.state)); return a + (Number.isFinite(n) && n > 0 ? n : 0); } return a + (s.state === 'on' ? 1 : 0); }, 0) : 0);
   // visible_if: { entity, state } — elementul se vede doar când entitatea are acea stare (ex. butonul „Tableta” doar pe tabletă)
-  const shown = (it) => !it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state);
+  const shown = (it) => forDevice(it) && (!it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state));
   const labels = config.labels !== false;
   const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? (it.badge_style === 'light' ? 'lit' : 'alert') : 'off';
     return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge${it.badge_style === 'light' ? ' lit' : ''}">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');
@@ -2849,7 +2947,7 @@ function patchNodes(o, n) {
   return true;
 }
 
-return { esc, formatClock, defaultTap, entityModel, sparkPath, renderButton, renderChip, renderButtons, visibleChips, normalizeWaste, wasteModel, renderChips, normalizeHeader, renderHeader, normalizeNav, renderNav, safePicture, normalizePeople, renderPeople, patchNodes };
+return { esc, formatClock, defaultTap, entityModel, sparkPath, renderButton, renderChip, renderButtons, visibleChips, normalizeWaste, wasteModel, renderChips, normalizeHeader, renderHeader, normalizeNav, navPath, holdTarget, renderNav, safePicture, normalizePeople, renderPeople, patchNodes };
 })();
 
 __m["graph-data"] = (() => {
@@ -3045,6 +3143,13 @@ function downsample(points, target = 150) {
  * Returnează { [entity_id]: [{ t: ms, v: number|null }, ...] }.
  * Ignoră unavailable/unknown/non-numeric (valoare = null).
  */
+/** Stări „pornit / oprit” desenabile ca 1 / 0 (ventile, întrerupătoare, senzori binari). Altceva → undefined. */
+const DISCRETE = { on: 1, off: 0, open: 1, closed: 0, true: 1, false: 0, home: 1, not_home: 0, detected: 1, clear: 0 };
+function discreteValue(s) {
+  const k = typeof s === 'string' ? s.trim().toLowerCase() : s === true ? 'true' : s === false ? 'false' : '';
+  return Object.prototype.hasOwnProperty.call(DISCRETE, k) ? DISCRETE[k] : undefined;
+}
+
 function parseMinimalResponse(data, entityIds) {
   if (!data || typeof data !== 'object') return {};
 
@@ -3058,6 +3163,7 @@ function parseMinimalResponse(data, entityIds) {
     const points = [];
     for (const item of raw) {
       const s = item.s;
+      const dv = discreteValue(s);
       // Parsează starea (sau null pentru unavailable/unknown)
       let v = null;
       if (s === null || s === undefined || s === 'unavailable' || s === 'unknown') {
@@ -3077,7 +3183,7 @@ function parseMinimalResponse(data, entityIds) {
             num *= 1000000;
           }
           v = num;
-        }
+        } else if (dv !== undefined) { v = dv; points.binary = true; }   // pornit / oprit → 1 / 0
       }
       // epoch_sec (lu) → ms (×1000)
       const t = typeof item.lu === 'number' ? item.lu * 1000 : item.lu;
@@ -3228,7 +3334,7 @@ function formatDate(d) {
 
 // Export pentru testare
 
-return { roundNiceStep, getNiceStep, formatDate, niceScale, downsample, parseMinimalResponse, formatLabel, formatNumber, formatTimeLabel, formatRangeLabel };
+return { roundNiceStep, getNiceStep, formatDate, niceScale, downsample, discreteValue, parseMinimalResponse, formatLabel, formatNumber, formatTimeLabel, formatRangeLabel };
 })();
 
 __m["graph-card"] = (() => {
@@ -3254,7 +3360,10 @@ function formatValue(v, unit) {
 function rangeHours(r) {
   if (typeof r === 'number' && r >= 1 && r <= 24 * 90) return r;
   if (r && typeof r === 'object' && Number(r.hours) >= 1 && Number(r.hours) <= 24 * 90) return Number(r.hours);
-  return RANGE_H[r] || 24;
+  if (RANGE_H[r]) return RANGE_H[r];
+  const m = typeof r === 'string' ? /^\s*(\d{1,4})\s*([hd])\s*$/i.exec(r) : null;   // orice „48h”, „3d”, „90d” (1 h … 90 zile)
+  if (m) { const h = Number(m[1]) * (m[2].toLowerCase() === 'd' ? 24 : 1); if (h >= 1 && h <= 24 * 90) return h; }
+  return 24;
 }
 const rangeKey = (r) => (typeof r === 'string' && RANGE_H[r] ? r : `${rangeHours(r)}h`);
 const tabLabel = (r) => { const k = rangeKey(r); return k === '7d' ? t('7 zile') : k === '30d' ? t('30 zile') : ({ '6h': '6 h', '12h': '12 h', '24h': '24 h' }[k] || `${rangeHours(r)} h`); };
@@ -3300,19 +3409,20 @@ function normalizeGraphConfig(cfg) {
   const warnings = [];
   const src = cfg && typeof cfg === 'object' ? cfg : {};
   const series = [];
-  (Array.isArray(src.series) ? src.series : []).slice(0, 3).forEach((s, i) => {
+  const timeline = src.timeline === true, maxSeries = timeline ? 8 : 3;   // cronologie: un rând pe serie, până la 8
+  (Array.isArray(src.series) ? src.series : []).slice(0, maxSeries).forEach((s, i) => {
     const o = typeof s === 'string' ? { entity: s } : s && typeof s === 'object' ? { ...s } : null;
     if (!o || typeof o.entity !== 'string' || !/^[a-z_]+\.[a-z0-9_]+$/.test(o.entity)) { warnings.push(t('Seria #{n}: entity_id lipsă sau invalid.', { n: i + 1 })); return; }
     o.kind = KINDS.includes(o.kind) ? o.kind : (i === 0 ? 'area' : 'line');
     series.push(o);
   });
-  if (Array.isArray(src.series) && src.series.length > 3) warnings.push(t('Grafic: maximum 3 serii; restul sunt ignorate.'));
+  if (Array.isArray(src.series) && src.series.length > maxSeries) warnings.push(timeline ? t('Grafic: maximum 8 serii (cronologie); restul sunt ignorate.') : t('Grafic: maximum 3 serii; restul sunt ignorate.'));
   const range = src.range === undefined ? '24h' : src.range;
-  if (src.range !== undefined && rangeHours(range) === 24 && range !== '24h' && range !== 24 && !(range && range.hours === 24)) warnings.push(t('Interval necunoscut "{r}" → 24h.', { r: JSON.stringify(range) }));
+  if (src.range !== undefined && rangeHours(range) === 24 && range !== '24h' && range !== 24 && !(range && range.hours === 24)) warnings.push(t('Interval necunoscut "{r}" → 24h.', { r: typeof range === 'string' ? range : JSON.stringify(range) }));
   const tabs = (Array.isArray(src.tabs) ? src.tabs : []).filter((t) => rangeHours(t) > 0).slice(0, 4);
   const height = Number.isFinite(Number(src.height)) && src.height >= 60 && src.height <= 400 ? Number(src.height) : 0;
   const refresh = Number.isFinite(Number(src.refresh_minutes)) && src.refresh_minutes >= 1 && src.refresh_minutes <= 60 ? Number(src.refresh_minutes) : 5;
-  return { config: { ...src, series, range, tabs, height, refresh_minutes: refresh, legend: src.legend !== false, title: src.title ? String(src.title) : '' }, warnings };
+  return { config: { ...src, series, range, tabs, height, refresh_minutes: refresh, legend: src.legend !== false, timeline, title: src.title ? String(src.title) : '' }, warnings };
 }
 
 // ---- axa X: ore rotunjite ----
@@ -3334,6 +3444,7 @@ const lblRange = (hours) => (hours <= 24 ? '24h' : hours <= 24 * 8 ? '7d' : '30d
  * Axa din dreapta apare doar dacă o serie are altă unitate decât prima.
  */
 function buildGraphModel(config, data, width, height, now = Date.now()) {
+  if (config.timeline) return buildTimelineModel(config, data, width, now);
   const W = Math.max(200, Math.round(width || 360)), H = Math.max(80, Math.round(height || 150));
   const fs = W < 420 ? 11 : 12;
   const hours = rangeHours(config.range);
@@ -3350,16 +3461,18 @@ function buildGraphModel(config, data, width, height, now = Date.now()) {
     return niceScale(lo, hi, H < 120 ? 2 : 4);
   };
   const leftIdx = config.series.map((s, i) => i).filter((i) => !rightIdx.includes(i));
-  const sL = extent(leftIdx), sR = hasRight ? extent(rightIdx) : null;
+  const binAll = leftIdx.length > 0 && leftIdx.every((i) => data[i] && data[i].binary);   // doar serii pornit / oprit: axa are două trepte
+  const sL = binAll ? { min: -0.15, max: 1.15, ticks: [0, 1] } : extent(leftIdx), sR = hasRight ? extent(rightIdx) : null;
   // lățimea etichetelor Y după cea mai lungă etichetă (ex. „2 000 ppb” nu mai iese din cadru)
-  const labLen = Math.max(...sL.ticks.map((tv) => formatValue(tv, units[0]).length), ...(sR ? sR.ticks.map((tv) => formatValue(tv, units[rightIdx[0]]).length) : [0]));
+  const tickText = (tv) => (binAll ? (tv >= 1 ? t('Pornit') : t('Oprit')) : formatValue(tv, units[0]));
+  const labLen = Math.max(...sL.ticks.map((tv) => tickText(tv).length), ...(sR ? sR.ticks.map((tv) => formatValue(tv, units[rightIdx[0]]).length) : [0]));
   const lab = Math.max(Math.round(fs * 3.4), Math.ceil(labLen * fs * 0.62 + 8));
   const padL = axisRight ? 10 : lab, padR = hasRight || axisRight ? lab : 10, padT = 8, padB = fs + 14;
   const pw = W - padL - padR, ph = H - padT - padB;
   const X = (t) => padL + ((t - t0) / (t1 - t0)) * pw;
   const Y = (v, sc) => padT + (1 - (v - sc.min) / ((sc.max - sc.min) || 1)) * ph;
 
-  const grid = sL.ticks.map((tv) => ({ y: +Y(tv, sL).toFixed(1), label: formatValue(tv, units[0]), right: sR ? formatValue(sR.ticks[Math.round(sL.ticks.indexOf(tv) * (sR.ticks.length - 1) / Math.max(1, sL.ticks.length - 1))], units[rightIdx[0]]) : '' }));
+  const grid = sL.ticks.map((tv) => ({ y: +Y(tv, sL).toFixed(1), label: tickText(tv), right: sR ? formatValue(sR.ticks[Math.round(sL.ticks.indexOf(tv) * (sR.ticks.length - 1) / Math.max(1, sL.ticks.length - 1))], units[rightIdx[0]]) : '' }));
   const xt = timeTicks(t0, t1, hours).map((t) => ({ x: +X(t).toFixed(1), label: formatTimeLabel(t, lblRange(hours)) }));
   // etichete X fără suprapuneri: păstrăm doar cele la ≥ 46 px una de alta
   const xticks = []; let lastX = -1e9;
@@ -3368,6 +3481,13 @@ function buildGraphModel(config, data, width, height, now = Date.now()) {
   const seriesOut = config.series.map((s, i) => {
     const sc = rightIdx.includes(i) ? sR : sL;
     const pts = (data[i] || []).filter((p) => p.t >= t0 - 60e3 && p.t <= t1 + 60e3);
+    // serie pornit / oprit: trepte (valoarea rămâne până la următoarea schimbare) și ține până la „acum”
+    let drawPts = pts;
+    if (data[i] && data[i].binary) {
+      drawPts = [];
+      pts.forEach((p, k) => { if (p.v !== null && k > 0 && pts[k - 1].v !== null) drawPts.push({ t: p.t, v: pts[k - 1].v }); drawPts.push(p); });
+      const last = pts[pts.length - 1]; if (last && last.v !== null && last.t < t1) drawPts.push({ t: t1, v: last.v });
+    }
     let line = '', fill = '', seg = [];
     const flush = () => {
       if (seg.length >= 2) {
@@ -3378,15 +3498,107 @@ function buildGraphModel(config, data, width, height, now = Date.now()) {
       } else if (seg.length === 1) { line += (line ? ' ' : '') + `M${seg[0][0].toFixed(1)} ${seg[0][1].toFixed(1)} l0.1 0`; }
       seg = [];
     };
-    for (const p of pts) { if (p.v === null || !Number.isFinite(p.v)) { flush(); continue; } seg.push([Math.min(padL + pw, Math.max(padL, X(p.t))), Y(p.v, sc)]); }
+    for (const p of drawPts) { if (p.v === null || !Number.isFinite(p.v)) { flush(); continue; } seg.push([Math.min(padL + pw, Math.max(padL, X(p.t))), Y(p.v, sc)]); }
     flush();
-    return { name: s.name || s.entity, unit: units[i], kind: s.kind, color: seriesColor(s.color ?? DEFAULT_COLORS[i], i), line, fill, points: pts.filter((p) => p.v !== null && Number.isFinite(p.v)).map((p) => ({ t: p.t, v: p.v, x: X(p.t), y: Y(p.v, sc) })) };
+    return { name: s.name || s.entity, unit: units[i], binary: !!(data[i] && data[i].binary), kind: s.kind, color: seriesColor(s.color ?? DEFAULT_COLORS[i], i), line, fill, points: pts.filter((p) => p.v !== null && Number.isFinite(p.v)).map((p) => ({ t: p.t, v: p.v, x: X(p.t), y: Y(p.v, sc) })) };
   });
   return { W, H, fs, padL, padR, padT, padB, pw, ph, t0, t1, hours, grid, xticks, series: seriesOut, hasRight, axisRight, empty: seriesOut.every((s) => !s.line) };
 }
 
+/** Durata în text scurt: „45 min”, „2 h”, „1 h 25 min”. */
+function formatDuration(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 1) return '<1 min';
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? `${h} h ${r} min` : `${h} h`;
+}
+/** Varianta compactă, pentru bare înguste: „1,4 h” / „45 min”. */
+const durShort = (ms) => { const m = Math.round(ms / 60000); return m < 60 ? `${Math.max(1, m)} min` : `${formatNumber(Math.round(m / 6) / 10)} h`; };
+
+/** Ore rotunde pe axă (00:00, 03:00, 06:00 …), în ora locală; pași de câte 1 / 2 / 3 / 6 / 12 / 24 de ore după interval. */
+function alignedTicks(t0, t1, hours) {
+  const stepH = hours <= 6 ? 1 : hours <= 12 ? 2 : hours <= 24 ? 3 : hours <= 48 ? 6 : hours <= 72 ? 12 : hours <= 168 ? 24 : 24 * 5;
+  const d = new Date(t0); d.setMinutes(0, 0, 0);
+  if (stepH >= 24) { d.setHours(0); if (d.getTime() < t0) d.setDate(d.getDate() + 1); }
+  else while (d.getTime() < t0 || d.getHours() % stepH !== 0) d.setHours(d.getHours() + 1);
+  const out = [];
+  for (let t = d.getTime(); t <= t1 && out.length < 16;) {
+    out.push(t);
+    const n = new Date(t); if (stepH >= 24) n.setDate(n.getDate() + stepH / 24); else n.setHours(n.getHours() + stepH);
+    t = n.getTime();
+  }
+  return out;
+}
+
+/**
+ * Cronologie: un rând pe serie, cu bare unde seria e „pornită” (1 / pornit / > 0), hașurat unde e indisponibilă și durata scrisă pe bare.
+ * Ideal pentru ventile, întrerupătoare, uși. Model pur: data[i] = [{ t (ms), v | null }]; valoarea ține până la următorul punct (și până la „acum”).
+ */
+function buildTimelineModel(config, data, width, now = Date.now()) {
+  const W = Math.max(200, Math.round(width || 360)), fs = W < 420 ? 11 : 12;
+  const hours = rangeHours(config.range), t1 = now, t0 = now - hours * 3600e3;
+  const showDur = config.hide_durations !== true;
+  const maxChars = Math.max(6, Math.floor(Math.min(W * 0.36, 140) / (fs * 0.56)));
+  const full = config.series.map((s) => String(s.name || s.entity));
+  const names = full.map((n) => (n.length > maxChars ? n.slice(0, Math.max(1, maxChars - 1)) + '…' : n));
+  const laneH = Number(config.lane_height) >= 12 && Number(config.lane_height) <= 36 ? Number(config.lane_height) : 22, gap = 6, n = config.series.length;
+  // pe rând: perioadele (pornit / indisponibil) cu ora de început și de sfârșit, ca să se poată citi cât a mers
+  const raw = config.series.map((s, i) => {
+    const pts = (data[i] || []).filter((p) => p && Number.isFinite(p.t)).slice().sort((x, y) => x.t - y.t);
+    const on = [], na = [];
+    pts.forEach((p, k) => {
+      const a = Math.max(t0, p.t), b = Math.min(t1, k + 1 < pts.length ? pts[k + 1].t : t1);
+      if (b <= a) return;
+      if (p.v === null || !Number.isFinite(p.v)) na.push({ a, b }); else if (p.v > 0) on.push({ a, b });
+    });
+    const merge = (arr) => arr.reduce((acc, sg) => { const l = acc[acc.length - 1]; if (l && sg.a <= l.b + 1000) l.b = Math.max(l.b, sg.b); else acc.push({ ...sg }); return acc; }, []);
+    return { on: merge(on), na: merge(na), known: pts.some((p) => p.v !== null && Number.isFinite(p.v)) };
+  });
+  const totals = raw.map((r) => r.on.reduce((a, sg) => a + (sg.b - sg.a), 0));
+  const totTexts = totals.map((ms) => (ms > 0 ? formatDuration(ms) : '0'));
+  const padL = Math.min(Math.round(W * 0.38), Math.max(56, Math.ceil(Math.max(...names.map((x) => x.length)) * fs * 0.56 + 12)));
+  const padR = showDur ? Math.min(Math.round(W * 0.26), Math.ceil(Math.max(...totTexts.map((x) => x.length)) * fs * 0.56 + 12)) : 8;
+  const padT = 4, padB = fs + 12, pw = W - padL - padR, ph = n * laneH + Math.max(0, n - 1) * gap, H = padT + ph + padB;
+  const X = (t) => padL + ((t - t0) / (t1 - t0)) * pw;
+  const seg = (sg) => ({ a: sg.a, b: sg.b, dur: sg.b - sg.a, x: +X(sg.a).toFixed(1), w: Math.max(1.5, +(X(sg.b) - X(sg.a)).toFixed(1)) });
+  const lanes = config.series.map((s, i) => ({ name: names[i], fullName: full[i], color: seriesColor(s.color ?? 'on', i), y: padT + i * (laneH + gap), h: laneH, segs: raw[i].on.map(seg), na: raw[i].na.map(seg), known: raw[i].known, total: totals[i], totalText: totTexts[i] }));
+  const xticks = []; let lastX = -1e9;
+  for (const t of alignedTicks(t0, t1, hours)) { const x = +X(t).toFixed(1); if (x - lastX >= (W < 420 ? 50 : 58)) { xticks.push({ x, label: formatTimeLabel(t, lblRange(hours)) }); lastX = x; } }
+  return { timeline: true, showDur, W, H, fs, padL, padR, padT, padB, pw, ph, t0, t1, hours, xticks, lanes, grid: [], hasRight: false, axisRight: false, series: lanes.map((l) => ({ name: l.name, color: l.color, points: [] })), empty: lanes.every((l) => !l.known) };
+}
+
+/** Ce se află la (x, y) în cronologie (coordonate SVG): bara, golul „indisponibil” sau intervalul oprit. null în afara rândurilor. */
+function timelineHit(m, x, y) {
+  if (!m || !m.timeline) return null;
+  const lane = m.lanes.find((l) => y >= l.y - 3 && y <= l.y + l.h + 3);
+  if (!lane || x < m.padL || x > m.W - m.padR) return null;
+  const at = (arr) => arr.find((s) => x >= s.x && x <= s.x + s.w);
+  const rng = m.hours <= 24 ? '24h' : '7d', span = (s) => `${formatTimeLabel(s.a, rng)}–${formatTimeLabel(s.b, rng)} · ${formatDuration(s.dur)}`;
+  const on = at(lane.segs), na = at(lane.na);
+  if (on) return { x, text: `${lane.fullName} · ${t('Pornit')} ${span(on)}` };
+  if (na) return { x, text: `${lane.fullName} · ${t('indisponibil')} ${span(na)}` };
+  return { x, text: `${lane.fullName} · ${t('Oprit')} · ${formatTimeLabel(m.t0 + ((x - m.padL) / m.pw) * (m.t1 - m.t0), rng)}` };
+}
+
+function renderTimelineSvg(m) {
+  const ticks = m.xticks.map((tk) => `<line class="grid" x1="${tk.x}" x2="${tk.x}" y1="${m.padT}" y2="${m.padT + m.ph}"/><text x="${tk.x}" y="${m.H - 4}" text-anchor="middle">${esc(tk.label)}</text>`).join('');
+  const fit = (w, text) => w >= text.length * m.fs * 0.56 + 8;
+  const rows = m.lanes.map((l) => {
+    const bars = l.segs.map((s) => {
+      const long = formatDuration(s.dur), short = durShort(s.dur), txt = !m.showDur ? '' : fit(s.w, long) ? long : fit(s.w, short) ? short : '';
+      return `<rect class="on" x="${s.x}" y="${l.y}" width="${s.w}" height="${l.h}" rx="3"/>${txt ? `<text class="dur" x="${(s.x + s.w / 2).toFixed(1)}" y="${(l.y + l.h / 2 + 4).toFixed(1)}" text-anchor="middle">${esc(txt)}</text>` : ''}`;
+    }).join('');
+    const gaps = l.na.map((s) => `<rect class="na" x="${s.x}" y="${l.y}" width="${s.w}" height="${l.h}" rx="3" fill="url(#ccu-na)"/>`).join('');
+    return `<g class="lane" style="--sc:${esc(l.color)}"><text class="ln" x="${m.padL - 8}" y="${(l.y + l.h / 2 + 4).toFixed(1)}" text-anchor="end">${esc(l.name)}</text><rect class="trk" x="${m.padL}" y="${l.y}" width="${m.pw}" height="${l.h}" rx="4"/>${gaps}${bars}${m.showDur ? `<text class="tot" x="${m.W - 6}" y="${(l.y + l.h / 2 + 4).toFixed(1)}" text-anchor="end">${esc(l.totalText)}</text>` : ''}</g>`;
+  }).join('');
+  const defs = `<defs><pattern id="ccu-na" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#fbbf24" stroke-width="2" stroke-opacity=".55"/></pattern></defs>`;
+  return `<svg class="ccu-graph timeline" viewBox="0 0 ${m.W} ${m.H}" width="${m.W}" height="${m.H}" role="img" aria-label="cronologie">${defs}${ticks}${rows}<line class="cursor" x1="0" x2="0" y1="${m.padT}" y2="${m.padT + m.ph}" opacity="0"/><g class="dots"></g></svg>`;
+}
+
 /** SVG-ul graficului (șir). Fără NaN: coordonatele vin din buildGraphModel. */
 function renderGraphSvg(m) {
+  if (m.timeline) return renderTimelineSvg(m);
   const g = m.grid.map((r) => `<line class="grid" x1="${m.padL}" x2="${m.W - m.padR}" y1="${r.y}" y2="${r.y}"/>${m.axisRight ? `<text x="${m.W - m.padR + 6}" y="${r.y + 3.5}">${esc(r.label)}</text>` : `<text x="${m.padL - 6}" y="${r.y + 3.5}" text-anchor="end">${esc(r.label)}</text>`}${m.hasRight && r.right ? `<text x="${m.W - m.padR + 6}" y="${r.y + 3.5}">${esc(r.right)}</text>` : ''}`).join('');
   const x = m.xticks.map((t) => `<text x="${t.x}" y="${m.H - 4}" text-anchor="middle">${esc(t.label)}</text>`).join('');
   const s = m.series.map((se, i) => (se.line ? `<g class="ser" style="--sc:${esc(se.color)}">${se.kind === 'area' ? `<defs><linearGradient id="gr${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sc);stop-opacity:.38"/><stop offset="1" style="stop-color:var(--sc);stop-opacity:0"/></linearGradient></defs><path class="area" style="fill:url(#gr${i})" d="${se.fill}"/>` : ''}<path class="line" d="${se.line}"/></g>` : '')).join('');
@@ -3396,7 +3608,7 @@ function renderGraphSvg(m) {
 /** Tot cardul (șir): titlu + file + grafic + legendă. */
 function renderGraphCard(config, m, state, opts = {}) {
   const tabs = config.tabs.length > 1 ? `<div class="ccu-tabs">${config.tabs.map((t, i) => `<button type="button" class="ccu-tab" data-tab="${i}" data-state="${rangeKey(t) === rangeKey(state.range) ? 'on' : 'off'}">${esc(tabLabel(t))}</button>`).join('')}</div>` : '';
-  const legend = config.legend && m.series.length > 1 ? `<div class="ccu-legend">${m.series.map((s) => `<span><i style="background:${esc(s.color)}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
+  const legend = config.legend && !config.timeline && m.series.length > 1 ? `<div class="ccu-legend">${m.series.map((s) => `<span><i style="background:${esc(s.color)}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
   // compact: legenda urcă în rândul titlului (între titlu și file) — cardul e mai scund
   const inHead = config.compact === true ? legend : '';
   const head = config.title || tabs ? `<div class="ccu-graph-head${inHead ? ' compact' : ''}"><div class="ccu-title">${esc(config.title)}</div>${inHead}${tabs}</div>` : '';
@@ -3416,7 +3628,7 @@ function nearestPoint(points, x) {
   return Math.abs(points[lo].x - x) <= Math.abs(points[hi].x - x) ? points[lo] : points[hi];
 }
 
-return { formatValue, rangeHours, seriesColor, thin, normalizeGraphConfig, buildGraphModel, renderGraphSvg, renderGraphCard, nearestPoint };
+return { formatValue, rangeHours, seriesColor, thin, normalizeGraphConfig, buildGraphModel, formatDuration, buildTimelineModel, timelineHit, renderGraphSvg, renderGraphCard, nearestPoint };
 })();
 
 __m["energy"] = (() => {
@@ -3496,6 +3708,13 @@ function normalizeFlowConfig(cfg) {
     if (!o || !okId(o.entity)) { warnings.push(t('Statistica #{n}: entity_id lipsă sau invalid.', { n: i + 1 })); return; }
     items.push({ kind: 'stat', entity: o.entity, name: o.label || o.name || '', icon: o.icon || 'bolt' });
   });
+  // sub titlu: energia produsă azi și radiația solară (rând mic, cu iconiță de soare)
+  for (const [key, icon, label] of [['solar_today', 'sun', t('produs azi')], ['radiation', 'w-sun', t('radiație')]]) {
+    const o = src[key] && typeof src[key] === 'object' ? src[key] : { entity: src[key] };
+    if (!o.entity) continue;
+    if (!okId(o.entity)) { warnings.push(t('Flux: „{k}” are entity_id lipsă sau invalid.', { k: key })); continue; }
+    items.push({ kind: 'sunnote', entity: o.entity, name: o.label !== undefined ? String(o.label) : o.name !== undefined ? String(o.name) : src.sun_labels === false ? '' : label, icon: o.icon || icon });
+  }
   return { items, title: src.title ? String(src.title) : '', warnings };
 }
 
@@ -3539,7 +3758,12 @@ function buildFlowModel(items, hass) {
     const unit = (s && s.attributes && s.attributes.unit_of_measurement) || '';
     return { ...it, text: Number.isFinite(n) && s.state !== '' ? `${formatNumber(n)}${unit ? ' ' + unit : ''}` : '—' };
   });
-  return { left, right, stats, total, totalText: total >= THRESH_W ? fmtPower(total) : t('fără flux'), idle: total < THRESH_W };
+  const sun = items.filter((i) => i.kind === 'sunnote').map((it) => {
+    const s = hass && hass.states && hass.states[it.entity]; const n = s ? Number(s.state) : NaN;
+    const unit = (s && s.attributes && s.attributes.unit_of_measurement) || '';
+    return { ...it, text: Number.isFinite(n) && s.state !== '' ? `${formatNumber(n)}${unit ? ' ' + unit : ''}` : '—' };
+  });
+  return { left, right, stats, sun, total, totalText: total >= THRESH_W ? fmtPower(total) : t('fără flux'), idle: total < THRESH_W };
 }
 
 /** Geometria: poziții verticale, panglici (poligoane) și nodul Total; toate coordonatele în [0,W]×[0,H]. */
@@ -3591,7 +3815,8 @@ function renderFlow(config, model, W, opts = {}) {
   const stats = model.stats.length ? `<div class="ccu-flow-stats" data-n="${model.stats.length}">${model.stats.map((s) => `<div class="st" data-id="${idOf(s)}" data-entity="${esc(s.entity)}"><span class="ccu-ico">${iconSvg(s.icon)}</span><span class="tx"><small>${esc(s.name)}</small><b>${esc(s.text)}</b></span></div>`).join('')}</div>` : '';
   const head = config.title ? `<div class="ccu-flow-head"><span class="t">${esc(config.title)}</span>${model.idle ? '' : `<span class="tt">· ${t('Total')} ${esc(model.totalText)}</span>`}</div>` : '';
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
-  return `<div class="ccu-card panel ccu-flow">${head}<div class="ccu-flow-body" style="height:${g.H}px">${svg}${left}${right}${hub}</div>${stats}${notes}</div>`;
+  const sunRow = model.sun && model.sun.length ? `<div class="ccu-flow-sun">${model.sun.map((s) => `<span class="s" data-id="${idOf(s)}" data-entity="${esc(s.entity)}"><span class="ccu-ico">${iconSvg(s.icon)}</span><b>${esc(s.text)}</b>${s.name ? `<small>${esc(s.name)}</small>` : ''}</span>`).join('')}</div>` : '';
+  return `<div class="ccu-card panel ccu-flow">${head}${sunRow}<div class="ccu-flow-body" style="height:${g.H}px">${svg}${left}${right}${hub}</div>${stats}${notes}</div>`;
 }
 
 // ================================================================ BATERIE ==
@@ -3603,7 +3828,7 @@ function normalizeBatteryConfig(cfg) {
   const soc = ent('soc');
   if (!soc) warnings.push(t('Baterie: lipsește „soc” (entitatea cu procentul bateriei).'));
   const cfgOut = {
-    soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
+    soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, charge_eta: src.charge_eta === 'now' ? 'now' : 'avg', runtime_while_charging: src.runtime_while_charging === true || src.runtime_while_charging === 'true', load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
     capacity_kwh: num('capacity_kwh', 0, 0.1, 1000), reserve_pct: num('reserve_pct', 20, 0, 100), shutdown_pct: num('shutdown_pct', 10, 0, 100),
     title: src.title ? String(src.title) : t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
   };
@@ -3613,7 +3838,7 @@ function normalizeBatteryConfig(cfg) {
 }
 
 /** Modelul bateriei: SOC, energie, autonomie până la rezervă, stare (ok / low / backup / na). */
-function buildBatteryModel(config, hass) {
+function buildBatteryModel(config, hass, extra) {
   const st = (id) => (id && hass && hass.states ? hass.states[id] : null);
   const socS = st(config.soc), p = socS ? Number(socS.state) : NaN;
   const soc = Number.isFinite(p) && socS.state !== '' ? Math.min(100, Math.max(0, p)) : null;
@@ -3626,7 +3851,12 @@ function buildBatteryModel(config, hass) {
   const loadW = loadVals.length && loadVals.every((w) => w !== null) ? loadVals.reduce((a, b) => a + b, 0) : null;
   // încărcare: puterea bateriei are convenția fluxului (+ = descărcare, − = încărcare; `power_invert: true` o întoarce)
   let pw = toWatts(st(config.power)); if (pw !== null && config.power_invert) pw = -pw;
-  const chargeW = pw !== null && pw < -THRESH_W ? -pw : null;
+  const nowCharge = pw !== null && pw < -THRESH_W ? -pw : null;
+  // media puterii pe ultimele minute (din istoric), cu aceeași convenție de semn; „plin în” o folosește implicit, ca cifra să nu sară când trece un nor
+  let avg = extra && typeof extra.avgPowerW === 'number' && Number.isFinite(extra.avgPowerW) ? extra.avgPowerW : null;
+  if (avg !== null && config.power_invert) avg = -avg;
+  const avgCharge = avg !== null && avg < -THRESH_W ? -avg : null;
+  const chargeW = nowCharge === null ? null : config.charge_eta === 'now' ? nowCharge : (avgCharge !== null ? avgCharge : nowCharge);
   const gp = st(config.grid_present);
   const backup = !!gp && gp.state === 'off';
   // banda utilizabilă = [prag, 100]%: cu rețea pragul e rezerva (reserve_pct), fără rețea (backup) pragul de oprire (shutdown_pct).
@@ -3637,7 +3867,7 @@ function buildBatteryModel(config, hass) {
   let autonomyH = null;
   if (usable !== null && loadW !== null && loadW >= THRESH_W) autonomyH = (usable * 1000) / loadW;
   const state = soc === null ? 'na' : backup ? 'backup' : soc <= config.reserve_pct ? 'low' : 'ok';
-  const charging = chargeW !== null && soc !== null && soc < 100;
+  const charging = chargeW !== null && soc !== null && soc < 99;   // peste 99% nu mai arătăm „plin în”: bateria oscilează cu câțiva W și cifrele ar sări
   const fullH = charging && total ? (((100 - soc) / 100) * total * 1000) / chargeW : null;   // timp până la 100% la puterea de încărcare de acum
   const hh = (h) => (h === null ? '—' : h >= 100 ? '>99 h' : `~${formatNumber(Math.round(h * 10) / 10)} h`);
   return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, charging, chargeW, fullH, fullText: hh(fullH), loadW, socText: soc === null ? '—' : `${Math.round(soc)}%`,
@@ -3661,12 +3891,53 @@ function renderBattery(config, m, opts = {}) {
     ? `<div class="ccu-bat-head backup"><span class="ccu-ico">${iconSvg('bolt')}</span><span>${t('Backup activ · Rețeaua este oprită')}</span></div>`
     : (config.show_title === false ? '' : `<div class="ccu-bat-head"><span class="ccu-ico">${iconSvg('battery')}</span><span>${esc(config.title)}</span></div>`);   // show_title: false = fără titlu „Baterie” + iconiță
   const body = `<div class="ccu-bat-body"><div class="ccu-bat-shell" data-state="${m.state}"><div class="fill" style="width:${pct}%;background:linear-gradient(180deg,${c0},${c1})"></div><span class="pct">${esc(m.socText)}</span></div>`
-    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span>${m.charging ? `<span class="a ch"><i>${t('Plin în')}</i><b>${esc(m.fullText)}</b></span>` : ''}<span class="a"><i>${m.charging ? t('Autonomie la consum') : t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span></div></div>`;
+    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span>${m.charging ? `<span class="a ch"><i>${t('Plin în')}</i><b>${esc(m.fullText)}</b></span>` : ''}${!m.charging || config.runtime_while_charging ? `<span class="a"><i>${m.charging ? t('Autonomie la consum') : t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span>` : ''}</div></div>`;
   const slider = `<div class="ccu-bat-slider"><div class="tr"><div class="fl" style="width:${pct}%"></div></div>${mk}</div>`;
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
   return `<div class="ccu-card panel ccu-bat" data-state="${m.state}"${m.charging ? ' data-charging="1"' : ''} data-id="0" data-entity="${esc(config.soc)}">${head}${body}${slider}${notes}</div>`;
 }
 
+
+/**
+ * Textul mic de sub o valoare din antet, pentru valorile cu autonomie (`runtime_*`): autonomia la consumul curent,
+ * sau „plin în …” cât timp bateria se încarcă (când e dat și `runtime_power`). Gol când nu se poate calcula.
+ */
+function headerRuntimeTexts(header, hass, avgMap) {
+  return ((header && header.values) || []).map((v) => {
+    if (!v || !v.runtimeCfg) return '';
+    const rc = v.runtimeCfg;
+    const bc = normalizeBatteryConfig({ ...rc, runtime_while_charging: rc.while_charging, soc: v.entity }).config;
+    const m = buildBatteryModel(bc, hass, { avgPowerW: avgMap && rc.power ? avgMap[rc.power] : null });
+    if (m.charging && m.fullH !== null) {   // în încărcare: „plin în …”; autonomia doar dacă utilizatorul o cere (pe a doua linie)
+      const lines = [t('plin în {x}', { x: m.fullText })];
+      if (bc.runtime_while_charging && m.autonomyH !== null) lines.push(t('autonomie {x}', { x: m.autonomyText }));
+      return lines.length > 1 ? lines : lines[0];
+    }
+    return m.autonomyH !== null ? m.autonomyText : '';
+  });
+}
+
+/** Media în timp a puterii dintr-o serie de puncte [{ t (ms), v }] pe intervalul [start, end]; valorile lipsă nu contează. null dacă nu e nimic de mediat. */
+function weightedAveragePower(points, start, end) {
+  const pts = (points || []).map((p) => ({ t: Math.max(start, Number(p.t) || start), v: Number.isFinite(p.v) ? p.v : null })).sort((a, b) => a.t - b.t);
+  let sum = 0, w = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const t1 = i + 1 < pts.length ? pts[i + 1].t : end, d = Math.max(0, t1 - pts[i].t);
+    if (pts[i].v !== null && d > 0) { sum += pts[i].v * d; w += d; }
+  }
+  return w > 0 ? sum / w : null;
+}
+
+/** Puterea medie (W) a unei entități pe ultimele `minutes` minute, din istoricul HA (aceeași metodă ca graficul). null dacă nu se poate citi. */
+async function fetchAveragePower(hass, entityId, minutes = 10) {
+  if (!hass || !hass.callWS || !entityId) return null;
+  const end = Date.now(), start = end - minutes * 60000;
+  const res = await hass.callWS({ type: 'history/history_during_period', start_time: new Date(start).toISOString(), end_time: new Date(end).toISOString(), entity_ids: [entityId], minimal_response: true, no_attributes: true, significant_changes_only: false });
+  const rows = (res && res[entityId]) || [];
+  const cur = hass.states && hass.states[entityId], unit = cur && cur.attributes && cur.attributes.unit_of_measurement;
+  const k = unit === 'kW' ? 1000 : unit === 'MW' ? 1e6 : 1;
+  return weightedAveragePower(rows.map((p) => ({ t: (p.lu !== undefined ? p.lu : p.lc) * 1000, v: p.s === '' ? NaN : Number(p.s) * k })), start, end);
+}
 
 // ============================================================ BATERII: DESCOPERIRE AUTOMATĂ ==
 const MOBILE_PLATFORMS = ['mobile_app', 'fully_kiosk', 'browser_mod'];
@@ -3785,7 +4056,7 @@ function renderBatteries(config, rows, opts = {}) {
   return `<div class="ccu-card panel ccu-batts">${title}<div class="rows">${body}</div>${notes}</div>`;
 }
 
-return { toWatts, toKwh, fmtPower, normalizeFlowConfig, buildFlowModel, layoutFlow, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeAutoBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries };
+return { toWatts, toKwh, fmtPower, normalizeFlowConfig, buildFlowModel, layoutFlow, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, headerRuntimeTexts, weightedAveragePower, fetchAveragePower, normalizeAutoBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries };
 })();
 
 __m["weather"] = (() => {
@@ -4633,7 +4904,7 @@ function defineEditors() {
   if (typeof HTMLElement === 'undefined' || typeof customElements === 'undefined') return;
 
   class CcuEditor extends HTMLElement {
-    constructor() { super(); this._cfg = {}; this._hass = null; this._root = this.attachShadow({ mode: 'open' }); this._ready = false; this._rows = {}; this._last = ''; }
+    constructor() { super(); this._cfg = {}; this._hass = null; this._root = this.attachShadow({ mode: 'open' }); this._ready = false; this._rows = {}; this._open = {}; this._last = ''; }
     setConfig(c) {
       const j = JSON.stringify(c || {});
       // HA ne dă înapoi config-ul emis, dar ASINCRON: la o tastare rapidă ecoul primei litere ajunge după a treia. Ignorăm orice config pe care l-am trimis noi
@@ -4679,6 +4950,18 @@ function defineEditors() {
       if (o.collapsed) return h('details', { class: 'blk', open: keys.some((k) => !isEmpty(this._obj(path)[k])) }, h('summary', { text: title }), body);
       return h('div', { class: 'blk' }, title ? h('h3', {}, title) : null, body);
     }
+    /** Funcție opțională cu bifă (ex. radiația solară: nu toți au stație meteo). Debifat = cheile dispar din config; bifat = apar câmpurile. */
+    _optional(path, title, hint, schema, labels, helpers, defaults) {
+      const keys = names(schema), cur = this._obj(path) || {}, id = 'opt/' + path.join('.') + '/' + keys.join(',');
+      if (this._open[id] === undefined) this._open[id] = keys.some((k) => !isEmpty(cur[k]));
+      const data = { ...(defaults || {}) }; for (const k of keys) { const v = cur[k]; if (v !== undefined) data[k] = v && typeof v === 'object' && !Array.isArray(v) && v.entity ? v.entity : v; }
+      const form = this._form(schema, data, labels, (v) => { for (const k of keys) this._set(path, k, v[k]); }, helpers);
+      return h('div', { class: 'blk' }, h('h3', {}, this._form([{ name: 'on', selector: BOOL }], { on: this._open[id] }, { on: title }, (v) => {
+        this._open[id] = !!v.on;
+        if (!v.on) { const o = this._obj(path, true); for (const k of keys) delete o[k]; this._emit(); }
+        this._draw();
+      })), this._open[id] ? [hint ? h('p', { class: 'hint', text: hint }) : null, form] : null);
+    }
     /** Listă repetabilă (rânduri cu ↑ ↓ ✕ și „Adaugă”); rândul gol nu se scrie în config până nu e completat. */
     _listBlock(key, title, hint, max, addLabel, rowLabel, rowBuilder, isReady, path, toConfig) {
       const P = path || [], id = P.join('.') + '/' + key;
@@ -4715,12 +4998,17 @@ function defineEditors() {
       const forms = o.forms, ready = o.ready || ((x) => !!(x && x.entity));
       const rowBuilder = (item, i, onChange) => [...forms.map((fm) => {
         const ks = names(fm.schema), keep = new Set(fm.defTrue || []);
-        const f = this._form(fm.schema, pick(item, ks), fm.labels, (v) => {
+        const f = this._form(fm.schema, { ...(fm.defaults || {}), ...pick(item, ks) }, fm.labels, (v) => {
           const next = { ...item };
           for (const k of ks) { if (isEmpty(v[k]) && !(keep.has(k) && v[k] === false)) delete next[k]; else next[k] = v[k]; }
           Object.keys(item).forEach((k) => delete item[k]); Object.assign(item, next);
           onChange(item);
         }, fm.helpers);
+        if (fm.toggle) {   // grup opțional: o bifă; debifat = cheile dispar din config
+          const tid = key + '/' + i + '/' + fm.toggle;
+          if (this._open[tid] === undefined) this._open[tid] = ks.some((k) => !isEmpty(item[k]));
+          return h('div', { class: 'tg' }, this._form([{ name: 'on', selector: BOOL }], { on: this._open[tid] }, { on: fm.toggle }, (v) => { this._open[tid] = !!v.on; if (!v.on) { ks.forEach((k) => delete item[k]); onChange(item); } this._draw(); }), this._open[tid] ? f : null);
+        }
         return fm.details ? h('details', { open: ks.some((k) => !isEmpty(item[k])) }, h('summary', { text: fm.details }), f) : f;
       }), ...(o.extra ? [].concat(o.extra(item, i) || []) : [])];
       return this._listBlock(key, o.title, o.hint, o.max, o.addLabel, o.rowLabel, rowBuilder, ready, o.path, (x) => (o.compact !== false && Object.keys(x).length === 1 && x.entity ? x.entity : x));
@@ -4794,6 +5082,9 @@ function defineEditors() {
           { ...LBL, invert: t('Contorul arată valori pozitive când exportă') }, { invert: t('Bifează dacă pe contor + înseamnă export în rețea.') }),
         src('battery', t('Baterie'), t('Puterea bateriei și, opțional, nivelul de încărcare.'), [{ name: 'entity', selector: SENSOR() }, { name: 'soc', selector: SENSOR() }, { name: 'invert', selector: BOOL }],
           { ...LBL, soc: t('Nivel încărcare (%)'), invert: t('Bateria arată valori pozitive când se încarcă') }, { invert: t('Implicit + înseamnă descărcare.') }),
+        this._optional([], t('Arată energia produsă azi'), t('Rând mic sub titlu, cu iconiță de soare.'), [{ name: 'solar_today', selector: SENSOR() }], { solar_today: t('Senzor energie produsă azi (kWh)') }),
+        this._optional([], t('Arată radiația solară'), t('Doar dacă ai o stație meteo sau un senzor de radiație.'), [{ name: 'radiation', selector: SENSOR() }], { radiation: t('Senzor radiație solară (W/m²)') }),
+        this._cfg.solar_today || this._cfg.radiation ? this._fields([], '', '', [{ name: 'sun_labels', selector: BOOL }], { sun_labels: t('Arată textul lângă valori („produs azi”, „radiație”)') }, null, { defTrue: ['sun_labels'] }) : null,
         this._listBlock('consumers', t('Consumatori'), t('Ce consumă energia: casă, hală, piscină, mașină electrică…'), 6, t('Adaugă consumator'), t('Consumator'),
           (item, i, onChange) => {
             const f = consumerToForm(item);
@@ -4861,7 +5152,10 @@ function defineEditors() {
       return [
         this._fields(['header'], t('Antet'), '', [grid({ name: 'icon', selector: ICON }, { name: 'clock', selector: BOOL })], { icon: t('Iconiță'), clock: t('Arată ceasul') }, null, { defTrue: ['clock'] }),
         this._items('values', { path: ['header'], title: t('Valori'), hint: t('Maximum 3 valori în antet.'), max: 3, addLabel: t('Adaugă valoare'), rowLabel: t('Valoare'), compact: false,
-          forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'color', selector: SEL(['accent', 'on', 'ok', 'alert']) }], labels: { entity: t('Senzor'), label: t('Etichetă'), icon: t('Iconiță'), color: t('Culoare') } }] }),
+          forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'color', selector: SEL(['accent', 'on', 'ok', 'alert']) }], labels: { entity: t('Senzor'), label: t('Etichetă'), icon: t('Iconiță'), color: t('Culoare') } },
+            { toggle: t('Arată autonomia sub valoare (pentru procentul bateriei)'), schema: [{ name: 'runtime_load', selector: SENSOR() }, { name: 'runtime_load_entities', selector: SENSOR({ multiple: true }) }, grid({ name: 'runtime_capacity_entity', selector: SENSOR() }, { name: 'runtime_capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'runtime_grid_present', selector: ENT({ domain: 'binary_sensor' }) }, grid({ name: 'runtime_reserve_pct', selector: NUM(0, 100) }, { name: 'runtime_shutdown_pct', selector: NUM(0, 100) }), { name: 'runtime_power', selector: SENSOR() }, { name: 'runtime_charge_eta', selector: SEL([{ value: 'avg', label: t('Media ultimelor 10 minute') }, { value: 'now', label: t('Puterea de acum') }]) }, { name: 'runtime_while_charging', selector: BOOL }], defaults: { runtime_charge_eta: 'avg' },
+              labels: { runtime_charge_eta: t('Calculează „Plin în” după'), runtime_while_charging: t('Arată autonomia și în timpul încărcării'), runtime_load: t('Consum curent (W)'), runtime_load_entities: t('Alți consumatori (se adună la consum)'), runtime_capacity_entity: t('Senzor capacitate'), runtime_capacity_kwh: t('sau capacitate (kWh)'), runtime_grid_present: t('Rețea prezentă (senzor binar)'), runtime_reserve_pct: t('Rezervă (%)'), runtime_shutdown_pct: t('Oprire (%)'), runtime_power: t('Putere baterie (W)') },
+              helpers: { runtime_load: t('Completează consumul și apare autonomia sub procent, ca pe cardul de baterie.'), runtime_power: t('+ = descărcare, − = încărcare. Cât timp se încarcă, apare „plin în …”.') } }] }),
         this._fields(['header', 'right'], t('În dreapta (în loc de ceas)'), t('Opțional: o valoare afișată în locul ceasului, ex. temperatura de afară.'), [{ name: 'entity', selector: ENT() }, grid({ name: 'attribute', selector: TXT }, { name: 'label', selector: TXT })], { entity: t('Entitate'), attribute: t('Atribut (opțional)'), label: t('Etichetă') }, null, { collapsed: true }),
       ];
     }
@@ -4870,8 +5164,10 @@ function defineEditors() {
     _body() {
       return [
         this._fields([], t('Meniu'), '', [grid({ name: 'sticky', selector: BOOL }, { name: 'compact', selector: BOOL })], { sticky: t('Fixat jos pe ecran'), compact: t('Compact') }),
-        this._items('items', { title: t('Butoane meniu'), hint: t('Fiecare buton duce la o pagină (cale completă, ex. /dashboard-casa/camere).'), max: 8, addLabel: t('Adaugă buton'), rowLabel: t('Buton'), compact: false, ready: (x) => !!(x && x.path),
-          forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } },
+        this._items('items', { title: t('Butoane meniu'), hint: t('Fiecare buton duce la o pagină (cale completă, ex. /dashboard-casa/camere).'), max: 12, addLabel: t('Adaugă buton'), rowLabel: t('Buton'), compact: false, ready: (x) => !!(x && (x.path || x.path_tablet || x.path_phone || x.back)),
+          forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }, { name: 'device', selector: SEL([{ value: 'all', label: t('Oriunde') }, { value: 'tablet', label: t('Doar pe tabletă') }, { value: 'phone', label: t('Doar pe telefon') }]) }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii'), device: t('Se vede') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } },
+            { toggle: t('Apăsare lungă: altă pagină'), schema: [{ name: 'hold_path', selector: TXT }, grid({ name: 'hold_path_tablet', selector: TXT }, { name: 'hold_path_phone', selector: TXT })], labels: { hold_path: t('Adresa la apăsare lungă'), hold_path_tablet: t('Pe tabletă'), hold_path_phone: t('Pe telefon') }, helpers: { hold_path: t('Merge pe orice dispozitiv; câmpurile de dedesubt au prioritate pe tabletă / telefon.'), hold_path_phone: t('Ex. pe telefon, apăsat lung pe Home duce la pagina tabletei.') } },
+            { toggle: t('Adresă diferită pe tabletă și pe telefon'), schema: [{ name: 'path_tablet', selector: TXT }, { name: 'path_phone', selector: TXT }], labels: { path_tablet: t('Adresa pe tabletă'), path_phone: t('Adresa pe telefon') }, helpers: { path_tablet: t('Ex. Home duce la pagina tabletei.'), path_phone: t('Ex. Home duce la pagina telefonului.') } },
             { details: t('Insignă cu număr'), schema: [{ name: 'badge', selector: ENT({ multiple: true }) }, { name: 'badge_style', selector: SEL(['light']) }], labels: { badge: t('Entități numărate'), badge_style: t('Aspect insignă') }, helpers: { badge: t('Numără entitățile pornite; un senzor numeric adaugă valoarea lui (ex. „becuri aprinse”).'), badge_style: t('„light” = galben, pentru lumini; implicit roșu (alertă).') } }] }),
       ];
     }
@@ -4882,9 +5178,9 @@ function defineEditors() {
   class CcuGraphEditor extends CcuEditor {
     _body() {
       return [
-        this._fields([], t('Grafic'), '', [{ name: 'title', selector: TXT }, grid({ name: 'range', selector: SEL(RANGES) }, { name: 'tabs', selector: SEL(RANGES, true) }), grid({ name: 'y_axis', selector: SEL(['left', 'right']) }, { name: 'height', selector: NUM(60, 400, 10) }), { name: 'compact', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
-          { tap_action: t('La atingere (ex. deschide pagina graficului)'), title: t('Titlu (opțional)'), range: t('Interval'), tabs: t('File pentru schimbarea intervalului'), y_axis: t('Axa Y'), height: t('Înălțime (px)'), compact: t('Compact') }),
-        this._items('series', { title: t('Serii'), hint: t('Între 1 și 3 linii pe grafic.'), max: 3, addLabel: t('Adaugă serie'), rowLabel: t('Serie'), compact: false,
+        this._fields([], t('Grafic'), '', [{ name: 'title', selector: TXT }, grid({ name: 'range', selector: SEL(RANGES) }, { name: 'tabs', selector: SEL(RANGES, true) }), grid({ name: 'y_axis', selector: SEL(['left', 'right']) }, { name: 'height', selector: NUM(60, 400, 10) }), { name: 'compact', selector: BOOL }, { name: 'timeline', selector: BOOL }, { name: 'hide_durations', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
+          { timeline: t('Cronologie: un rând pe serie (pornit / oprit)'), hide_durations: t('Cronologie: ascunde durata de pe bare și totalul pe rând'), tap_action: t('La atingere (ex. deschide pagina graficului)'), title: t('Titlu (opțional)'), range: t('Interval'), tabs: t('File pentru schimbarea intervalului'), y_axis: t('Axa Y'), height: t('Înălțime (px)'), compact: t('Compact') }),
+        this._items('series', { title: t('Serii'), hint: this._cfg.timeline ? t('Până la 8 rânduri, unul pe serie.') : t('Între 1 și 3 linii pe grafic.'), max: this._cfg.timeline ? 8 : 3, addLabel: t('Adaugă serie'), rowLabel: t('Serie'), compact: false,
           forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, grid({ name: 'name', selector: TXT }, { name: 'color', selector: SEL(['accent', 'yellow', 'green', 'blue', 'orange', 'red', 'cyan']) }), { name: 'kind', selector: SEL(['area', 'line']) }], labels: { entity: t('Senzor'), name: t('Nume'), color: t('Culoare'), kind: t('Tip') } }] }),
       ];
     }
@@ -4893,10 +5189,14 @@ function defineEditors() {
     _body() {
       return [
         this._fields([], t('Baterie'), t('Nivelul de încărcare și, opțional, capacitatea și consumul pentru autonomie.'), [
-          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, { name: 'load_entities', selector: SENSOR({ multiple: true }) }, grid({ name: 'power', selector: SENSOR() }, { name: 'power_invert', selector: BOOL }), grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
+          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
           grid({ name: 'reserve_pct', selector: NUM(0, 100) }, { name: 'shutdown_pct', selector: NUM(0, 100) }), grid({ name: 'color', selector: SEL(['yellow', 'green', 'blue', 'orange']) }, { name: 'show_title', selector: BOOL })],
-          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), load_entities: t('Alți consumatori (se adună la consum)'), power: t('Putere baterie (W)'), power_invert: t('Inversează semnul puterii'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
-          { grid_present: t('Când e oprit, cardul arată „Backup activ”.'), load_entities: t('Dacă bateria alimentează mai multe circuite, adaugă-le aici: autonomia se calculează la suma lor.'), power: t('+ = descărcare, − = încărcare. Cât timp se încarcă, cardul arată „Plin în”.') }, { defTrue: ['show_title'] }),
+          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
+          { grid_present: t('Când e oprit, cardul arată „Backup activ”.') }, { defTrue: ['show_title'] }),
+        this._optional([], t('Consum din mai multe circuite'), t('Dacă bateria alimentează mai multe circuite, adaugă-le aici: autonomia se calculează la suma lor.'), [{ name: 'load_entities', selector: SENSOR({ multiple: true }) }], { load_entities: t('Alți consumatori (se adună la consum)') }),
+        this._optional([], t('Arată „Plin în” cât se încarcă'), t('+ = descărcare, − = încărcare.'), [{ name: 'power', selector: SENSOR() }, { name: 'power_invert', selector: BOOL }, { name: 'charge_eta', selector: SEL([{ value: 'avg', label: t('Media ultimelor 10 minute') }, { value: 'now', label: t('Puterea de acum') }]) }, { name: 'runtime_while_charging', selector: BOOL }],
+          { power: t('Putere baterie (W)'), power_invert: t('Inversează semnul puterii'), charge_eta: t('Calculează „Plin în” după'), runtime_while_charging: t('Arată autonomia și în timpul încărcării') },
+          { charge_eta: t('Media nu sare când trece un nor; citește istoricul din HA.') }, { charge_eta: 'avg' }),
       ];
     }
   }
@@ -5000,21 +5300,21 @@ __m["cards"] = (() => {
 // Regulile din PROMPT: DOM actualizat pe loc (patchNodes), randare doar când s-a schimbat o entitate folosită, ≥ 1 s între randări,
 // un singur interval pentru ceas (curățat la disconnect), gesturi pe pointer events, fără rețea.
 const { CCU_THEME } = __m["theme"];
-const { setLang } = __m["i18n"];
-const { normalizeConfig, resolveMotion } = __m["config"];
+const { setLang, t } = __m["i18n"];
+const { normalizeConfig, resolveMotion, deviceKind } = __m["config"];
 const { runAction, toggleEntity } = __m["actions"];
 const { attachGestures } = __m["gestures"];
 const { defineEditors, detectEnergy } = __m["editor"];
 const { normalizeRadio, radioModel, renderRadio, stationUrl } = __m["radio"];
 const { normalizeVehicles, buildVehiclesModel, renderVehicles, normalizeDeadlines, dueDocuments, parseDate } = __m["vehicles"];
 const { applyPreset } = __m["presets"];
-const { normalizeGraphConfig, buildGraphModel, renderGraphCard, nearestPoint, rangeHours, thin, formatValue } = __m["graph-card"];
-const { parseMinimalResponse, formatTimeLabel } = __m["graph-data"];
+const { normalizeGraphConfig, buildGraphModel, renderGraphCard, nearestPoint, rangeHours, thin, formatValue, timelineHit } = __m["graph-card"];
+const { parseMinimalResponse, formatTimeLabel, discreteValue } = __m["graph-data"];
 const { normalizeWeatherConfig, buildWeatherModel, renderWeather } = __m["weather"];
-const { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel } = __m["energy"];
+const { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, headerRuntimeTexts, fetchAveragePower, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel } = __m["energy"];
 const { normalizeControls, controlModel, renderControls, sliderValue, normalizeTitle, renderTitle, normalizeRemote, renderRemote } = __m["controls"];
 const { formatNumber } = __m["state"];
-const { normalizeWaste, renderButtons, renderChips, renderHeader, renderNav, renderPeople, normalizePeople, normalizeHeader, normalizeNav, sparkPath, patchNodes, defaultTap } = __m["render"];
+const { normalizeWaste, renderButtons, renderChips, renderHeader, renderNav, navPath, holdTarget, renderPeople, normalizePeople, normalizeHeader, normalizeNav, sparkPath, patchNodes, defaultTap } = __m["render"];
 const MIN_RENDER_MS = 1000;
 const CLOCK_MS = 30000;
 const ROW_UNITS = { xs: 0.7, s: 1.5, m: 1.7, l: 1.4, xl: 2.6 };
@@ -5054,8 +5354,7 @@ class CcuBase extends HTMLElement {
 
   /** Mișcarea: data-anim (icoane), data-fx (vreme), data-flow (fluxul) = „calm” | „off”; lipsa atributului = animații continue. Telefon (latura mică a ecranului < 600 px) → calm, dacă nu e setat altfel. */
   _applyMotion(cfg) {
-    const narrow = typeof screen !== 'undefined' && screen && Math.min(screen.width || 9999, screen.height || 9999) < 600;
-    const m = resolveMotion(cfg || {}, narrow);
+    const m = resolveMotion(cfg || {}, deviceKind(cfg && cfg.device) === 'phone');
     for (const [attr, v] of [['data-anim', m.anim], ['data-fx', m.fx], ['data-flow', m.flow]]) { if (v === 'full') this.removeAttribute(attr); else this.setAttribute(attr, v); }
   }
 
@@ -5331,10 +5630,13 @@ class CcuGraphCard extends CcuBase {
       const res = await this._hass.callWS({ type: 'history/history_during_period', start_time: start.toISOString(), end_time: end.toISOString(), entity_ids: ids, minimal_response: true, no_attributes: true, significant_changes_only: false });
       const parsed = parseMinimalResponse(res, ids);
       const data = ids.map((id) => {
-        let pts = thin(parsed[id] || [], 150);
+        const bin = !!(parsed[id] && parsed[id].binary);
+        let pts = thin(parsed[id] || [], this._config.timeline ? 600 : 150);   // cronologia păstrează toate trecerile pornit / oprit
         const cur = this._hass.states && this._hass.states[id]; const n = Number(cur && cur.state);
         if (cur && cur.state !== '' && Number.isFinite(n) && pts.length) pts = pts.concat([{ t: end.getTime(), v: n }]);
+        else if (bin && cur && pts.length && discreteValue(cur.state) !== undefined) pts = pts.concat([{ t: end.getTime(), v: discreteValue(cur.state) }]);
         pts.unit = (cur && cur.attributes && cur.attributes.unit_of_measurement) || '';
+        pts.binary = bin;
         return pts;
       });
       this._cache.set(key, { at: Date.now(), data });
@@ -5351,10 +5653,16 @@ class CcuGraphCard extends CcuBase {
       const m = this._model; if (!m || !m.series.length) return;
       const r = svg.getBoundingClientRect(); if (!r.width) return;
       const x = (e.clientX - r.left) * (m.W / r.width);
+      if (m.timeline) {   // cronologie: ce e sub deget (bara, golul „indisponibil”, intervalul oprit) cu ora și durata
+        const hit = timelineHit(m, x, (e.clientY - r.top) * (m.H / r.height)); if (!hit) return hide();
+        const c = svg.querySelector('.cursor'); c.setAttribute('x1', hit.x); c.setAttribute('x2', hit.x); c.setAttribute('opacity', '.6');
+        if (tip) { tip.textContent = hit.text; tip.hidden = false; tip.style.left = `${Math.min(Math.max(hit.x * r.width / m.W, 90), r.width - 90)}px`; }
+        return;
+      }
       const p0 = nearestPoint(m.series[0].points, x); if (!p0) return hide();
       const c = svg.querySelector('.cursor'); c.setAttribute('x1', p0.x); c.setAttribute('x2', p0.x); c.setAttribute('opacity', '.8');
       let dots = '', txt = [];
-      m.series.forEach((s) => { const p = nearestPoint(s.points, p0.x); if (!p) return; dots += `<circle class="dot ser" style="--sc:${s.color}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5"/>`; txt.push(formatValue(p.v, s.unit)); });
+      m.series.forEach((s) => { const p = nearestPoint(s.points, p0.x); if (!p) return; dots += `<circle class="dot ser" style="--sc:${s.color}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5"/>`; txt.push(s.binary ? (p.v >= 1 ? t('Pornit') : t('Oprit')) : formatValue(p.v, s.unit)); });
       svg.querySelector('.dots').innerHTML = dots;
       if (tip) { tip.textContent = `${formatTimeLabel(p0.t, m.hours <= 24 ? '24h' : '7d')} · ${txt.join(' · ')}`; tip.hidden = false; tip.style.left = `${Math.min(Math.max(p0.x * r.width / m.W, 60), r.width - 60)}px`; }
     };
@@ -5409,6 +5717,21 @@ class CcuFlowCard extends CcuBase {
   }
 }
 
+/** Media puterii bateriei pe ultimele 10 minute, citită din istoric cel mult o dată pe minut și doar cât bateria chiar se încarcă; la sosire redesenează cardul. */
+function avgRefresh(card, list) {
+  if (!card._hass) return;
+  card._avg = card._avg || {};
+  for (const { id, invert } of list) {
+    const s = card._hass.states && card._hass.states[id], n = s ? Number(s.state) : NaN;
+    const unit = s && s.attributes && s.attributes.unit_of_measurement, w = Number.isFinite(n) ? n * (unit === 'kW' ? 1000 : unit === 'MW' ? 1e6 : 1) : null;
+    if (w === null || (invert ? -w : w) >= -50) continue;   // nu se încarcă acum: media nu e necesară
+    const a = card._avg[id] || (card._avg[id] = { w: null, at: 0, busy: false });
+    if (a.busy || Date.now() - a.at < 60000) continue;
+    a.busy = true; a.at = Date.now();
+    fetchAveragePower(card._hass, id, 10).then((v) => { a.w = v; a.busy = false; card._draw(false); }).catch(() => { a.busy = false; });
+  }
+}
+
 class CcuBatteryCard extends CcuBase {
   static getConfigElement() { return document.createElement('ccu-battery-editor'); }
   _build(cfg) {
@@ -5416,8 +5739,12 @@ class CcuBatteryCard extends CcuBase {
     const base = normalizeConfig({ ...(cfg || {}), entities: b.config.soc ? [b.config.soc] : [] });
     return { config: { ...base.config, ...b.config, entities: b.config.soc ? [{ entity: b.config.soc, name: b.config.title }] : [] }, warnings: b.warnings.concat(base.warnings.filter((w) => !/entit|Fără/i.test(w))) };
   }
-  _entityIds() { const c = this._config; return [c.soc, c.capacity_entity, c.load, c.power, c.grid_present].filter(Boolean); }
-  _html() { return renderBattery(this._config, buildBatteryModel(this._config, this._hass), { warnings: this._warnings }); }
+  _entityIds() { const c = this._config; return [c.soc, c.capacity_entity, c.load, c.power, c.grid_present].concat(c.load_entities || []).filter(Boolean); }
+  _html() {
+    const c = this._config;
+    if (c.power && c.charge_eta !== 'now') avgRefresh(this, [{ id: c.power, invert: c.power_invert }]);
+    return renderBattery(c, buildBatteryModel(c, this._hass, { avgPowerW: c.power && this._avg && this._avg[c.power] ? this._avg[c.power].w : null }), { warnings: this._warnings });
+  }
   getCardSize() { return 4; }
   getGridOptions() { return { columns: 12, min_columns: 4, rows: 'auto'}; }
   static getStubConfig(hass) {
@@ -5509,24 +5836,38 @@ class CcuNavCard extends CcuBase {
     config.labels = !(cfg && cfg.labels === false);   // labels: false = doar iconițe
     config.compact = !!(cfg && cfg.compact === true); // capsulă îngustă, centrată (în loc de bară pe toată lățimea)
     config.spacer = !(cfg && cfg.spacer === false);   // spacer: false = fără spațiul gol rezervat sub bara fixă
+    config.device = cfg && (cfg.device === 'phone' || cfg.device === 'tablet') ? cfg.device : '';   // ocolește detectarea telefon / tabletă
     return { config, warnings: warnings.filter((w) => !/entit/i.test(w)).concat(n.warnings) };
   }
   setConfig(cfg) { super.setConfig(cfg); this.toggleAttribute('data-sticky', !!this._config.sticky); }
   _entityIds() { return (this._config.items || []).flatMap((it) => [...(it.badge || []), ...(it.visible_if ? [it.visible_if.entity] : [])]); }
   _path() { return (typeof location !== 'undefined' && location.pathname) || ''; }
-  _html() { return renderNav(this._config, this._path(), { warnings: this._warnings, hass: this._hass }); }
-  _actionFor(idx) { const it = (this._config.items || [])[Number(idx)]; return it ? { action: 'navigate', path: it.path } : null; }
+  _device() { return deviceKind(this._config && this._config.device); }
+  _html() { return renderNav(this._config, this._path(), { warnings: this._warnings, hass: this._hass, device: this._device() }); }
+  _actionFor(idx) { const it = (this._config.items || [])[Number(idx)]; return it ? { action: 'navigate', path: navPath(it, this._device()) } : null; }
   // meniul: simplu `click` (instant, fără așteptare de hold / double-tap); Enter/Space merg natural pe <button>
   _bind() {
     this._unbind.forEach((f) => f()); this._unbind = [];
     this._mount.querySelectorAll('.ccu-nav-item').forEach((el) => {
+      const it0 = (this._config.items || [])[Number(el.getAttribute('data-id'))];
+      const hold = it0 && !it0.back ? holdTarget(it0, this._device()) : '';
+      let timer = null, fired = false;
       const go = () => {
+        if (fired) { fired = false; return; }   // apăsarea lungă a navigat deja: ignoră „click”-ul de la ridicarea degetului
         const it = (this._config.items || [])[Number(el.getAttribute('data-id'))];
         if (it && it.back) { try { window.history.back(); } catch (e) { /* fără istoric */ } return; }
         this._fire(el.getAttribute('data-id'), 'tap', el);
       };
       el.addEventListener('click', go);
       this._unbind.push(() => el.removeEventListener('click', go));
+      if (hold) {
+        const start = () => { fired = false; clearTimeout(timer); timer = setTimeout(() => { timer = null; fired = true; runAction(this._hass, el, { action: 'navigate', path: hold }); }, 550); };
+        const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
+        const noMenu = (e) => e.preventDefault();   // fără meniul sistemului la apăsare lungă
+        el.addEventListener('pointerdown', start); el.addEventListener('contextmenu', noMenu);
+        for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(ev, cancel);
+        this._unbind.push(() => { cancel(); el.removeEventListener('pointerdown', start); el.removeEventListener('contextmenu', noMenu); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) el.removeEventListener(ev, cancel); });
+      }
     });
   }
   connectedCallback() {
@@ -5553,9 +5894,18 @@ class CcuHeaderCard extends CcuBase {
     config.header = h.header;
     return { config, warnings: warnings.filter((w) => !/entit/i.test(w)).concat(h.warnings) };
   }
-  _entityIds() { const h = this._config.header; return h.values.map((v) => v.entity).concat(h.right ? [h.right.entity] : []); }
+  _entityIds() {
+    const h = this._config.header;
+    const rt = h.values.flatMap((v) => (v.runtimeCfg ? [v.runtimeCfg.load, v.runtimeCfg.capacity_entity, v.runtimeCfg.grid_present, v.runtimeCfg.power].concat(v.runtimeCfg.load_entities || []).filter(Boolean) : []));
+    return h.values.map((v) => v.entity).concat(h.right ? [h.right.entity] : [], rt);
+  }
   _hasClock() { return !!(this._config && this._config.header.clock); }
-  _html(now) { return renderHeader(this._config, this._hass, now, { warnings: this._warnings }); }
+  _html(now) {
+    const h = this._config.header, ids = h.values.filter((v) => v.runtimeCfg && v.runtimeCfg.power && v.runtimeCfg.charge_eta !== 'now').map((v) => ({ id: v.runtimeCfg.power, invert: v.runtimeCfg.power_invert === true || v.runtimeCfg.power_invert === 'true' }));
+    if (ids.length) avgRefresh(this, ids);
+    const avgMap = {}; for (const { id } of ids) if (this._avg && this._avg[id]) avgMap[id] = this._avg[id].w;
+    return renderHeader(this._config, this._hass, now, { warnings: this._warnings, subs: headerRuntimeTexts(h, this._hass, avgMap) });
+  }
   setConfig(cfg) { super.setConfig(cfg); if (this.isConnected && this._hasClock() && !this._clock) this._clock = setInterval(() => this._draw(false), CLOCK_MS); }
   getCardSize() { return 1; }
   getGridOptions() { return { columns: 12, rows: 'auto' }; }

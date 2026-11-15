@@ -33,7 +33,10 @@ ok('se încarcă (putere negativă)', m.charging === true && near(m.chargeW, 103
 ok('plin în = 7,2 kWh / 10,335 kW', near(m.fullH, 7.2 / 10.335, 0.001), m.fullH);
 ok('autonomia rămâne la consumul curent', near(m.autonomyH, 24.8 / 3.78, 0.01));
 let html = renderBattery(cfg({ load: 'sensor.l', power: 'sensor.p' }), m);
-ok('randarea arată „Plin în” și „Autonomie la consum”', html.includes('Plin în') && html.includes('Autonomie la consum') && html.includes('data-charging="1"'));
+ok('în încărcare: „Plin în”, fără autonomie (implicit)', html.includes('Plin în') && !html.includes('Autonomie') && html.includes('data-charging="1"'));
+const m2 = buildBatteryModel(cfg({ load: 'sensor.l', power: 'sensor.p', runtime_while_charging: true }), { states: st });
+html = renderBattery(cfg({ load: 'sensor.l', power: 'sensor.p', runtime_while_charging: true }), m2);
+ok('cu bifa: „Plin în” și „Autonomie la consum”', html.includes('Plin în') && html.includes('Autonomie la consum'));
 
 // descărcare (+) → nu e încărcare; power_invert întoarce semnul
 m = buildBatteryModel(cfg({ load: 'sensor.l', power: 'sensor.p' }), { states: S({ 'sensor.soc': 82, 'sensor.l': 1000, 'sensor.p': 1000 }) });

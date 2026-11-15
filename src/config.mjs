@@ -288,6 +288,16 @@ function validateAction(a) {
 }
 
 // Export pentru testare (funcțiile neexportate direct)
+/**
+ * Dispozitivul: „phone” când latura mică a ecranului e sub 600 px (indiferent de orientare), altfel „tablet” (și PC / iPad).
+ * `override` = „phone” | „tablet” (opțiunea `device:` a cardului) ocolește detectarea.
+ */
+export function deviceKind(override) {
+  if (override === 'phone' || override === 'tablet') return override;
+  const s = typeof screen !== 'undefined' && screen ? screen : null;
+  return s && Math.min(s.width || 9999, s.height || 9999) < 600 ? 'phone' : 'tablet';
+}
+
 /** `motion`: auto | full | calm | off (altceva → auto). `weather_effects` / `flow_animation`: auto | on | off. */
 const MOTION_VALUES = ['auto', 'full', 'calm', 'off'];
 function normalizeMotion(v) { const s = String(v === undefined || v === null ? 'auto' : v).toLowerCase(); return MOTION_VALUES.includes(s) ? s : 'auto'; }

@@ -2,6 +2,8 @@
 
 Română · [English](README.md)
 
+[![HACS custom](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://hacs.xyz/docs/faq/custom_repositories/) [![release](https://img.shields.io/github/v/release/AdrianTIonut/ha-calm-modern-ui?style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases) ![downloads](https://img.shields.io/github/downloads/AdrianTIonut/ha-calm-modern-ui/total?style=flat-square) [![build](https://img.shields.io/github/actions/workflow/status/AdrianTIonut/ha-calm-modern-ui/ci.yml?branch=main&style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/actions) ![license](https://img.shields.io/github/license/AdrianTIonut/ha-calm-modern-ui?style=flat-square)
+
 Set de carduri pentru Home Assistant, într-un stil calm și modern: plăci sticloase, verde pentru „activ”, albastru pentru informație,
 portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără rețea, fără biblioteci externe, fără `INTERNET` către terți.
 
@@ -9,15 +11,21 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 
 | Card | Ce face |
 |---|---|
-| `ccu-buttons-card` | Grilă de butoane xs–xl: pastile, plăci orizontale, rând cu comutator, card „erou” cu variație și grafic mic |
-| `ccu-chips-card` | Rând de chips cu stare (aprins/alertă/ok), inclusiv aer condiționat cu ventilator care se învârte |
-| `ccu-header-card` | Bandă pe un rând: iconiță, până la 3 valori, ceas sau o valoare în dreapta (ex. temperatura exterioară) |
-| `ccu-nav-card` | Meniu de jos; pagina curentă e evidențiată automat |
-| `ccu-graph-card` | Grafic de istoric (6 h / 24 h / 7 zile / 30 zile), 1–3 serii, valoare la atingere |
-| `ccu-flow-card` | Flux energetic: solar / rețea / baterie → consumatori, cu procente și statistici |
-| `ccu-battery-card` | Baterie cu bară, praguri (oprire / rezervă), autonomie și stare „Backup activ” |
-| `ccu-people-card` | Avatare suprapuse: cine e acasă are cerc verde |
-| `ccu-weather-card` | Vreme: valori din stația ta (Ecowitt etc.), prognoză pe 5 zile și scenă animată (ploaie, lapoviță, ninsoare, vânt, furtună, ceață, senin/noapte) |
+| `ccu-buttons-card` | Grilă de butoane xs–xl: pastile, plăci orizontale, rând cu comutator, card „erou” cu variație și grafic mic, grupuri de alertă |
+| `ccu-chips-card` | Chips cu stare (aprins / alertă / ok): apar doar când sunt active (A/C, ploaie, pompe…), stări text, calendar de colectare a gunoiului, baterii slabe, termene mașini |
+| `ccu-controls-card` | Termostat / A/C cu cadran, lumini cu luminozitate, temperatură de culoare și culori rapide, ventilator, media player, număr, selector |
+| `ccu-radio-card` | Player radio / muzică cu scală de acordaj, egalizator, schimbarea posturilor, volum și alegerea boxei |
+| `ccu-remote-card` | Telecomandă TV (`remote.send_command`) cu D-pad, volum, canale și taste proprii |
+| `ccu-flow-card` | Flux energetic: solar / rețea / baterie → consumatori, cu procente, sume, scăderi, statistici, energia produsă azi și radiația solară; puncte animate pe panglici |
+| `ccu-battery-card` | Baterie cu bară, praguri (oprire / rezervă), autonomie, „Plin în” cât se încarcă și stare „Backup activ” |
+| `ccu-batteries-card` | Nivelul bateriilor de la telefoane, tablete, mașini…, sortate, cu bară; le poate găsi singur |
+| `ccu-graph-card` | Grafic de istoric (6 h … 30 de zile), 1–3 serii, valoare la atingere, acțiune la atingere opțională |
+| `ccu-weather-card` | Vreme: valori din stația ta (Ecowitt etc.), prognoză pe 5 zile și scenă animată (ploaie, lapoviță, ninsoare, vânt, furtună, ceață, senin / noapte) |
+| `ccu-people-card` | Cine e acasă: chips sau avatare mari „familie” |
+| `ccu-vehicle-card` | Documente și revizii pentru mașini: RCA, ITP, rovinietă, revizie și ulei pe kilometri, cu date editabile și alerte |
+| `ccu-header-card` | Antet pe un rând: iconiță, până la 3 valori (cu autonomia bateriei sub procent), ceas sau o valoare în dreapta |
+| `ccu-nav-card` | Meniu de jos pentru tabletă și telefon: pagini și butoane diferite pe dispozitiv, apăsare lungă, insigne, butoane condiționate, fix jos |
+| `ccu-title-card` | Titlu de secțiune cu iconiță și subtitlu |
 
 ## Galerie
 
@@ -36,9 +44,17 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 <tr><td valign="top"><img src="docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
 </table>
 
+## Dashboard exemplu
+
+Un dashboard complet pe care îl poți lipi în Home Assistant: o pagină pentru **tabletă** și una pentru **telefon**, cu aceeași bară de jos pe fiecare pagină (Home duce la pagina dispozitivului pe care îl ții, iar o apăsare lungă sare la celălalt; telefonul arată 5 butoane, tableta toate 9). Toate entitățile și numele din el sunt inventate: înlocuiește-le cu ale tale. Fișier: [`examples/dashboard-calm.yaml`](examples/dashboard-calm.yaml) (modul de folosire e în primele rânduri din fișier).
+
+<table>
+<tr><td valign="top"><img src="docs/img/dashboard-tablet.png" width="620" alt="dashboard exemplu pe tabletă"></td><td valign="top"><img src="docs/img/dashboard-phone.png" width="250" alt="dashboard exemplu pe telefon"></td></tr>
+</table>
+
 ## Iconițe animate
 
-Iconițele se mișcă doar când are sens și doar cât aparatul e pornit: ventilatorul unui aparat de aer condiționat se învârte cât timp chiar răcește, becul strălucește, centrala pâlpâie, pompa sau boxa pulsează. Animațiile se opresc la „reduce motion” (sau cu `animations: false`).
+Iconițele se mișcă doar când are sens. **Aparatele** se mișcă doar cât sunt pornite: ventilatorul unui aparat de aer condiționat se învârte cât timp chiar răcește, tamburul mașinii de spălat se rotește, becul strălucește, centrala pâlpâie, fulgerul de încărcare, pompa sau boxa pulsează, soarele strălucește. **Iconițele de vreme** (soare, lună, nori, ploaie, ninsoare, lapoviță, grindină, furtună, ceață, vânt) se mișcă mereu. Animațiile se opresc la „reduce motion” (sau cu `animations: false`), iar `motion: calm` le păstrează scurte (vezi mai jos).
 
 <img src="docs/img/animated-icons.png" width="472" alt="animated icons">
 
@@ -65,12 +81,19 @@ flow_animation: auto    # cardul de flux: auto | on | off (punctele care curg pe
 
 ## Instalare
 
+**Cerințe:** Home Assistant cu resurse personalizate pentru dashboard (orice versiune actuală); dezvoltat și testat pe Home Assistant 2026.11. Un singur fișier JavaScript, fără dependențe, fără rețea. [Dashboardul exemplu](#dashboard-exemplu) folosește vizualizarea *Secțiuni*.
+
 1. Copiază `ccu.js` în `config/www/ccu/ccu.js` (apare ca `/local/ccu/ccu.js`).
 2. **Setări → Tablouri de bord → ⋮ → Resurse → Adaugă resursă**: URL `/local/ccu/ccu.js?v=1`, tip **Modul JavaScript**.
 3. La fiecare actualizare a fișierului schimbă numărul din `?v=` (altfel browserul ține varianta veche).
 4. Reîncarcă pagina (Ctrl+F5 / „Reîncarcă forțat” în aplicația mobilă).
 
 HACS: **Repository-uri personalizate** → `https://github.com/adriantionut/ha-calm-modern-ui`, categoria **Dashboard**; fișierul servit e `ccu.js`.
+
+## Actualizare
+
+- **HACS / Marketplace:** actualizezi **Calm Modern UI**, apoi reîncarci browserul. În aplicația de telefon: Setări → Companion app → Depanare → *Reset frontend cache* (sau închizi aplicația complet și o deschizi din nou), altfel aplicația păstrează fișierul vechi.
+- **Manual:** înlocuiești `config/www/ccu/ccu.js` și schimbi numărul din `?v=` din resursă.
 
 ## Editor vizual (fără YAML)
 
@@ -196,6 +219,26 @@ header:
   right: { entity: weather.acasa, attribute: temperature, label: afară }   # în locul ceasului; fără right apare ceasul
 ```
 
+Procentul bateriei poate avea dedesubt **autonomia**, ca text mic (rămâne vizibil și pe telefon):
+
+```yaml
+type: custom:ccu-header-card
+header:
+  icon: home
+  values:
+    - entity: sensor.baterie_nivel
+      icon: battery
+      color: ok
+      runtime_load: sensor.consum_casa           # consumul, ca la cardul de baterie (+ runtime_load_entities pentru mai multe)
+      runtime_capacity_kwh: 10                   # sau runtime_capacity_entity
+      runtime_reserve_pct: 20
+      runtime_power: sensor.putere_baterie       # opțional: cât se încarcă arată „plin în …” în loc de autonomie
+      runtime_charge_eta: avg                    # avg (media ultimelor 10 min, implicit) | now
+      runtime_while_charging: false              # true = arată autonomia și cât se încarcă (a doua linie)
+```
+
+În editorul vizual e bifa *Arată autonomia sub valoare* de la fiecare valoare.
+
 ## ccu-nav-card
 
 ```yaml
@@ -205,6 +248,25 @@ items:
   - { icon: sun,   label: Solar, path: /dashboard-casa/solar, match: /dashboard-casa/solar }
 ```
 
+**O singură bară pentru tabletă și telefon.** Același card se poate pune pe toate paginile: `Home` duce în alt loc pe fiecare dispozitiv, iar unele butoane se văd doar pe tabletă.
+
+```yaml
+type: custom:ccu-nav-card
+sticky: true
+items:
+  - { icon: home,   label: Home,  path_tablet: /dashboard-casa/tableta, path_phone: /dashboard-casa/telefon, hold_path_phone: /dashboard-casa/tableta, hold_path_tablet: /dashboard-casa/telefon }   # apăsare lungă = saltul la Home-ul celuilalt dispozitiv
+  - { icon: sun,    label: Solar, path: /dashboard-casa/solar, match: [/dashboard-casa/solar, /dashboard-casa/solar-apa] }   # se aprinde pe toate paginile grupului
+  - { icon: bulb,   label: Lumini, path: /dashboard-casa/lumini }
+  - { icon: camera, label: Camere, path: /dashboard-casa/camere, match: [/dashboard-casa/camere, /dashboard-casa/camere-tehnica] }
+  - { icon: car,    label: Mașina, path: /dashboard-casa/masina, device: tablet }   # doar pe tabletă; `device: phone` pentru butoane doar pe telefon
+```
+
+- `path_tablet` / `path_phone` (sau `path: { tablet: …, phone: … }`) stabilesc unde duce butonul pe fiecare dispozitiv. `path` simplu e valoarea implicită.
+- `hold_path` (pe orice dispozitiv), `hold_path_tablet` și `hold_path_phone` stabilesc unde duce o **apăsare lungă** (cam o jumătate de secundă): de exemplu Home de pe telefon poate sări la pagina tabletei, și invers.
+- **Amplasare:** cu `sticky: true` bara stă fixă jos pe ecran și își rezervă loc în pagină. Pune cardul în **ultima secțiune** a paginii, pe toată lățimea, ca locul rezervat să fie la sfârșitul paginii; altfel ultimul rând de butoane poate ajunge sub bară.
+- Telefon = ecran cu latura mică sub 600 px; restul (tabletă, iPad, PC) e tabletă. `device: phone` sau `device: tablet` pe card forțează alegerea.
+- Butonul paginii curente se aprinde (verde), chiar dacă are insignă; `match` listează paginile în plus care aprind același buton.
+
 ## ccu-graph-card
 
 <img src="docs/img/graph.png" width="360" alt="graph">
@@ -212,7 +274,7 @@ items:
 ```yaml
 type: custom:ccu-graph-card
 title: Energie (ultimele 6 h)
-range: 6h                 # 6h | 12h | 24h | 7d | 30d | { hours: 36 }
+range: 6h                 # 6h | 12h | 24h | 7d | 30d, sau orice 48h / 3d … (1 h – 90 de zile), sau { hours: 36 }
 tabs: [24h, 7d]           # file pentru schimbarea intervalului (opțional)
 y_axis: right             # etichetele Y în dreapta (opțional)
 height: 150
@@ -224,13 +286,43 @@ series:                   # 1–3 serii; a doua cu altă unitate primește axă 
 
 Istoricul se cere cu `history/history_during_period` (un singur apel pentru toate seriile); fără istoric apare „fără date istorice”.
 
+**Serii pornit / oprit** (ventile de încălzire, întrerupătoare, senzori de ușă și fereastră: stările `on`, `off`, `open`, `closed`, `home`, `not_home`…) se desenează ca **trepte**, cu *Oprit* / *Pornit* pe axă, iar ultima stare ține până acum:
+
+```yaml
+type: custom:ccu-graph-card
+title: Ventil living
+range: 48h
+series:
+  - { entity: binary_sensor.ventil_living, name: Ventil }
+```
+
+**Cronologie** (`timeline: true`): un rând pe serie, cu bară oriunde seria e pornită, până la 8 rânduri într-un card mic. Făcută pentru ventile de încălzire, întrerupătoare, uși și geamuri:
+
+```yaml
+type: custom:ccu-graph-card
+title: Ventile încălzire (24 h)
+timeline: true
+range: 24h
+series:                       # până la 8; numele e eticheta rândului
+  - { entity: binary_sensor.ventil_living, name: Living }
+  - { entity: binary_sensor.ventil_bucatarie, name: Bucătărie }
+  - { entity: binary_sensor.ventil_dormitor, name: Dormitor, color: yellow }
+```
+
+Pe cronologie fiecare bară arată **cât a mers** („3 h”, „1 h 25 min”; barele înguste primesc o formă scurtă sau nimic), la marginea din dreapta apare **totalul pe rând**, perioadele în care entitatea a fost **indisponibilă** sunt **hașurate în galben**, iar axa are ore rotunde (00:00, 03:00, …). Atinge sau trece cu mouse-ul peste o bară, un gol hașurat sau o perioadă oprită ca să citești intervalul exact și durata. `hide_durations: true` scoate duratele și totalurile (bifă în editor).
+
+O serie a cărei entitate nu are stare numerică și nici pornit / oprit nu desenează nimic (de exemplu o entitate `climate`: starea ei e modul, nu o temperatură). Folosește senzorul ei de temperatură.
+
 ## ccu-flow-card
 
-<img src="docs/img/flow.png" width="360" alt="flow">
+<img src="docs/img/flow-animated.png" width="360" alt="flux de energie cu punctele care curg pe panglici">
 
 ```yaml
 type: custom:ccu-flow-card
 title: Flux energie
+solar_today: sensor.energie_solara_azi          # opțional: energia produsă azi, rând mic sub titlu (iconiță de soare)
+radiation: sensor.radiatie_solara             # opțional: radiația solară (W/m²) în același rând
+sun_labels: false                             # opțional: ascunde cuvintele de lângă cele două valori (implicit se văd)
 solar: sensor.solar_total_power
 grid:    { entity: sensor.power_meter_active_power, invert: true }   # convenție: + = import; invert dacă senzorul tău e + la export
 battery: { entity: sensor.invertor_deye_battery_power, soc: sensor.invertor_deye_battery }   # + = descărcare
@@ -239,6 +331,8 @@ consumers:                  # maximum 6; procentul e din Total (suma consumatori
 stats:                      # maximum 3, rândul de jos
   - { entity: sensor.import_retea_zilnic, label: Import azi, icon: mdi:transmission-tower }
 ```
+
+Punctele curg pe panglici în sensul energiei (spre nod sau spre un consumator). `flow_animation: off` le oprește, iar `motion: calm` le lasă să ruleze doar câteva secunde.
 
 ## ccu-battery-card
 
@@ -251,6 +345,8 @@ capacity_entity: sensor.invertor_deye_battery_capacity   # sau capacity_kwh: 38.
 load: sensor.invertor_deye_load_power                    # pentru autonomie (până la rezervă, la consumul curent)
 load_entities: [sensor.alt_consum]                       # opțional: alte circuite pe baterie, se adună la `load`
 power: sensor.putere_baterie                             # opțional: + = descărcare, − = încărcare (power_invert: true o întoarce)
+charge_eta: avg                                          # „Plin în” după: avg (media ultimelor 10 min, implicit) | now
+runtime_while_charging: false                            # true = arată și autonomia cât se încarcă
 grid_present: binary_sensor.invertor_deye_grid           # off = „Backup activ”; unavailable NU declanșează backup
 reserve_pct: 20
 shutdown_pct: 10
@@ -262,7 +358,7 @@ Cum se calculează (exact, din procente și capacitate; se rotunjește doar la a
 - **Cu rețea**: banda utilizabilă e `reserve_pct` → 100 %. Cardul arată energia din bandă, „X kWh din Y kWh”, cu Y = (100 − rezervă)% × capacitate, și autonomia până la rezervă, la consumul curent.
 - **Fără rețea (backup activ)**: banda devine `shutdown_pct` → 100 %, același „X kWh din Y kWh” și autonomia până la pragul de oprire. Doar atunci apar „Backup activ” și marcajul de oprire.
 - **Autonomia** = energia utilizabilă împărțită la consumul curent (`load` plus `load_entities`, adunate), ca și cum încărcarea s-ar opri acum. Dacă vreunul dintre senzori nu are valoare, nu se afișează autonomia, în loc să iasă prea optimistă.
-- **Cât timp se încarcă** (cere `power`) cardul arată și „Plin în” (timpul până la 100 % la puterea de încărcare de acum), iar autonomia are eticheta „la consum”.
+- **Cât timp se încarcă** (cere `power`) cardul arată „Plin în”: timpul până la 100 % la puterea de încărcare, luată ca **medie a ultimelor 10 minute**, ca cifra să nu sară când trece un nor (`charge_eta: now` folosește puterea de acum). Autonomia se ascunde cât se încarcă; `runtime_while_charging: true` o arată și pe ea. Peste 99 % „Plin în” dispare și revine autonomia. La fel în antet (`runtime_power`, `runtime_charge_eta`, `runtime_while_charging`).
 - Schimbi `reserve_pct` (de exemplu 20 → 30) și totul se recalculează. Procentul mare e mereu starea reală de încărcare.
 
 
@@ -469,6 +565,24 @@ vehicles:
 
 Chip pe cardul de chips-uri: `deadlines: { alert_days: 3, vehicles: [...], tap_action: {...} }`; apare doar cât timp ceva se apropie sau a expirat.
 
+## ccu-radio-card
+
+<img src="docs/img/radio-ro.png" width="360" alt="radio">
+
+```yaml
+type: custom:ccu-radio-card
+title: Radio piscină
+stations: input_select.radio_favorite       # opțiuni de forma „Nume - https://adresa-stream”; adresa nu se vede
+player: media_player.boxa_piscina           # boxa principală: volum și disponibilitate
+speakers:                                   # opțional: mai multe boxe, cu butoane pentru alegerea celei pe care cântă
+  - media_player.boxa_piscina
+  - media_player.boxa_living
+playing: input_boolean.radio_porneste       # opțional
+play: script.radio_play                     # opțional: scripturile tale; fără ele cardul trimite adresa stream-ului boxei alese
+stop: script.radio_stop
+hide: [Custom]                              # ascunde posturile care conțin aceste cuvinte
+```
+
 ## ccu-remote-card
 
 <img src="docs/img/remote.png" width="360" alt="remote">
@@ -484,6 +598,17 @@ extra:                                # taste proprii
 ```
 
 Volumul și canalele se repetă cât ții apăsat.
+
+## Depanare
+
+- **„Custom element doesn't exist: ccu-…”**: resursa nu e încărcată. Verifică Setări → Dashboard-uri → ⋮ → Resurse (tip *Modul JavaScript*, adresa `/local/ccu/ccu.js?v=…`), apoi reîmprospătare forțată (Ctrl+F5; în aplicație: *Reset frontend cache*).
+- **O opțiune nouă nu face nimic după o actualizare**: browserul sau aplicația au încă fișierul vechi. Schimbă numărul `?v=` din resursă și reîmprospătează forțat.
+- **Un card arată „—”**: entitatea nu există sau nu are încă o valoare. Copiază id-ul exact din Instrumente pentru dezvoltatori → Stări.
+- **Autonomia bateriei arată „—”**: are nevoie de senzorul de consum (`load`, în W sau kW). La `load_entities`, fiecare senzor din listă trebuie să aibă valoare.
+- **„Plin în” lipsește cât se încarcă**: are nevoie de senzorul de putere al bateriei (`power`: + = descărcare, − = încărcare; `power_invert: true` îl întoarce) și de un nivel sub 99 %.
+- **Ultimele butoane ale unei pagini sunt acoperite de bara de jos**: pune bara în ultima secțiune de pe toată lățimea a paginii (vezi cardul de meniu).
+- **Telefonul se descarcă mai repede cu dashboardul deschis**: animațiile țin ecranul ocupat; ajută `motion: calm` (implicit pe telefon) sau `motion: off` (vezi *Mișcare și baterie*).
+- **Home trebuie să ducă în alt loc pe telefon și pe tabletă**: folosește `path_tablet` / `path_phone` pe acel buton.
 
 ## ccu-radio-card
 

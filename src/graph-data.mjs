@@ -190,6 +190,13 @@ export function downsample(points, target = 150) {
  * Returnează { [entity_id]: [{ t: ms, v: number|null }, ...] }.
  * Ignoră unavailable/unknown/non-numeric (valoare = null).
  */
+/** Stări „pornit / oprit” desenabile ca 1 / 0 (ventile, întrerupătoare, senzori binari). Altceva → undefined. */
+const DISCRETE = { on: 1, off: 0, open: 1, closed: 0, true: 1, false: 0, home: 1, not_home: 0, detected: 1, clear: 0 };
+export function discreteValue(s) {
+  const k = typeof s === 'string' ? s.trim().toLowerCase() : s === true ? 'true' : s === false ? 'false' : '';
+  return Object.prototype.hasOwnProperty.call(DISCRETE, k) ? DISCRETE[k] : undefined;
+}
+
 export function parseMinimalResponse(data, entityIds) {
   if (!data || typeof data !== 'object') return {};
 
@@ -203,6 +210,7 @@ export function parseMinimalResponse(data, entityIds) {
     const points = [];
     for (const item of raw) {
       const s = item.s;
+      const dv = discreteValue(s);
       // Parsează starea (sau null pentru unavailable/unknown)
       let v = null;
       if (s === null || s === undefined || s === 'unavailable' || s === 'unknown') {
@@ -222,7 +230,7 @@ export function parseMinimalResponse(data, entityIds) {
             num *= 1000000;
           }
           v = num;
-        }
+        } else if (dv !== undefined) { v = dv; points.binary = true; }   // pornit / oprit → 1 / 0
       }
       // epoch_sec (lu) → ms (×1000)
       const t = typeof item.lu === 'number' ? item.lu * 1000 : item.lu;

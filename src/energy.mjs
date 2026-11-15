@@ -75,6 +75,13 @@ export function normalizeFlowConfig(cfg) {
     if (!o || !okId(o.entity)) { warnings.push(t('Statistica #{n}: entity_id lipsă sau invalid.', { n: i + 1 })); return; }
     items.push({ kind: 'stat', entity: o.entity, name: o.label || o.name || '', icon: o.icon || 'bolt' });
   });
+  // sub titlu: energia produsă azi și radiația solară (rând mic, cu iconiță de soare)
+  for (const [key, icon, label] of [['solar_today', 'sun', t('produs azi')], ['radiation', 'w-sun', t('radiație')]]) {
+    const o = src[key] && typeof src[key] === 'object' ? src[key] : { entity: src[key] };
+    if (!o.entity) continue;
+    if (!okId(o.entity)) { warnings.push(t('Flux: „{k}” are entity_id lipsă sau invalid.', { k: key })); continue; }
+    items.push({ kind: 'sunnote', entity: o.entity, name: o.label !== undefined ? String(o.label) : o.name !== undefined ? String(o.name) : src.sun_labels === false ? '' : label, icon: o.icon || icon });
+  }
   return { items, title: src.title ? String(src.title) : '', warnings };
 }
 
@@ -118,7 +125,12 @@ export function buildFlowModel(items, hass) {
     const unit = (s && s.attributes && s.attributes.unit_of_measurement) || '';
     return { ...it, text: Number.isFinite(n) && s.state !== '' ? `${formatNumber(n)}${unit ? ' ' + unit : ''}` : '—' };
   });
-  return { left, right, stats, total, totalText: total >= THRESH_W ? fmtPower(total) : t('fără flux'), idle: total < THRESH_W };
+  const sun = items.filter((i) => i.kind === 'sunnote').map((it) => {
+    const s = hass && hass.states && hass.states[it.entity]; const n = s ? Number(s.state) : NaN;
+    const unit = (s && s.attributes && s.attributes.unit_of_measurement) || '';
+    return { ...it, text: Number.isFinite(n) && s.state !== '' ? `${formatNumber(n)}${unit ? ' ' + unit : ''}` : '—' };
+  });
+  return { left, right, stats, sun, total, totalText: total >= THRESH_W ? fmtPower(total) : t('fără flux'), idle: total < THRESH_W };
 }
 
 /** Geometria: poziții verticale, panglici (poligoane) și nodul Total; toate coordonatele în [0,W]×[0,H]. */
@@ -170,7 +182,8 @@ export function renderFlow(config, model, W, opts = {}) {
   const stats = model.stats.length ? `<div class="ccu-flow-stats" data-n="${model.stats.length}">${model.stats.map((s) => `<div class="st" data-id="${idOf(s)}" data-entity="${esc(s.entity)}"><span class="ccu-ico">${iconSvg(s.icon)}</span><span class="tx"><small>${esc(s.name)}</small><b>${esc(s.text)}</b></span></div>`).join('')}</div>` : '';
   const head = config.title ? `<div class="ccu-flow-head"><span class="t">${esc(config.title)}</span>${model.idle ? '' : `<span class="tt">· ${t('Total')} ${esc(model.totalText)}</span>`}</div>` : '';
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
-  return `<div class="ccu-card panel ccu-flow">${head}<div class="ccu-flow-body" style="height:${g.H}px">${svg}${left}${right}${hub}</div>${stats}${notes}</div>`;
+  const sunRow = model.sun && model.sun.length ? `<div class="ccu-flow-sun">${model.sun.map((s) => `<span class="s" data-id="${idOf(s)}" data-entity="${esc(s.entity)}"><span class="ccu-ico">${iconSvg(s.icon)}</span><b>${esc(s.text)}</b>${s.name ? `<small>${esc(s.name)}</small>` : ''}</span>`).join('')}</div>` : '';
+  return `<div class="ccu-card panel ccu-flow">${head}${sunRow}<div class="ccu-flow-body" style="height:${g.H}px">${svg}${left}${right}${hub}</div>${stats}${notes}</div>`;
 }
 
 // ================================================================ BATERIE ==
@@ -182,7 +195,7 @@ export function normalizeBatteryConfig(cfg) {
   const soc = ent('soc');
   if (!soc) warnings.push(t('Baterie: lipsește „soc” (entitatea cu procentul bateriei).'));
   const cfgOut = {
-    soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
+    soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, charge_eta: src.charge_eta === 'now' ? 'now' : 'avg', runtime_while_charging: src.runtime_while_charging === true || src.runtime_while_charging === 'true', load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
     capacity_kwh: num('capacity_kwh', 0, 0.1, 1000), reserve_pct: num('reserve_pct', 20, 0, 100), shutdown_pct: num('shutdown_pct', 10, 0, 100),
     title: src.title ? String(src.title) : t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
   };
@@ -192,7 +205,7 @@ export function normalizeBatteryConfig(cfg) {
 }
 
 /** Modelul bateriei: SOC, energie, autonomie până la rezervă, stare (ok / low / backup / na). */
-export function buildBatteryModel(config, hass) {
+export function buildBatteryModel(config, hass, extra) {
   const st = (id) => (id && hass && hass.states ? hass.states[id] : null);
   const socS = st(config.soc), p = socS ? Number(socS.state) : NaN;
   const soc = Number.isFinite(p) && socS.state !== '' ? Math.min(100, Math.max(0, p)) : null;
@@ -205,7 +218,12 @@ export function buildBatteryModel(config, hass) {
   const loadW = loadVals.length && loadVals.every((w) => w !== null) ? loadVals.reduce((a, b) => a + b, 0) : null;
   // încărcare: puterea bateriei are convenția fluxului (+ = descărcare, − = încărcare; `power_invert: true` o întoarce)
   let pw = toWatts(st(config.power)); if (pw !== null && config.power_invert) pw = -pw;
-  const chargeW = pw !== null && pw < -THRESH_W ? -pw : null;
+  const nowCharge = pw !== null && pw < -THRESH_W ? -pw : null;
+  // media puterii pe ultimele minute (din istoric), cu aceeași convenție de semn; „plin în” o folosește implicit, ca cifra să nu sară când trece un nor
+  let avg = extra && typeof extra.avgPowerW === 'number' && Number.isFinite(extra.avgPowerW) ? extra.avgPowerW : null;
+  if (avg !== null && config.power_invert) avg = -avg;
+  const avgCharge = avg !== null && avg < -THRESH_W ? -avg : null;
+  const chargeW = nowCharge === null ? null : config.charge_eta === 'now' ? nowCharge : (avgCharge !== null ? avgCharge : nowCharge);
   const gp = st(config.grid_present);
   const backup = !!gp && gp.state === 'off';
   // banda utilizabilă = [prag, 100]%: cu rețea pragul e rezerva (reserve_pct), fără rețea (backup) pragul de oprire (shutdown_pct).
@@ -216,7 +234,7 @@ export function buildBatteryModel(config, hass) {
   let autonomyH = null;
   if (usable !== null && loadW !== null && loadW >= THRESH_W) autonomyH = (usable * 1000) / loadW;
   const state = soc === null ? 'na' : backup ? 'backup' : soc <= config.reserve_pct ? 'low' : 'ok';
-  const charging = chargeW !== null && soc !== null && soc < 100;
+  const charging = chargeW !== null && soc !== null && soc < 99;   // peste 99% nu mai arătăm „plin în”: bateria oscilează cu câțiva W și cifrele ar sări
   const fullH = charging && total ? (((100 - soc) / 100) * total * 1000) / chargeW : null;   // timp până la 100% la puterea de încărcare de acum
   const hh = (h) => (h === null ? '—' : h >= 100 ? '>99 h' : `~${formatNumber(Math.round(h * 10) / 10)} h`);
   return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, charging, chargeW, fullH, fullText: hh(fullH), loadW, socText: soc === null ? '—' : `${Math.round(soc)}%`,
@@ -240,12 +258,53 @@ export function renderBattery(config, m, opts = {}) {
     ? `<div class="ccu-bat-head backup"><span class="ccu-ico">${iconSvg('bolt')}</span><span>${t('Backup activ · Rețeaua este oprită')}</span></div>`
     : (config.show_title === false ? '' : `<div class="ccu-bat-head"><span class="ccu-ico">${iconSvg('battery')}</span><span>${esc(config.title)}</span></div>`);   // show_title: false = fără titlu „Baterie” + iconiță
   const body = `<div class="ccu-bat-body"><div class="ccu-bat-shell" data-state="${m.state}"><div class="fill" style="width:${pct}%;background:linear-gradient(180deg,${c0},${c1})"></div><span class="pct">${esc(m.socText)}</span></div>`
-    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span>${m.charging ? `<span class="a ch"><i>${t('Plin în')}</i><b>${esc(m.fullText)}</b></span>` : ''}<span class="a"><i>${m.charging ? t('Autonomie la consum') : t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span></div></div>`;
+    + `<div class="ccu-bat-info"><span class="e">${esc(m.energyText)}</span>${m.charging ? `<span class="a ch"><i>${t('Plin în')}</i><b>${esc(m.fullText)}</b></span>` : ''}${!m.charging || config.runtime_while_charging ? `<span class="a"><i>${m.charging ? t('Autonomie la consum') : t('Autonomie')}</i><b>${esc(m.autonomyText)}</b></span>` : ''}</div></div>`;
   const slider = `<div class="ccu-bat-slider"><div class="tr"><div class="fl" style="width:${pct}%"></div></div>${mk}</div>`;
   const notes = opts.warnings && opts.warnings.length ? `<div class="ccu-note">${opts.warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '';
   return `<div class="ccu-card panel ccu-bat" data-state="${m.state}"${m.charging ? ' data-charging="1"' : ''} data-id="0" data-entity="${esc(config.soc)}">${head}${body}${slider}${notes}</div>`;
 }
 
+
+/**
+ * Textul mic de sub o valoare din antet, pentru valorile cu autonomie (`runtime_*`): autonomia la consumul curent,
+ * sau „plin în …” cât timp bateria se încarcă (când e dat și `runtime_power`). Gol când nu se poate calcula.
+ */
+export function headerRuntimeTexts(header, hass, avgMap) {
+  return ((header && header.values) || []).map((v) => {
+    if (!v || !v.runtimeCfg) return '';
+    const rc = v.runtimeCfg;
+    const bc = normalizeBatteryConfig({ ...rc, runtime_while_charging: rc.while_charging, soc: v.entity }).config;
+    const m = buildBatteryModel(bc, hass, { avgPowerW: avgMap && rc.power ? avgMap[rc.power] : null });
+    if (m.charging && m.fullH !== null) {   // în încărcare: „plin în …”; autonomia doar dacă utilizatorul o cere (pe a doua linie)
+      const lines = [t('plin în {x}', { x: m.fullText })];
+      if (bc.runtime_while_charging && m.autonomyH !== null) lines.push(t('autonomie {x}', { x: m.autonomyText }));
+      return lines.length > 1 ? lines : lines[0];
+    }
+    return m.autonomyH !== null ? m.autonomyText : '';
+  });
+}
+
+/** Media în timp a puterii dintr-o serie de puncte [{ t (ms), v }] pe intervalul [start, end]; valorile lipsă nu contează. null dacă nu e nimic de mediat. */
+export function weightedAveragePower(points, start, end) {
+  const pts = (points || []).map((p) => ({ t: Math.max(start, Number(p.t) || start), v: Number.isFinite(p.v) ? p.v : null })).sort((a, b) => a.t - b.t);
+  let sum = 0, w = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const t1 = i + 1 < pts.length ? pts[i + 1].t : end, d = Math.max(0, t1 - pts[i].t);
+    if (pts[i].v !== null && d > 0) { sum += pts[i].v * d; w += d; }
+  }
+  return w > 0 ? sum / w : null;
+}
+
+/** Puterea medie (W) a unei entități pe ultimele `minutes` minute, din istoricul HA (aceeași metodă ca graficul). null dacă nu se poate citi. */
+export async function fetchAveragePower(hass, entityId, minutes = 10) {
+  if (!hass || !hass.callWS || !entityId) return null;
+  const end = Date.now(), start = end - minutes * 60000;
+  const res = await hass.callWS({ type: 'history/history_during_period', start_time: new Date(start).toISOString(), end_time: new Date(end).toISOString(), entity_ids: [entityId], minimal_response: true, no_attributes: true, significant_changes_only: false });
+  const rows = (res && res[entityId]) || [];
+  const cur = hass.states && hass.states[entityId], unit = cur && cur.attributes && cur.attributes.unit_of_measurement;
+  const k = unit === 'kW' ? 1000 : unit === 'MW' ? 1e6 : 1;
+  return weightedAveragePower(rows.map((p) => ({ t: (p.lu !== undefined ? p.lu : p.lc) * 1000, v: p.s === '' ? NaN : Number(p.s) * k })), start, end);
+}
 
 // ============================================================ BATERII: DESCOPERIRE AUTOMATĂ ==
 const MOBILE_PLATFORMS = ['mobile_app', 'fully_kiosk', 'browser_mod'];

@@ -2,6 +2,8 @@
 
 [Română](README.ro.md) · English
 
+[![HACS custom](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://hacs.xyz/docs/faq/custom_repositories/) [![release](https://img.shields.io/github/v/release/AdrianTIonut/ha-calm-modern-ui?style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases) ![downloads](https://img.shields.io/github/downloads/AdrianTIonut/ha-calm-modern-ui/total?style=flat-square) [![build](https://img.shields.io/github/actions/workflow/status/AdrianTIonut/ha-calm-modern-ui/ci.yml?branch=main&style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/actions) ![license](https://img.shields.io/github/license/AdrianTIonut/ha-calm-modern-ui?style=flat-square)
+
 A set of custom cards for [Home Assistant](https://www.home-assistant.io/) in a calm, modern style: glassy tiles, green for “active”, blue for information,
 orange for attention. **One JavaScript file** (`ccu.js`), no external libraries, no network access, no telemetry.
 
@@ -12,18 +14,19 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 | Card | What it does |
 |---|---|
 | `ccu-buttons-card` | Grid of tiles (xs–xl): pills, horizontal tiles, switch rows, a “hero” tile with delta and sparkline, alert groups |
-| `ccu-chips-card` | Status chips that can show only when active (A/C, rain, pumps…), text states, waste-collection calendar |
+| `ccu-chips-card` | Status chips that can show only when active (A/C, rain, pumps…), text states, waste-collection calendar, low batteries and vehicle deadlines |
 | `ccu-controls-card` | Thermostat / A/C dial, lights with brightness · colour temperature · quick colours, fan, media player, number, select |
 | `ccu-radio-card` | Radio / music player with a tuning dial, equaliser display, station switching, volume and speaker selection |
 | `ccu-remote-card` | TV remote (`remote.send_command`) with D-pad, volume, channels and custom keys |
-| `ccu-flow-card` | Energy flow: solar / grid / battery → consumers, with percentages, sums, subtractions and statistics |
-| `ccu-battery-card` | Battery bar with thresholds, runtime estimate and a “backup active” state |
-| `ccu-batteries-card` | Battery levels of phones, tablets, cars… sorted, with a bar |
+| `ccu-flow-card` | Energy flow: solar / grid / battery → consumers, with percentages, sums, subtractions, statistics, the energy produced today and the solar radiation; animated dots on the ribbons |
+| `ccu-battery-card` | Battery bar with thresholds, runtime estimate, “Full in” while charging and a “backup active” state |
+| `ccu-batteries-card` | Battery levels of phones, tablets, cars… sorted, with a bar; it can find them automatically |
 | `ccu-graph-card` | History graph (6 h … 30 d), 1–3 series, value on touch, optional tap action |
 | `ccu-weather-card` | Values from *your* weather station, daily forecast and an animated scene (rain, snow, sleet, wind, storm, fog) |
 | `ccu-people-card` | Who is home, as chips or large “family” avatars |
-| `ccu-header-card` | One-line header: icon, up to 3 values, clock or an outdoor value |
-| `ccu-nav-card` | Bottom navigation: back button, badges, conditional buttons, sticky |
+| `ccu-vehicle-card` | Vehicle documents and service: insurance, inspection, road tax, service and oil by kilometres, with editable dates and alerts |
+| `ccu-header-card` | One-line header: icon, up to 3 values (with the battery runtime under the percentage), clock or an outdoor value |
+| `ccu-nav-card` | Bottom navigation for tablet and phone: different pages and buttons per device, long press, badges, conditional buttons, sticky |
 | `ccu-title-card` | Section title with icon and subtitle |
 
 ## Gallery
@@ -43,9 +46,17 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 <tr><td valign="top"><img src="docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
 </table>
 
+## Example dashboard
+
+A complete dashboard you can paste into Home Assistant: a **tablet** page and a **phone** page, with the same bottom bar on every page (Home goes to the page of the device you hold, a long press jumps to the other one; a phone shows 5 buttons, a tablet shows all 9). Every entity and name in it is invented: replace them with yours. File: [`examples/dashboard-calm.yaml`](examples/dashboard-calm.yaml) (how to use it is in the first lines of the file).
+
+<table>
+<tr><td valign="top"><img src="docs/img/dashboard-tablet.png" width="620" alt="example dashboard on a tablet"></td><td valign="top"><img src="docs/img/dashboard-phone.png" width="250" alt="example dashboard on a phone"></td></tr>
+</table>
+
 ## Animated icons
 
-The icons move only when it makes sense, and only while the device is on: the fan of an A/C turns while it is actually cooling, a bulb glows, a heater flickers, a pump or a speaker pulses. Animations stop on “reduce motion” (or with `animations: false`).
+The icons move only when it makes sense. **Devices** move only while they are on: the fan of an A/C turns while it is actually cooling, a washer drum turns, a bulb glows, a heater flickers, a charging bolt, a pump or a speaker pulses, the sun glows. The **weather icons** (sun, moon, clouds, rain, snow, sleet, hail, storm, fog, wind) always move. Animations stop on “reduce motion” (or with `animations: false`), and `motion: calm` keeps them short (see below).
 
 <img src="docs/img/animated-icons.png" width="472" alt="animated icons">
 
@@ -72,18 +83,25 @@ flow_animation: auto    # flow card: auto | on | off (the moving dots on the rib
 
 ## Installation
 
+**Requirements:** Home Assistant with custom dashboard resources (any current version); developed and tested on Home Assistant 2026.11. One JavaScript file, no dependencies, no network access. The [example dashboard](#example-dashboard) uses the *Sections* view.
+
 ### HACS (recommended)
 
 1. HACS → ⋮ → **Custom repositories** → add `https://github.com/adriantionut/ha-calm-modern-ui`, category **Dashboard**.
 2. Install **Calm Modern UI**, then reload the browser (Ctrl+F5, or “force refresh” in the mobile app).
 
-HACS adds the resource for you.
+HACS adds the resource for you. (Newer versions of Home Assistant call it *Marketplace*: Settings → Marketplace.)
 
 ### Manual
 
 1. Download `ccu.js` from the [latest release](https://github.com/adriantionut/ha-calm-modern-ui/releases/latest) and copy it to `config/www/ccu/ccu.js`.
 2. **Settings → Dashboards → ⋮ → Resources → Add resource**: URL `/local/ccu/ccu.js?v=1`, type **JavaScript module**.
 3. After each update change the number in `?v=` (otherwise the browser keeps the old file) and force-refresh.
+
+### Updating
+
+- **HACS / Marketplace:** update **Calm Modern UI**, then reload the browser. In the mobile app: Settings → Companion app → Debugging → *Reset frontend cache* (or close the app completely and open it again), otherwise the app keeps the old file.
+- **Manual:** replace `config/www/ccu/ccu.js` and change the number in `?v=` in the resource.
 
 ### Try it
 
@@ -311,12 +329,15 @@ extra:
 
 ### ccu-flow-card
 
-<img src="docs/img/flow.png" width="360" alt="flow">
+<img src="docs/img/flow-animated.png" width="360" alt="energy flow with the dots flowing along the ribbons">
 
 ```yaml
 type: custom:ccu-flow-card
 title: Energy flow
 solar: sensor.solar_power
+solar_today: sensor.solar_energy_today        # optional: energy produced today, a small row under the title (sun icon)
+radiation: sensor.solar_radiation             # optional: solar radiation (W/m²) in the same row
+sun_labels: false                             # optional: hide the words next to those two values (shown by default)
 grid:    { entity: sensor.meter_active_power, invert: true }   # convention: + = import; invert if your sensor is + on export
 battery: { entity: sensor.battery_power, soc: sensor.battery_soc }   # + = discharging
 consumers:                  # up to 6; the percentage is of Total (sum of consumers)
@@ -328,6 +349,7 @@ stats:                      # up to 4, bottom row
 
 Shown signs: grid — export “+”, import “−”; battery — charging “+”, discharging “−”. A source with no exchange (solar at night, battery idle, grid ~0) draws no ribbon.
 `hide_idle: false` keeps a consumer under 10 W visible.
+The dots flow along the ribbons in the direction of the energy (towards the node, or towards a consumer). `flow_animation: off` stops them, and `motion: calm` lets them run for a few seconds only.
 
 ### ccu-battery-card · ccu-batteries-card
 
@@ -340,6 +362,8 @@ capacity_entity: sensor.battery_capacity      # or capacity_kwh: 38.6
 load: sensor.load_power                       # for the runtime estimate
 load_entities: [sensor.other_load]            # optional: more loads on the battery, added to `load`
 power: sensor.battery_power                   # optional: + = discharging, − = charging (power_invert: true flips it)
+charge_eta: avg                               # “Full in” from: avg (average of the last 10 min, default) | now
+runtime_while_charging: false                 # true = show the runtime while charging too
 grid_present: binary_sensor.grid              # off = “Backup active”
 reserve_pct: 20
 shutdown_pct: 10
@@ -350,7 +374,7 @@ How the numbers are computed (exactly, from percentages and capacity; rounding o
 - **With grid**: the usable band is `reserve_pct` → 100 %. The card shows the energy in that band, “X kWh of Y kWh”, with Y = (100 − reserve)% × capacity, and the runtime until the reserve at the current load.
 - **Without grid (backup active)**: the band becomes `shutdown_pct` → 100 %, the same “X kWh of Y kWh” and the runtime until the shutdown level. Only then the card shows “Backup active” and the shutdown marker.
 - **The runtime** is the usable energy divided by the current load (`load` plus `load_entities`, summed), as if the charging stopped now. If any of those sensors has no value, no runtime is shown rather than a too-optimistic one.
-- **While charging** (needs `power`) the card also shows “Full in” (time to 100 % at the current charging power), and the runtime is labelled “at current load”.
+- **While charging** (needs `power`) the card shows “Full in”: the time to 100 % at the charging power, taken as the **average of the last 10 minutes** so the number does not jump when a cloud passes (`charge_eta: now` uses the current power instead). The runtime is hidden while charging; `runtime_while_charging: true` shows it as well. Above 99 % “Full in” goes away and the runtime comes back. The same works in the header (`runtime_power`, `runtime_charge_eta`, `runtime_while_charging`).
 - Change `reserve_pct` (for example 20 → 30) and everything follows. The big percentage is always the real state of charge.
 
 
@@ -380,7 +404,7 @@ auto: { threshold: 20, exclude: [inverter, car], include: [sensor.some_battery] 
 ```yaml
 type: custom:ccu-graph-card
 title: Energy (last 6 h)
-range: 6h                 # 6h | 12h | 24h | 7d | 30d
+range: 6h                 # 6h | 12h | 24h | 7d | 30d, or any 48h / 3d … (1 h – 90 days), or { hours: 36 }
 tabs: [24h, 7d]           # optional range tabs
 y_axis: right
 height: 150               # 60–400
@@ -390,6 +414,33 @@ series:                   # 1–3 series
   - { entity: sensor.consumption, name: Consumption, color: accent, kind: area }
   - { entity: sensor.solar, name: Solar, color: yellow, kind: line }
 ```
+
+**On / off series** (heating valves, switches, door and window sensors: states `on`, `off`, `open`, `closed`, `home`, `not_home`…) are drawn as a **step chart** with *Off* / *On* on the axis, and the last state holds until now:
+
+```yaml
+type: custom:ccu-graph-card
+title: Living room valve
+range: 48h
+series:
+  - { entity: binary_sensor.living_room_valve, name: Valve }
+```
+
+**Timeline** (`timeline: true`): one row per series with a bar wherever it is on, up to 8 rows in one small card. Made for heating valves, switches, doors and windows:
+
+```yaml
+type: custom:ccu-graph-card
+title: Heating valves (24 h)
+timeline: true
+range: 24h
+series:                       # up to 8; the name is the row label
+  - { entity: binary_sensor.living_room_valve, name: Living room }
+  - { entity: binary_sensor.kitchen_valve, name: Kitchen }
+  - { entity: binary_sensor.bedroom_valve, name: Bedroom, color: yellow }
+```
+
+On the timeline each bar shows **how long it ran** (“3 h”, “1 h 25 min”; narrow bars get a short form or none), the right edge shows the **total per row**, periods when the entity was **unavailable** are **hatched amber**, and the axis uses round hours (00:00, 03:00, …). Touch or hover a bar, a hatched gap or an off period to read the exact interval and duration. `hide_durations: true` removes the durations and the totals (checkbox in the editor).
+
+A series whose entity has no numeric state and no on/off state draws nothing (for example a `climate` entity: its state is the mode, not a temperature). Use its temperature sensor instead.
 
 ### ccu-weather-card
 
@@ -431,6 +482,26 @@ header:
   right: { entity: weather.home, attribute: temperature, label: outside }   # replaces the clock
 ```
 
+The battery percentage can carry its **runtime** as a small text under it (it stays visible on a phone):
+
+```yaml
+type: custom:ccu-header-card
+header:
+  icon: home
+  values:
+    - entity: sensor.battery_soc
+      icon: battery
+      color: ok
+      runtime_load: sensor.house_load_power      # the load, as on the battery card (+ runtime_load_entities to add more)
+      runtime_capacity_kwh: 10                   # or runtime_capacity_entity
+      runtime_reserve_pct: 20
+      runtime_power: sensor.battery_power        # optional: while charging it shows “full in …” instead of the runtime
+      runtime_charge_eta: avg                    # avg (average of the last 10 min, default) | now
+      runtime_while_charging: false              # true = show the runtime while charging as well (second line)
+```
+
+In the visual editor this is the *Show the runtime under the value* checkbox on each value.
+
 ```yaml
 type: custom:ccu-nav-card
 sticky: true
@@ -444,12 +515,42 @@ items:
   - { icon: tablet, label: Tablet, path: /dashboard-home/tablet, visible_if: { entity: sensor.browser_user, state: Tablet } }
 ```
 
+**One bar for tablet and phone.** The same card can be used on every page: `Home` goes to a different page on each device, and some buttons only show on a tablet.
+
+```yaml
+type: custom:ccu-nav-card
+sticky: true
+items:
+  - { icon: home,   label: Home,  path_tablet: /dashboard-home/tablet, path_phone: /dashboard-home/phone, hold_path_phone: /dashboard-home/tablet, hold_path_tablet: /dashboard-home/phone }   # a long press jumps to the other device's home
+  - { icon: sun,    label: Solar, path: /dashboard-home/solar, match: [/dashboard-home/solar, /dashboard-home/solar-water] }   # lit on every page of the group
+  - { icon: bulb,   label: Lights, path: /dashboard-home/lights }
+  - { icon: camera, label: Cams,  path: /dashboard-home/cams, match: [/dashboard-home/cams, /dashboard-home/cams-tech] }
+  - { icon: car,    label: Car,   path: /dashboard-home/car,  device: tablet }     # only on a tablet; use device: phone for phone-only buttons
+```
+
+- `path_tablet` / `path_phone` (or `path: { tablet: …, phone: … }`) set where a button goes on each device. A plain `path` is the default.
+- `hold_path` (any device), `hold_path_tablet` and `hold_path_phone` set where a **long press** goes (about half a second): for example Home on a phone can jump to the tablet home page, and the other way round.
+- **Placement:** with `sticky: true` the bar is fixed at the bottom of the screen and reserves the room it needs inside the page. Put the card in the **last section** of the view, spanning all columns, so that room is at the end of the page; otherwise the last row of buttons can end up behind the bar.
+- A phone is a screen whose short side is under 600 px; everything else (tablet, iPad, PC) is a tablet. `device: phone` or `device: tablet` on the card forces it.
+- The button of the page you are on lights up (green), also when it has a badge; `match` lists extra pages that light the same button.
+
 ```yaml
 type: custom:ccu-title-card
 title: Kitchen
 subtitle: Climate · lights
 icon: pot
 ```
+
+## Troubleshooting
+
+- **“Custom element doesn't exist: ccu-…”**: the resource is not loaded. Check Settings → Dashboards → ⋮ → Resources (type *JavaScript module*, URL `/local/ccu/ccu.js?v=…`), then force-refresh (Ctrl+F5; in the app: *Reset frontend cache*).
+- **A new option does nothing after an update**: the browser or the app still has the old file. Change the `?v=` number in the resource and force-refresh.
+- **A card shows “—”**: the entity does not exist or has no value yet. Copy the exact id from Developer tools → States.
+- **The battery runtime shows “—”**: it needs the load sensor (`load`, in W or kW). With `load_entities`, every sensor of the list must have a value.
+- **“Full in” is missing while charging**: it needs the battery power sensor (`power`: + = discharging, − = charging; `power_invert: true` flips it) and a level under 99 %.
+- **The last buttons of a page are hidden by the bottom bar**: put the bar in the last full-width section of the view (see the navigation card).
+- **The phone drains faster with the dashboard open**: animations keep the screen busy; `motion: calm` (the phone default) or `motion: off` helps (see *Motion and battery*).
+- **Home should go to another page on a phone and on a tablet**: use `path_tablet` / `path_phone` on that button.
 
 ## Languages
 

@@ -6,42 +6,27 @@
   body { margin: 0; padding: 56px 64px; background: radial-gradient(1200px 700px at 30% 20%, #16233d 0%, #0a0f1a 60%, #070a12 100%); font-family: system-ui, sans-serif; }
   #out { display: flex; align-items: flex-end; justify-content: center; gap: 56px; width: max-content; }
   .dev { background: #05070b; box-shadow: 0 0 0 2px #2a3242, 0 30px 70px rgba(0,0,0,.55), inset 0 0 0 2px #0e131c; position: relative; }
-  .tablet { width: 1060px; height: 740px; padding: 20px; border-radius: 40px; }
-  .phone { width: 390px; height: 800px; padding: 12px; border-radius: 54px; }
-  .scr { width: 100%; height: 100%; overflow: hidden; background: #0b1220; position: relative; }
-  .tablet .scr { border-radius: 22px; padding: 16px; }
-  .phone .scr { border-radius: 42px; padding: 52px 12px 12px; }
-  .island { position: absolute; top: 12px; left: 50%; width: 92px; height: 26px; margin-left: -46px; border-radius: 20px; background: #000; z-index: 5; }
+  .tablet { padding: 20px; border-radius: 40px; }
+  .phone { padding: 12px; border-radius: 54px; }
+  /* the real dashboard (docs/demo/dashboard.html) in an iframe at the real device size, scaled down to fit the frame */
+  .scr { overflow: hidden; background: #0b1220; position: relative; }
+  .tablet .scr { width: 960px; height: 600px; border-radius: 22px; }
+  .phone .scr { width: 292px; height: 633px; border-radius: 42px; }
+  .scr iframe { border: 0; position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: scale(.75); background: #0b1220; }
+  .tablet iframe { width: 1280px; height: 800px; }
+  .phone iframe { width: 390px; height: 844px; }
+  .island { position: absolute; top: 10px; left: 50%; width: 76px; height: 22px; margin-left: -38px; border-radius: 20px; background: #000; z-index: 5; }
   .cam { position: absolute; top: 50%; left: 8px; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: #1b2230; }
-  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; height: 100%; grid-template-rows: 1fr auto; }
-  .col { display: grid; gap: 10px; align-content: start; min-width: 0; overflow: hidden; }
-  .stack { display: grid; gap: 10px; align-content: start; height: 100%; }
-  .bottom { grid-column: 1 / -1; }
-  .phone .scr { display: flex; flex-direction: column; gap: 10px; }
-  .phone .scr .stack { flex: 1; min-height: 0; overflow: hidden; height: auto; }
-  .phone .scr .navwrap { flex: none; }
 </style></head>
 <body>
 <div id="out">
-  <div class="dev tablet"><div class="cam"></div><div class="scr"><div class="cols" id="tab"></div></div></div>
-  <div class="dev phone"><div class="scr"><div class="island"></div><div class="stack" id="ph"></div></div></div>
+  <div class="dev tablet"><div class="cam"></div><div class="scr"><iframe id="ft" src="dashboard.html?device=tablet&sticky=1"></iframe></div></div>
+  <div class="dev phone"><div class="scr"><div class="island"></div><iframe id="fp" src="dashboard.html?device=phone&sticky=1&pad=44"></iframe></div></div>
 </div>
-<script src="../../ccu.js"></script>
-<script src="scenes.js"></script>
 <script>
-const D = window.CCU_DEMO, hass = D.makeHass('en'), S = D.scenes;
-const make = (cfg, into) => { const el = document.createElement(cfg.type.replace('custom:', '')); el.setConfig({ language: 'en', preset: 'green', ...cfg }); el.hass = hass; into.append(el); return el; };
-const col = (parent, cards) => { const c = document.createElement('div'); c.className = 'col'; cards.forEach((x) => make(x, c)); parent.append(c); return c; };
-const tab = document.getElementById('tab');
-col(tab, [S.hero.cards[0], S.hero.cards[1], S.buttons.cards[0]]);
-col(tab, [S.flow.cards[0], S.chips.cards[0]]);
-col(tab, [S.battery.cards[0], S.graph.cards[0]]);
-const bottom = document.createElement('div'); bottom.className = 'bottom'; tab.append(bottom);
-make(S.nav.cards[0], bottom);
-const ph = document.getElementById('ph');
-[S.hero.cards[0], S.hero.cards[1], S.buttons.cards[0]].forEach((x) => make(x, ph));
-const navwrap = document.createElement('div'); navwrap.className = 'navwrap'; ph.parentElement.append(navwrap);
-make({ ...S.nav.cards[0], items: S.nav.cards[0].items.slice(0, 5) }, navwrap);
-document.title = 'ready';
+// ready when both embedded dashboards are drawn
+const wait = setInterval(() => {
+  try { if (['ft', 'fp'].every((i) => document.getElementById(i).contentDocument.title === 'ready')) { clearInterval(wait); setTimeout(() => (document.title = 'ready'), 2500); } } catch (e) { /* still loading */ }
+}, 200);
 </script>
 </body></html>

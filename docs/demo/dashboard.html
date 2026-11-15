@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calm Modern UI — example dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: #0b1220; font-family: system-ui, sans-serif; }
+  #view { display: grid; gap: 16px; align-items: start; }
+  .section { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; align-content: start; min-width: 0; }
+  .section > * { min-width: 0; }
+</style></head>
+<body>
+<div id="view"></div>
+<script src="../../ccu.js"></script>
+<script src="scenes.js"></script>
+<script src="dashboard.js"></script>
+<script>
+// The example dashboard drawn like a Home Assistant "sections" view, with the fake Home Assistant of the demo (invented data).
+// ?device=tablet | phone picks the view; the page width is the width of the window.
+const q = new URLSearchParams(location.search), device = q.get('device') === 'phone' ? 'phone' : 'tablet', sticky = q.get('sticky') === '1';
+const D = window.CCU_DEMO, hass = D.makeHass('en');
+if (Number(q.get('pad'))) document.body.style.paddingTop = Number(q.get('pad')) + 'px';   // room for a status bar / camera island in a device mock-up
+const view = window.CCU_DASHBOARD.views.find((v) => v.path === device);
+const root = document.getElementById('view');
+const cols = view.max_columns > 1 && device === 'tablet' ? view.max_columns : 1;
+root.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+const span = (g) => (g === 'full' || g === undefined ? 12 : Number(g) || 12);
+const pass = (c) => { // `conditional` card: only numeric_state is needed here
+  const s = hass.states[c.entity], n = s ? Number(s.state) : NaN;
+  return c.condition === 'numeric_state' && Number.isFinite(n) && (c.above === undefined || n > c.above) && (c.below === undefined || n < c.below);
+};
+const make = (cfg, into) => {
+  if (cfg.type === 'conditional') { if (!(cfg.conditions || []).every(pass)) return; return make({ ...cfg.card, grid_options: cfg.grid_options }, into); }
+  const el = document.createElement(cfg.type.replace('custom:', ''));
+  const c = { language: 'en', preset: 'green', device, ...cfg };   // `device` makes the page behave as that device even inside an iframe
+  if (c.type === 'custom:ccu-nav-card' && !sticky) { c.sticky = false; c.spacer = false; }   // for a still full-page screenshot the bar stays at the end of the page; ?sticky=1 keeps it fixed at the bottom of the window
+  el.setConfig(c); el.hass = hass;
+  el.style.gridColumn = `span ${span(cfg.grid_options && cfg.grid_options.columns)}`;
+  into.append(el);
+};
+view.sections.forEach((s) => {
+  const sec = document.createElement('div'); sec.className = 'section';
+  if (s.column_span > 1 && cols > 1) sec.style.gridColumn = `span ${Math.min(s.column_span, cols)}`;
+  s.cards.forEach((c) => make(c, sec));
+  root.append(sec);
+});
+document.title = 'ready';
+</script>
+</body></html>

@@ -1,0 +1,872 @@
+# Calm Modern UI — example dashboard: a tablet view and a phone view with the same bottom bar.
+# Every entity id and name here is INVENTED. Replace them with yours (Developer tools → States lists the real ones).
+#
+# How to use it:
+#   1. Install ccu.js and add it as a dashboard resource (see the README).
+#   2. Create a dashboard (Settings → Dashboards → Add dashboard), open it, ⋮ → Edit → ⋮ → Raw configuration editor.
+#   3. Paste this file. The pages in the bottom bar (energy, solar, lights, cams, car, shed, pool, status, …) are just paths:
+#      create the views you want, or point the buttons at views you already have (edit the `path` of each button).
+#
+# The bottom bar is the same card on every page:
+#   • Home goes to the tablet page on a tablet and to the phone page on a phone; a long press jumps to the other one.
+#   • A phone shows 5 buttons, a tablet shows all 9 (`device: tablet` on the others).
+#   • The button of the page you are on lights up.
+title: Calm Modern UI example
+views:
+  - title: Tablet
+    path: tablet
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:ccu-chips-card
+            grid_options:
+              columns: full
+            entities:
+              - entity: group.all_lights
+                name: Lights
+                icon: mdi:lightbulb
+                hide_off: true
+                secondary:
+                  entity: sensor.lights_on
+              - entity: group.all_windows
+                icon: mdi:window-open
+                count: true
+                hide_off: true
+              - entity: group.external_doors
+                icon: mdi:door-open
+                count: true
+                hide_off: true
+              - entity: group.water_leak
+                icon: mdi:water-alert
+                hide_off: true
+                on_as: alert
+              - entity: group.smoke_alarm
+                icon: mdi:fire-alert
+                hide_off: true
+                on_as: alert
+            low_batteries:
+              threshold: 20
+              tap_action:
+                action: navigate
+                navigation_path: /dashboard-calm/batteries
+            deadlines:
+              alert_days: 3
+              tap_action:
+                action: navigate
+                navigation_path: /dashboard-calm/cars
+              vehicles:
+                - name: Family car
+                  documents:
+                    - label: Insurance
+                      entity: input_datetime.car_insurance
+                      icon: mdi:shield-car
+                    - label: Inspection
+                      entity: input_datetime.car_inspection
+                      icon: mdi:car-wrench
+                    - label: Road tax
+                      entity: input_datetime.car_road_tax
+                      icon: mdi:highway
+                    - label: Service
+                      entity: sensor.car_service_date
+                      icon: mdi:car-cog
+                    - label: Oil
+                      odometer: sensor.car_odometer
+                      last_km: input_number.car_oil_km
+                      interval_km: 10000
+                      icon: mdi:oil
+                - name: Van
+                  documents:
+                    - label: Insurance
+                      entity: input_datetime.van_insurance
+                      icon: mdi:shield-car
+                    - label: Inspection
+                      entity: input_datetime.van_inspection
+                      icon: mdi:car-wrench
+                    - label: Road tax
+                      entity: input_datetime.van_road_tax
+                      icon: mdi:highway
+          - type: custom:ccu-chips-card
+            grid_options:
+              columns: full
+            entities:
+              - entity: binary_sensor.rain
+                name: Rain
+                icon: mdi:weather-rainy
+                hide_off: true
+              - entity: sensor.feels_like
+                name: Feels like
+                icon: mdi:thermometer-alert
+                show_state: true
+                alert_above: 32
+                hide_off: true
+              - entity: climate.living_ac
+                name: Living A/C
+                icon: mdi:air-conditioner
+                hide_off: true
+              - entity: climate.bedroom_ac
+                name: Bedroom A/C
+                icon: mdi:air-conditioner
+                hide_off: true
+              - entity: switch.air_cleaner
+                name: Air cleaner
+                icon: mdi:fan
+                hide_off: true
+              - entity: switch.pool_pump
+                name: Pool pump
+                icon: mdi:valve
+                hide_off: true
+              - entity: switch.uv_sterilizer
+                name: UV
+                icon: mdi:sun-wireless-outline
+                hide_off: true
+              - entity: light.pool
+                name: Pool light
+                icon: mdi:lightbulb
+                hide_off: true
+              - entity: sensor.washer_status
+                name: Washer
+                icon: mdi:washing-machine
+                hide_off: true
+                show_state: true
+                on_states:
+                  - running
+                  - spinning
+                  - rinsing
+                  - drying
+                text_map:
+                  running: Wash
+                  spinning: Spin
+                  rinsing: Rinse
+                  drying: Dry
+                secondary:
+                  entity: sensor.washer_remaining
+            waste:
+              calendar: calendar.waste
+              next_days: 1
+              hide_today_after: "23:59"
+              patterns:
+                - match: "Waste: General"
+                  label: General
+                  icon: mdi:trash-can
+                  exact: true
+                - match: "Waste: Plastic"
+                  label: Plastic
+                  icon: mdi:recycle
+                  exact: true
+          - type: conditional
+            grid_options:
+              columns: 6
+            conditions:
+              - condition: numeric_state
+                entity: sensor.dishwasher_remaining
+                above: 0
+            card:
+              type: custom:ccu-buttons-card
+              columns: 1
+              entities:
+                - entity: sensor.dishwasher_remaining
+                  name: Dishwasher
+                  icon: mdi:dishwasher
+                  active: true
+                  size: l
+          - type: custom:ccu-graph-card
+            grid_options:
+              columns: full
+            title: Energy (last 6 h)
+            range: 6h
+            tabs:
+              - 6h
+              - 24h
+            y_axis: right
+            height: 64
+            compact: true
+            series:
+              - entity: sensor.house_power
+                name: Consumption
+                color: accent
+              - entity: sensor.solar_power
+                name: Solar
+                color: yellow
+                kind: line
+      - type: grid
+        cards:
+          - type: custom:ccu-people-card
+            grid_options:
+              columns: 12
+            layout: family
+            people:
+              - person.ana
+              - person.maria
+              - person.alex
+          - type: custom:ccu-weather-card
+            grid_options:
+              columns: 12
+            weather: weather.home
+            sensors:
+              temperature: sensor.temp
+              feels_like: sensor.feels
+              humidity: sensor.hum
+              wind_speed: sensor.wind
+              wind_gust: sensor.gust
+              wind_direction: sensor.dir
+              rain_rate: sensor.rain_rate
+              rain_today: sensor.rain_today
+              rain_state: binary_sensor.raining
+              pressure: sensor.pressure
+              uv: sensor.uv
+              radiation: sensor.radiation
+            tiles:
+              - humidity
+              - wind
+              - rain
+              - pressure
+              - uv
+              - radiation
+            days: 5
+          - type: custom:ccu-batteries-card
+            grid_options:
+              columns: 12
+            title: Device batteries
+            entities:
+              - entity: sensor.tablet_battery
+                name: Wall tablet
+              - entity: sensor.phone_battery
+                name: Phone
+              - entity: sensor.car_battery
+                name: Car
+              - entity: sensor.remote_battery
+                name: TV remote
+      - type: grid
+        cards:
+          - type: custom:ccu-flow-card
+            grid_options:
+              columns: 12
+            solar_today: sensor.solar_today
+            radiation: sensor.solar_radiation
+            solar: sensor.solar_power
+            grid:
+              entity: sensor.grid_power
+              invert: true
+            battery:
+              entity: sensor.battery_power
+              soc: sensor.battery_soc
+            consumers:
+              - entity: sensor.house_power
+                subtract:
+                  - sensor.pool_power
+                name: House
+                icon: mdi:home
+              - entities:
+                  - sensor.shed_a
+                  - sensor.shed_b
+                  - sensor.shed_c
+                subtract:
+                  - sensor.ev_power
+                name: Shed
+                icon: mdi:warehouse
+              - entity: sensor.pool_power
+                name: Pool
+                icon: mdi:pool
+              - entity: sensor.ev_power
+                name: EV charger
+                icon: mdi:car-electric
+            stats:
+              - entity: sensor.import_today
+                label: Import today
+                icon: mdi:transmission-tower
+              - entity: sensor.export_today
+                label: Export today
+                icon: mdi:flash
+              - entity: sensor.import_month
+                label: Import month
+                icon: mdi:home
+              - entity: sensor.battery_charged_today
+                label: Charged today
+                icon: mdi:battery-charging
+          - type: custom:ccu-battery-card
+            grid_options:
+              columns: 12
+            show_title: false
+            soc: sensor.battery_soc
+            capacity_kwh: 10
+            load: sensor.load_power
+            power: sensor.battery_power
+            grid_present: binary_sensor.grid_present
+            reserve_pct: 20
+            shutdown_pct: 10
+          - type: custom:ccu-buttons-card
+            grid_options:
+              columns: 12
+            columns: 2
+            columns_wide: 4
+            entities:
+              - entity: light.kitchen
+                name: Kitchen
+                icon: mdi:pot-steam
+                secondary:
+                  entity: sensor.kitchen_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/kitchen
+                hold_action: toggle
+              - entity: light.living_room
+                name: Living room
+                icon: mdi:sofa
+                secondary:
+                  entity: sensor.living_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/living-room
+                hold_action: toggle
+              - entity: light.ground_hall
+                name: Ground hall
+                icon: mdi:stairs
+                secondary:
+                  entity: sensor.ground_hall_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/ground-hall
+                hold_action: toggle
+              - entity: light.office
+                name: Office
+                icon: mdi:flask
+                secondary:
+                  entity: sensor.office_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/office
+                hold_action: toggle
+              - entity: light.ground_bath
+                name: Ground bath
+                icon: mdi:toilet
+                secondary:
+                  entity: sensor.ground_bath_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/ground-bath
+                hold_action: toggle
+              - entity: light.master_bedroom
+                name: Master bedroom
+                icon: mdi:bed-double
+                secondary:
+                  entity: sensor.master_bedroom_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/master-bedroom
+                hold_action: toggle
+              - entity: light.dressing
+                name: Dressing
+                icon: mdi:bed-double
+                secondary:
+                  entity: sensor.dressing_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/dressing
+                hold_action: toggle
+              - entity: light.guest_room
+                name: Guest room
+                icon: mdi:bed-single
+                secondary:
+                  entity: sensor.guest_room_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/guest-room
+                hold_action: toggle
+              - entity: light.upper_hall
+                name: Upper hall
+                icon: mdi:stairs
+                secondary:
+                  entity: sensor.upper_hall_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/upper-hall
+                hold_action: toggle
+              - entity: light.upper_bath
+                name: Upper bath
+                icon: mdi:toilet
+                secondary:
+                  entity: sensor.upper_bath_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/upper-bath
+                hold_action: toggle
+              - entity: light.pool
+                name: Pool
+                icon: mdi:pool
+                secondary:
+                  entity: sensor.pool_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/pool
+                hold_action: toggle
+              - entity: switch.shed_lights
+                name: Shed
+                icon: mdi:warehouse
+                secondary:
+                  entity: sensor.shed_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/shed
+                hold_action: toggle
+              - entity: switch.gate
+                name: Gate
+                icon: mdi:gate
+                secondary: hold to open
+                tap_action: none
+                hold_action: toggle
+                on_as: alert
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:ccu-nav-card
+            grid_options:
+              columns: 12
+            sticky: true
+            items:
+              - icon: home
+                label: Home
+                path_tablet: /dashboard-calm/tablet
+                path_phone: /dashboard-calm/phone
+                hold_path_phone: /dashboard-calm/tablet
+                hold_path_tablet: /dashboard-calm/phone
+              - icon: sun
+                label: Energy
+                path: /dashboard-calm/energy
+              - icon: bolt
+                label: Solar
+                path: /dashboard-calm/solar
+              - icon: bulb
+                label: Lights
+                path: /dashboard-calm/lights
+                badge:
+                  - sensor.lights_on
+                badge_style: light
+              - icon: camera
+                label: Cams
+                path: /dashboard-calm/cams
+                badge:
+                  - binary_sensor.cam1_person
+                  - binary_sensor.cam2_person
+              - icon: car
+                label: Car
+                path: /dashboard-calm/car
+                device: tablet
+              - icon: warehouse
+                label: Shed
+                path: /dashboard-calm/shed
+                device: tablet
+              - icon: pool
+                label: Pool
+                path: /dashboard-calm/pool
+                device: tablet
+              - icon: thermo
+                label: Status
+                path: /dashboard-calm/status
+                device: tablet
+  - title: Home
+    path: phone
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: custom:ccu-chips-card
+            grid_options:
+              columns: 12
+            entities:
+              - entity: binary_sensor.rain
+                name: Rain
+                icon: mdi:weather-rainy
+                hide_off: true
+              - entity: sensor.feels_like
+                name: Feels like
+                icon: mdi:thermometer-alert
+                show_state: true
+                alert_above: 32
+                hide_off: true
+              - entity: climate.living_ac
+                name: Living A/C
+                icon: mdi:air-conditioner
+                hide_off: true
+              - entity: climate.bedroom_ac
+                name: Bedroom A/C
+                icon: mdi:air-conditioner
+                hide_off: true
+              - entity: switch.air_cleaner
+                name: Air cleaner
+                icon: mdi:fan
+                hide_off: true
+              - entity: switch.pool_pump
+                name: Pool pump
+                icon: mdi:valve
+                hide_off: true
+              - entity: switch.uv_sterilizer
+                name: UV
+                icon: mdi:sun-wireless-outline
+                hide_off: true
+              - entity: light.pool
+                name: Pool light
+                icon: mdi:lightbulb
+                hide_off: true
+              - entity: sensor.washer_status
+                name: Washer
+                icon: mdi:washing-machine
+                hide_off: true
+                show_state: true
+                on_states:
+                  - running
+                  - spinning
+                  - rinsing
+                  - drying
+                text_map:
+                  running: Wash
+                  spinning: Spin
+                  rinsing: Rinse
+                  drying: Dry
+                secondary:
+                  entity: sensor.washer_remaining
+            waste:
+              calendar: calendar.waste
+              next_days: 1
+              hide_today_after: "23:59"
+              patterns:
+                - match: "Waste: General"
+                  label: General
+                  icon: mdi:trash-can
+                  exact: true
+                - match: "Waste: Plastic"
+                  label: Plastic
+                  icon: mdi:recycle
+                  exact: true
+          - type: custom:ccu-header-card
+            grid_options:
+              columns: 12
+            header:
+              icon: home
+              values:
+                - entity: sensor.house_power
+                  icon: bolt
+                  color: accent
+                  label: Load
+                - entity: sensor.solar_power
+                  icon: sun
+                  color: "on"
+                  label: Solar
+                - entity: sensor.battery_soc
+                  icon: battery
+                  color: ok
+                  label: Battery
+                  runtime_load: sensor.load_power
+                  runtime_capacity_kwh: 10
+                  runtime_reserve_pct: 20
+                  runtime_power: sensor.battery_power
+              right:
+                entity: sensor.outdoor_temperature
+                label: outside
+          - type: custom:ccu-flow-card
+            grid_options:
+              columns: 12
+            solar_today: sensor.solar_today
+            radiation: sensor.solar_radiation
+            solar: sensor.solar_power
+            grid:
+              entity: sensor.grid_power
+              invert: true
+            battery:
+              entity: sensor.battery_power
+              soc: sensor.battery_soc
+            consumers:
+              - entity: sensor.house_power
+                subtract:
+                  - sensor.pool_power
+                name: House
+                icon: mdi:home
+              - entities:
+                  - sensor.shed_a
+                  - sensor.shed_b
+                  - sensor.shed_c
+                subtract:
+                  - sensor.ev_power
+                name: Shed
+                icon: mdi:warehouse
+              - entity: sensor.pool_power
+                name: Pool
+                icon: mdi:pool
+              - entity: sensor.ev_power
+                name: EV charger
+                icon: mdi:car-electric
+            stats:
+              - entity: sensor.import_today
+                label: Import today
+                icon: mdi:transmission-tower
+              - entity: sensor.export_today
+                label: Export today
+                icon: mdi:flash
+              - entity: sensor.import_month
+                label: Import month
+                icon: mdi:home
+              - entity: sensor.battery_charged_today
+                label: Charged today
+                icon: mdi:battery-charging
+          - type: custom:ccu-buttons-card
+            columns: 1
+            grid_options:
+              columns: 6
+            entities:
+              - entity: switch.gate
+                name: Gate
+                icon: mdi:gate
+                secondary: hold to open
+                tap_action: none
+                hold_action: toggle
+                on_as: alert
+          - type: custom:ccu-chips-card
+            grid_options:
+              columns: 12
+            entities:
+              - entity: group.all_lights
+                name: Lights
+                icon: mdi:lightbulb
+                hide_off: true
+                secondary:
+                  entity: sensor.lights_on
+              - entity: group.all_windows
+                icon: mdi:window-open
+                count: true
+                hide_off: true
+              - entity: group.external_doors
+                icon: mdi:door-open
+                count: true
+                hide_off: true
+              - entity: group.water_leak
+                icon: mdi:water-alert
+                hide_off: true
+                on_as: alert
+              - entity: group.smoke_alarm
+                icon: mdi:fire-alert
+                hide_off: true
+                on_as: alert
+            low_batteries:
+              threshold: 20
+              tap_action:
+                action: navigate
+                navigation_path: /dashboard-calm/batteries
+            deadlines:
+              alert_days: 3
+              tap_action:
+                action: navigate
+                navigation_path: /dashboard-calm/cars
+              vehicles:
+                - name: Family car
+                  documents:
+                    - label: Insurance
+                      entity: input_datetime.car_insurance
+                      icon: mdi:shield-car
+                    - label: Inspection
+                      entity: input_datetime.car_inspection
+                      icon: mdi:car-wrench
+                    - label: Road tax
+                      entity: input_datetime.car_road_tax
+                      icon: mdi:highway
+                    - label: Service
+                      entity: sensor.car_service_date
+                      icon: mdi:car-cog
+                    - label: Oil
+                      odometer: sensor.car_odometer
+                      last_km: input_number.car_oil_km
+                      interval_km: 10000
+                      icon: mdi:oil
+                - name: Van
+                  documents:
+                    - label: Insurance
+                      entity: input_datetime.van_insurance
+                      icon: mdi:shield-car
+                    - label: Inspection
+                      entity: input_datetime.van_inspection
+                      icon: mdi:car-wrench
+                    - label: Road tax
+                      entity: input_datetime.van_road_tax
+                      icon: mdi:highway
+          - type: custom:ccu-people-card
+            grid_options:
+              columns: 6
+            people:
+              - person.ana
+              - person.maria
+              - person.alex
+          - type: custom:ccu-buttons-card
+            grid_options:
+              columns: 12
+            columns: 2
+            columns_wide: 4
+            entities:
+              - entity: light.kitchen
+                name: Kitchen
+                icon: mdi:pot-steam
+                secondary:
+                  entity: sensor.kitchen_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/kitchen
+                hold_action: toggle
+              - entity: light.living_room
+                name: Living room
+                icon: mdi:sofa
+                secondary:
+                  entity: sensor.living_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/living-room
+                hold_action: toggle
+              - entity: light.ground_hall
+                name: Ground hall
+                icon: mdi:stairs
+                secondary:
+                  entity: sensor.ground_hall_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/ground-hall
+                hold_action: toggle
+              - entity: light.office
+                name: Office
+                icon: mdi:flask
+                secondary:
+                  entity: sensor.office_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/office
+                hold_action: toggle
+              - entity: light.ground_bath
+                name: Ground bath
+                icon: mdi:toilet
+                secondary:
+                  entity: sensor.ground_bath_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/ground-bath
+                hold_action: toggle
+              - entity: light.master_bedroom
+                name: Master bedroom
+                icon: mdi:bed-double
+                secondary:
+                  entity: sensor.master_bedroom_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/master-bedroom
+                hold_action: toggle
+              - entity: light.dressing
+                name: Dressing
+                icon: mdi:bed-double
+                secondary:
+                  entity: sensor.dressing_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/dressing
+                hold_action: toggle
+              - entity: light.guest_room
+                name: Guest room
+                icon: mdi:bed-single
+                secondary:
+                  entity: sensor.guest_room_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/guest-room
+                hold_action: toggle
+              - entity: light.upper_hall
+                name: Upper hall
+                icon: mdi:stairs
+                secondary:
+                  entity: sensor.upper_hall_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/upper-hall
+                hold_action: toggle
+              - entity: light.upper_bath
+                name: Upper bath
+                icon: mdi:toilet
+                secondary:
+                  entity: sensor.upper_bath_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/upper-bath
+                hold_action: toggle
+              - entity: light.pool
+                name: Pool
+                icon: mdi:pool
+                secondary:
+                  entity: sensor.pool_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/pool
+                hold_action: toggle
+              - entity: switch.shed_lights
+                name: Shed
+                icon: mdi:warehouse
+                secondary:
+                  entity: sensor.shed_temperature
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/shed
+                hold_action: toggle
+              - entity: sensor.car_battery
+                name: Car
+                icon: mdi:car
+                secondary: documents
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/car
+              - entity: binary_sensor.grid_present
+                name: Status
+                icon: mdi:server
+                secondary: system
+                tap_action:
+                  action: navigate
+                  navigation_path: /dashboard-calm/status
+          - type: custom:ccu-nav-card
+            grid_options:
+              columns: 12
+            sticky: true
+            items:
+              - icon: home
+                label: Home
+                path_tablet: /dashboard-calm/tablet
+                path_phone: /dashboard-calm/phone
+                hold_path_phone: /dashboard-calm/tablet
+                hold_path_tablet: /dashboard-calm/phone
+              - icon: sun
+                label: Energy
+                path: /dashboard-calm/energy
+              - icon: bolt
+                label: Solar
+                path: /dashboard-calm/solar
+              - icon: bulb
+                label: Lights
+                path: /dashboard-calm/lights
+                badge:
+                  - sensor.lights_on
+                badge_style: light
+              - icon: camera
+                label: Cams
+                path: /dashboard-calm/cams
+                badge:
+                  - binary_sensor.cam1_person
+                  - binary_sensor.cam2_person
+              - icon: car
+                label: Car
+                path: /dashboard-calm/car
+                device: tablet
+              - icon: warehouse
+                label: Shed
+                path: /dashboard-calm/shed
+                device: tablet
+              - icon: pool
+                label: Pool
+                path: /dashboard-calm/pool
+                device: tablet
+              - icon: thermo
+                label: Status
+                path: /dashboard-calm/status
+                device: tablet
