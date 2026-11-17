@@ -233,6 +233,15 @@ waste:                                                    # chips from a waste-c
     - { match: 'Waste: General', label: General, icon: mdi:trash-can, exact: true }
 ```
 
+**One row, in order of activation.** All chips of a card (entities, waste, low batteries, deadlines) flow in one row and continue on the next row only when they no longer fit. Add `sort: true` (checkbox *Sort by activation time* in the editor) to order them by the moment they became active (`last_changed`), oldest first. A chip that turns on later goes to the end, so the others do not jump around. For one single line on a tablet, put the card on the full width of the view (`grid_options: { columns: full }`) and keep all chips in **one** card.
+
+```yaml
+type: custom:ccu-chips-card
+sort: true
+```
+
+**Inactive chips in the editor.** While you edit the card (card editor or dashboard edit mode), the chips that are hidden right now (`hide_off`, `show_if`) are shown faded with a dashed border, so you can see everything the card can show. On the dashboard itself they stay hidden.
+
 A **low batteries** chip that finds the devices on batteries by itself (battery sensors; phones and tablets are left out):
 
 ```yaml

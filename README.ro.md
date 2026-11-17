@@ -456,6 +456,15 @@ waste:                                                  # chips din calendarul d
     - { match: 'Gunoi: Menajer', label: Menajer, icon: mdi:trash-can, exact: true }
 ```
 
+**Un singur rând, în ordinea activării.** Toate chips-urile unui card (entități, gunoi, baterii slabe, termene) stau pe un singur rând și trec pe următorul doar când nu mai încap. Cu `sort: true` (bifa *Ordonează după momentul activării* din editor) sunt ordonate după momentul în care s-au activat (`last_changed`), cel mai vechi primul. Un chip care se activează mai târziu merge la capăt, ca celelalte să nu sară. Pentru o singură linie pe tabletă, pune cardul pe toată lățimea paginii (`grid_options: { columns: full }`) și ține toate chips-urile într-**un singur** card.
+
+```yaml
+type: custom:ccu-chips-card
+sort: true
+```
+
+**Chips inactive în editor.** Cât editezi cardul (editorul cardului sau modul de editare al dashboardului), chips-urile ascunse acum (`hide_off`, `show_if`) apar estompate, cu chenar punctat, ca să vezi tot ce poate arăta cardul. Pe dashboard rămân ascunse.
+
 Chip **baterii slabe**, care găsește singur dispozitivele pe baterii (senzori de baterie; telefoanele și tabletele sunt lăsate deoparte):
 
 ```yaml

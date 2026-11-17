@@ -83,6 +83,9 @@ class CcuBase extends HTMLElement {
     this._schedule();
   }
   get hass() { return this._hass; }
+  // HA setează `preview` în editorul de carduri și în modul de editare al dashboardului
+  set preview(v) { v = !!v; if (v === this._preview) return; this._preview = v; if (this._config) this._draw(true); }
+  get preview() { return !!this._preview; }
 
   _schedule() {
     const wait = MIN_RENDER_MS - (Date.now() - this._lastDraw);
@@ -199,7 +202,7 @@ class CcuChipsCard extends CcuBase {
     if (waste || low || dl) r.warnings = r.warnings.filter((w) => !/entit/i.test(w));
     return r;
   }
-  _html() { return renderChips(this._config, this._hass, { warnings: this._warnings, events: this._events, now: new Date(), lowBat: lowBatteryModel(this._config.low_batteries, this._hass), due: this._config.deadlines ? dueDocuments(this._config.deadlines, this._hass, new Date()) : null }); }
+  _html() { return renderChips(this._config, this._hass, { preview: this._preview, warnings: this._warnings, events: this._events, now: new Date(), lowBat: lowBatteryModel(this._config.low_batteries, this._hass), due: this._config.deadlines ? dueDocuments(this._config.deadlines, this._hass, new Date()) : null }); }
   _hasClock() { return !!(this._config && this._config.deadlines); }   // la miezul nopții „zilele rămase” se schimbă
   // chips-ul „baterii slabe” depinde de toate bateriile din HA: lista lor se reface cel mult o dată la 30 s
   _entityIds() {

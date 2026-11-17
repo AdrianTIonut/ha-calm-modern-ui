@@ -219,7 +219,8 @@ export function wasteModel(waste, events, now = new Date()) {
 }
 
 export function renderChips(config, hass, opts = {}) {
-  const items = (config.entities || []).map((e, i) => { const m = entityModel(e, i, hass, config); return m.hidden ? '' : renderChip(m, e, hass); }).join(''); // hide_off: chip-ul dispare când nu e „on”
+  const lastCh = (id) => { const ts = Date.parse(hass?.states?.[id]?.last_changed || ''); return Number.isFinite(ts) ? ts : 0; };   // momentul activării (pentru `sort: activated`)
+  const itemList = (config.entities || []).map((e, i) => { const m = entityModel(e, i, hass, config); if (m.hidden && !opts.preview) return null; const h = renderChip(m, e, hass); return { h: m.hidden ? h.replace(/^(\s*<\w+)/, '$1 data-inactive="1" title="' + esc(t('Inactiv: nu se vede pe dashboard')) + '"') : h, ts: lastCh(e.entity) }; }).filter(Boolean); // hide_off: chip-ul dispare când nu e „on”
   const waste = wasteModel(config.waste, opts.events, opts.now || new Date()).map((w) =>
     `<span class="ccu-chip" data-state="${w.diff === 0 ? 'alert' : 'on'}" data-waste="1" data-entity="${esc(config.waste.calendar)}"><span class="ccu-ico">${iconSvg(w.icon)}</span>${esc(w.label)} <b>${w.diff === 0 ? t('azi') : w.diff === 1 ? t('mâine') : t('în {n} zile', { n: w.diff })}</b></span>`).join('');
   // baterii slabe: un singur chip, doar când există; cu o singură baterie arată numele și procentul, altfel numărul
@@ -228,7 +229,9 @@ export function renderChips(config, hass, opts = {}) {
   // termene (RCA, ITP, rovinietă, ulei…): un chip cât timp ceva se apropie sau a expirat; cu unul singur arată documentul și termenul, altfel numărul
   const due = opts.due && opts.due.length ? opts.due : null, dl = config.deadlines;
   const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1"><span class="ccu-ico">${iconSvg('calendar')}</span>${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
-  return `<div class="ccu-chips">${dueChip}${lowChip}${waste}${items}</div>${notes(opts.warnings)}`;
+  let parts = [{ h: dueChip, ts: 0 }, { h: lowChip, ts: lb ? Math.min(...lb.low.map((x) => lastCh(x.entity)).filter(Boolean), Infinity) : 0 }, { h: waste, ts: config.waste ? lastCh(config.waste.calendar) : 0 }, ...itemList];
+  if (config.sort === true || config.sort === 'activated') parts = parts.map((p, i) => ({ ...p, i, ts: Number.isFinite(p.ts) ? p.ts : 0 })).sort((a, b) => a.ts - b.ts || a.i - b.i);   // cel mai vechi activat primul
+  return `<div class="ccu-chips">${parts.map((p) => p.h).join('')}</div>${notes(opts.warnings)}`;
 }
 
 /** Normalizează secțiunea `header` (iconiță, ≤ 3 valori, ceas). */

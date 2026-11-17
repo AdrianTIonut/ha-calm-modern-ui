@@ -179,6 +179,7 @@ export const CCU_THEME = `
   font-size: 12.5px; font-weight: 600; box-shadow: var(--ccu-edge), var(--ccu-drop); transition: border-color .25s ease, background .25s ease; }
 .ccu-chip .ccu-ico { --ico: 18px; }
 .ccu-chip b { font-weight: 700; color: var(--ccu-ok); }
+.ccu-chip[data-inactive] { opacity: .45; border-style: dashed; filter: grayscale(.6); }
 .ccu-chip[data-state="on"] { --bc: color-mix(in srgb, var(--ccu-on) 72%, transparent);
   background: radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--ccu-on) 26%, transparent), color-mix(in srgb, var(--ccu-on) 6%, transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) 12%, var(--ccu-bg)); }
 .ccu-chip[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-on) 50%, transparent)); }

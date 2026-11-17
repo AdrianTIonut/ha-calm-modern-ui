@@ -184,6 +184,7 @@ const CCU_THEME = `
   font-size: 12.5px; font-weight: 600; box-shadow: var(--ccu-edge), var(--ccu-drop); transition: border-color .25s ease, background .25s ease; }
 .ccu-chip .ccu-ico { --ico: 18px; }
 .ccu-chip b { font-weight: 700; color: var(--ccu-ok); }
+.ccu-chip[data-inactive] { opacity: .45; border-style: dashed; filter: grayscale(.6); }
 .ccu-chip[data-state="on"] { --bc: color-mix(in srgb, var(--ccu-on) 72%, transparent);
   background: radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--ccu-on) 26%, transparent), color-mix(in srgb, var(--ccu-on) 6%, transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) 12%, var(--ccu-bg)); }
 .ccu-chip[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-on) 50%, transparent)); }
@@ -973,6 +974,7 @@ const EN = {
  "Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.": "Pick a device from the list that you no longer use (e.g. a broken toothbrush) or type a word from its name and press Enter.",
  "Adaugă dispozitive": "Add devices",
  "Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).": "Sensors added even if they are not found automatically or are ignored (e.g. a battery sensor without a type).",
+ "Inactiv: nu se vede pe dashboard": "Inactive: hidden on the dashboard",
  "slabă": "low",
  "Baterii slabe": "Low batteries",
  "Un singur chip, doar când există baterii slabe: arată numărul (sau numele, dacă e una) și, la atingere, deschide ce setezi mai jos.": "A single chip, shown only when there are low batteries: it shows the count (or the name, if there is one) and opens what you set below when tapped.",
@@ -1123,6 +1125,8 @@ const EN = {
  "Culoare necunoscută \"{k}\" ignorată.": "Unknown color \"{k}\" ignored.",
  "Culoarea \"{k}\" (\"{v}\") nu e validă — ignorată.": "Color \"{k}\" (\"{v}\") is not valid — ignored.",
  "Culoarea \"{k}\" nu e validă — ignorată.": "Color \"{k}\" is not valid — ignored.",
+ "Chips-urile apar în ordinea în care s-au activat (cel mai vechi primul); când nu mai încap pe un rând, trec pe următorul.": "Chips appear in the order they were activated (oldest first); when they no longer fit on a row, they continue on the next one.",
+ "Ordonează după momentul activării": "Sort by activation time",
  "pornit": "on",
  "oprit": "off",
  "deschis": "open",
@@ -2730,7 +2734,8 @@ function wasteModel(waste, events, now = new Date()) {
 }
 
 function renderChips(config, hass, opts = {}) {
-  const items = (config.entities || []).map((e, i) => { const m = entityModel(e, i, hass, config); return m.hidden ? '' : renderChip(m, e, hass); }).join(''); // hide_off: chip-ul dispare când nu e „on”
+  const lastCh = (id) => { const ts = Date.parse(hass?.states?.[id]?.last_changed || ''); return Number.isFinite(ts) ? ts : 0; };   // momentul activării (pentru `sort: activated`)
+  const itemList = (config.entities || []).map((e, i) => { const m = entityModel(e, i, hass, config); if (m.hidden && !opts.preview) return null; const h = renderChip(m, e, hass); return { h: m.hidden ? h.replace(/^(\s*<\w+)/, '$1 data-inactive="1" title="' + esc(t('Inactiv: nu se vede pe dashboard')) + '"') : h, ts: lastCh(e.entity) }; }).filter(Boolean); // hide_off: chip-ul dispare când nu e „on”
   const waste = wasteModel(config.waste, opts.events, opts.now || new Date()).map((w) =>
     `<span class="ccu-chip" data-state="${w.diff === 0 ? 'alert' : 'on'}" data-waste="1" data-entity="${esc(config.waste.calendar)}"><span class="ccu-ico">${iconSvg(w.icon)}</span>${esc(w.label)} <b>${w.diff === 0 ? t('azi') : w.diff === 1 ? t('mâine') : t('în {n} zile', { n: w.diff })}</b></span>`).join('');
   // baterii slabe: un singur chip, doar când există; cu o singură baterie arată numele și procentul, altfel numărul
@@ -2739,7 +2744,9 @@ function renderChips(config, hass, opts = {}) {
   // termene (RCA, ITP, rovinietă, ulei…): un chip cât timp ceva se apropie sau a expirat; cu unul singur arată documentul și termenul, altfel numărul
   const due = opts.due && opts.due.length ? opts.due : null, dl = config.deadlines;
   const dueChip = due ? `<span class="ccu-chip" role="button" tabindex="0" data-state="alert" data-due="1"><span class="ccu-ico">${iconSvg('calendar')}</span>${due.length === 1 && !(dl && dl.label) ? `${esc(due[0].label)} ${esc(due[0].vehicle)} <b>${esc(due[0].text)}</b>` : `${esc((dl && dl.label) || t('Termene mașini'))} <b>${due.length}</b>`}</span>` : '';
-  return `<div class="ccu-chips">${dueChip}${lowChip}${waste}${items}</div>${notes(opts.warnings)}`;
+  let parts = [{ h: dueChip, ts: 0 }, { h: lowChip, ts: lb ? Math.min(...lb.low.map((x) => lastCh(x.entity)).filter(Boolean), Infinity) : 0 }, { h: waste, ts: config.waste ? lastCh(config.waste.calendar) : 0 }, ...itemList];
+  if (config.sort === true || config.sort === 'activated') parts = parts.map((p, i) => ({ ...p, i, ts: Number.isFinite(p.ts) ? p.ts : 0 })).sort((a, b) => a.ts - b.ts || a.i - b.i);   // cel mai vechi activat primul
+  return `<div class="ccu-chips">${parts.map((p) => p.h).join('')}</div>${notes(opts.warnings)}`;
 }
 
 /** Normalizează secțiunea `header` (iconiță, ≤ 3 valori, ceas). */
@@ -5140,6 +5147,7 @@ function defineEditors() {
           this._fields(['low_batteries'], '', '', [grid({ name: 'threshold', selector: NUM(0, 100) }, { name: 'label', selector: TXT }), { name: 'exclude', selector: this._batteryIgnore() }, { name: 'include', selector: ENT({ multiple: true }) }, { name: 'mobile', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
             { threshold: t('Prag baterie slabă (%)'), label: t('Text (opțional)'), exclude: t('Ignoră dispozitivele'), include: t('Adaugă dispozitive'), mobile: t('Exclude telefoanele și tabletele'), tap_action: t('La atingere (ex. deschide lista bateriilor)') }, { exclude: t('Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.'), include: t('Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).') }, { defTrue: ['mobile'] }),
         ]),
+        this._fields([], t('Ordine'), t('Chips-urile apar în ordinea în care s-au activat (cel mai vechi primul); când nu mai încap pe un rând, trec pe următorul.'), [{ name: 'sort', selector: BOOL }], { sort: t('Ordonează după momentul activării') }),
         this._items('entities', { title: t('Chips'), hint: t('Etichete mici de stare; pot apărea doar când sunt active.'), max: 40, addLabel: t('Adaugă chip'), rowLabel: t('Chip'),
           forms: entityForms([{ schema: [grid({ name: 'icon_color', selector: SEL(COLORS) }, { name: 'on_as', selector: SEL(['alert']) }), grid({ name: 'show_state', selector: BOOL }, { name: 'hide_off', selector: BOOL })], labels: { icon_color: t('Culoarea iconiței'), on_as: t('Când e pornit arată ca'), show_state: t('Arată valoarea'), hide_off: t('Ascunde când e oprit') } }]) }),
       ];
@@ -5380,6 +5388,9 @@ class CcuBase extends HTMLElement {
     this._schedule();
   }
   get hass() { return this._hass; }
+  // HA setează `preview` în editorul de carduri și în modul de editare al dashboardului
+  set preview(v) { v = !!v; if (v === this._preview) return; this._preview = v; if (this._config) this._draw(true); }
+  get preview() { return !!this._preview; }
 
   _schedule() {
     const wait = MIN_RENDER_MS - (Date.now() - this._lastDraw);
@@ -5496,7 +5507,7 @@ class CcuChipsCard extends CcuBase {
     if (waste || low || dl) r.warnings = r.warnings.filter((w) => !/entit/i.test(w));
     return r;
   }
-  _html() { return renderChips(this._config, this._hass, { warnings: this._warnings, events: this._events, now: new Date(), lowBat: lowBatteryModel(this._config.low_batteries, this._hass), due: this._config.deadlines ? dueDocuments(this._config.deadlines, this._hass, new Date()) : null }); }
+  _html() { return renderChips(this._config, this._hass, { preview: this._preview, warnings: this._warnings, events: this._events, now: new Date(), lowBat: lowBatteryModel(this._config.low_batteries, this._hass), due: this._config.deadlines ? dueDocuments(this._config.deadlines, this._hass, new Date()) : null }); }
   _hasClock() { return !!(this._config && this._config.deadlines); }   // la miezul nopții „zilele rămase” se schimbă
   // chips-ul „baterii slabe” depinde de toate bateriile din HA: lista lor se reface cel mult o dată la 30 s
   _entityIds() {

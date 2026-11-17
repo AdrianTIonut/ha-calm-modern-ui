@@ -1,5 +1,10 @@
 # Istoric versiuni
 
+## 0.9.5
+- **Chips: ordine după activare.** `sort: true` (bifa *Ordonează după momentul activării* din editor) pune chips-urile în ordinea în care s-au activat (`last_changed`), cel mai vechi primul; cele care nu mai încap trec pe rândul următor. Cuprinde și gunoiul, bateriile slabe.
+- **Chips inactive în editor.** În editorul cardului și în modul de editare al dashboardului, chips-urile ascunse (`hide_off`, `show_if`) se văd estompate, cu chenar punctat. Pe dashboard rămân ascunse.
+- *English:* **Chips: sort by activation.** `sort: true` (checkbox *Sort by activation time* in the editor) orders chips by the moment they became active, oldest first; the ones that do not fit continue on the next row. Includes waste and low batteries. **Inactive chips in the editor:** while editing, hidden chips (`hide_off`, `show_if`) are shown faded with a dashed border; on the dashboard they stay hidden.
+
 ## 0.9.4
 - **„Plin în” mai stabil:** se calculează implicit după **media puterii pe ultimele 10 minute** (din istoricul HA, citit cel mult o dată pe minut), nu după valoarea de acum, ca cifra să nu sară când trece un nor; `charge_eta: now` păstrează calculul pe valoarea de acum. Cât se încarcă, autonomia se ascunde (`runtime_while_charging: true` o arată), iar peste 99 % „plin în” dispare. În antet, cu bifa, apar două linii sub procent. Cardul de baterie se redesenează acum și la schimbarea senzorilor din `load_entities`.
 - **Antet:** sub o valoare (procentul bateriei) poate apărea autonomia, `runtime_*` pe valoare (sau `runtime: { load, … }`), cu aceleași reguli ca la cardul de baterie; cât timp se încarcă arată „plin în …”. Rămâne vizibilă și pe telefon.
