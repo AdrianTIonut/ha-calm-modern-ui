@@ -1,6 +1,6 @@
 // tests/editor.test.mjs — logica pură a editorului vizual: conversii de config și detectarea automată a senzorilor. Rulare: node tests/editor.test.mjs
 import { setLang } from '../src/i18n.mjs'; setLang('ro');
-import { cleanObj, compactSource, consumerToForm, consumerFromForm, consumerReady, detectEnergy } from '../src/editor.mjs';
+import { cleanObj, compactSource, consumerToForm, consumerFromForm, consumerReady, detectEnergy, listRows } from '../src/editor.mjs';
 import { normalizeFlowConfig } from '../src/energy.mjs';
 import { runAction } from '../src/actions.mjs';
 
@@ -52,6 +52,17 @@ T('acțiune „perform-action” din editorul HA cheamă serviciul cu data și t
   const calls = []; const hass = { states: {}, callService: (...a) => calls.push(a) };
   runAction(hass, { dataset: {} }, { action: 'perform-action', perform_action: 'light.turn_on', data: { brightness_pct: 50 }, target: { entity_id: 'light.a' } });
   return eq(calls[0], ['light', 'turn_on', { brightness_pct: 50 }, { entity_id: 'light.a' }]) || calls;
+});
+
+// ---- liste din editor: rândurile salvate ca șir nu se pierd la prima modificare (raport: 10 din 12 comutatoare șterse) ----
+T('listRows: șirurile devin obiecte, obiectele rămân', () => eq(listRows(['switch.a', { entity: 'switch.b', icon: 'mdi:lamp' }, '', null]), [{ entity: 'switch.a' }, { entity: 'switch.b', icon: 'mdi:lamp' }]));
+T('listRows: fără listă → gol', () => eq(listRows(undefined), []) && eq(listRows('x'), []));
+T('modificarea unei iconițe păstrează toate cele 12 comutatoare', () => {
+  const saved = Array.from({ length: 12 }, (_, i) => 'switch.s' + (i + 1));   // cum le scrie editorul: doar entity → șir
+  const L = listRows(saved), ready = (x) => !!(x && x.entity);
+  L[0] = { ...L[0], icon: 'mdi:lightbulb' };   // prima iconiță schimbată
+  const out = L.filter(ready).map((x) => (Object.keys(x).length === 1 && x.entity ? x.entity : x));
+  return out.length === 12 && out[0].icon === 'mdi:lightbulb' && out[1] === 'switch.s2' || out;
 });
 
 console.log(`\n${pass}/${pass + fail}`);

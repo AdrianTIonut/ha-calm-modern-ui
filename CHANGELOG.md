@@ -1,5 +1,9 @@
 # Istoric versiuni
 
+## 0.9.7
+- **Reparat: editorul vizual putea șterge elemente dintr-o listă.** Rândurile care aveau doar o entitate (`- switch.x`) se pierdeau la prima modificare a unui alt rând din aceeași listă (de exemplu la schimbarea unei iconițe), iar în config rămâneau doar rândurile cu nume sau iconiță. Acum toate rândurile se păstrează. Dacă ți s-a întâmplat, restaurează cardul din istoricul dashboardului (Undo / versiunea salvată) sau adaugă din nou entitățile.
+- *English:* **Fixed: the visual editor could delete items from a list.** Rows that held only an entity (`- switch.x`) were dropped the first time you edited another row of the same list (for example when changing an icon), and only rows with a name or icon stayed in the config. All rows are now kept. If this happened to you, restore the card from the dashboard history or add the entities again.
+
 ## 0.9.6
 - **Înregistrare în HACS / Marketplace.** Pregătim cererea de includere în lista oficială HACS: am adăugat validarea HACS Action în repo și un release nou, ca să treacă verificările. **Cod neschimbat, nu trebuie să faci nimic**; dacă actualizezi, nu vei observa nicio diferență.
 - *English:* **Registering with HACS / Marketplace.** We are submitting the repository for the official HACS list: the HACS Action validation is now part of the repo, and this release follows it, as the review requires. **No code changes. You do not need to do anything**; if you update, you will see no difference.

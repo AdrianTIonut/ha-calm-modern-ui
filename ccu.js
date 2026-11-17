@@ -4907,6 +4907,14 @@ const names = (schema) => schema.flatMap((s) => (s.type === 'grid' ? names(s.sch
 const isEmpty = (v) => v === undefined || v === null || v === '' || v === false || (Array.isArray(v) && !v.length);
 const pick = (o, keys) => { const r = {}; for (const k of keys) if (o && o[k] !== undefined) r[k] = o[k]; return r; };
 
+/**
+ * Rândurile unei liste din config, pregătite pentru editor. Un rând doar cu `entity` e salvat ca șir (`- switch.x`): fără
+ * conversia în obiect, la prima modificare al oricărui rând toate șirurile ar fi scoase din listă (și din config).
+ */
+function listRows(cur) {
+  return (Array.isArray(cur) ? cur : []).filter((x) => x && (typeof x === 'string' || typeof x === 'object')).map((x) => (typeof x === 'string' ? { entity: x } : x));
+}
+
 function defineEditors() {
   if (typeof HTMLElement === 'undefined' || typeof customElements === 'undefined') return;
 
@@ -4972,7 +4980,7 @@ function defineEditors() {
     /** Listă repetabilă (rânduri cu ↑ ↓ ✕ și „Adaugă”); rândul gol nu se scrie în config până nu e completat. */
     _listBlock(key, title, hint, max, addLabel, rowLabel, rowBuilder, isReady, path, toConfig) {
       const P = path || [], id = P.join('.') + '/' + key;
-      if (!this._rows[id]) { const cur = this._obj(P)[key]; this._rows[id] = (Array.isArray(cur) ? cur : []).slice(); }
+      if (!this._rows[id]) { const cur = this._obj(P)[key]; this._rows[id] = listRows(cur); }
       const L = this._rows[id];
       const save = () => {
         const arr = L.filter(isReady).map((x) => (toConfig ? toConfig(x) : x));
@@ -5300,7 +5308,7 @@ function defineEditors() {
   for (const [tag, cls] of Object.entries(defs)) if (!customElements.get(tag)) customElements.define(tag, cls);
 }
 
-return { cleanObj, compactSource, consumerToForm, consumerFromForm, consumerReady, detectEnergy, defineEditors };
+return { cleanObj, compactSource, consumerToForm, consumerFromForm, consumerReady, detectEnergy, listRows, defineEditors };
 })();
 
 __m["cards"] = (() => {
