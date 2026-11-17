@@ -1,6 +1,7 @@
 // src/controls.mjs — controale ccu: termostat (climate), lumină cu luminozitate, număr (slider), selector (select), titlu de secțiune.
 // Funcții PURE (normalizare, model, șabloane HTML). Interacțiunea (slider, +/−, select) e în cards.mjs (CcuControlsCard).
 import { t, decSep } from './i18n.mjs';
+import { str } from './config.mjs';
 import { esc } from './render.mjs';
 import { iconSvg } from './icons.mjs';
 import { formatNumber } from './state.mjs';
@@ -28,7 +29,7 @@ export function normalizeControls(cfg) {
   });
   if (items.length > 12) { items.length = 12; warnings.push(t('Controale: maximum 12 per card.')); }
   const c = Number(src.columns);
-  return { items, columns: Number.isFinite(c) ? Math.min(3, Math.max(1, Math.round(c))) : 1, title: src.title ? String(src.title) : '', warnings };
+  return { items, columns: Number.isFinite(c) ? Math.min(3, Math.max(1, Math.round(c))) : 1, title: str(src.title) || '', warnings };
 }
 
 const num = (v) => { const n = Number(v); return v === null || v === undefined || v === '' || !Number.isFinite(n) ? null : n; };
@@ -225,7 +226,7 @@ export function sliderValue(frac, min, max, step) {
 /** Normalizează `ccu-title-card`: { title, subtitle?, icon? }. */
 export function normalizeTitle(cfg) {
   const src = cfg && typeof cfg === 'object' ? cfg : {};
-  return { title: src.title ? String(src.title) : '', subtitle: src.subtitle ? String(src.subtitle) : '', icon: src.icon ? String(src.icon) : '' };
+  return { title: str(src.title) || '', subtitle: str(src.subtitle) || '', icon: src.icon ? String(src.icon) : '' };
 }
 
 export function renderTitle(t) {
@@ -255,7 +256,7 @@ export function normalizeRemote(cfg) {
   extra.forEach((e) => { keys[e.id] = { cmd: e.cmd, icon: e.icon, label: e.label }; });
   let rows = Array.isArray(src.rows) ? src.rows.map((r) => (Array.isArray(r) ? r.filter((k) => keys[k]) : [])).filter((r) => r.length) : TV_ROWS.map((r) => r.slice());
   if (extra.length) rows = rows.concat([extra.map((e) => e.id)]);
-  return { entity, title: src.title ? String(src.title) : '', keys, rows, dpad: src.dpad !== false, warnings };
+  return { entity, title: str(src.title) || '', keys, rows, dpad: src.dpad !== false, warnings };
 }
 
 export function renderRemote(config, hass, opts = {}) {

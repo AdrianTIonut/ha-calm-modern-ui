@@ -1294,6 +1294,9 @@ const { t } = __m["i18n"];
  * Normalizează config-ul primit din HA. Returnează {config, warnings[]}.
  * Acceptă forma scurtă (entities: [entity_id]) sau lungă (entities: [{entity, name, ...}]).
  */
+/** Texto din YAML, în siguranță: obiectele / NaN devin '' (nu „[object Object]” pe ecran). */
+const str = (v) => (v === null || v === undefined || typeof v === 'object' || (typeof v === 'number' && Number.isNaN(v)) ? '' : String(v));
+
 function normalizeConfig(cfg) {
   const warnings = [];
 
@@ -1607,7 +1610,7 @@ function resolveMotion(cfg, narrow) {
   return { anim: base, fx: pick(c.weather_effects), flow: pick(c.flow_animation) };
 }
 
-return { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeMotion, normalizeSwitch, normalizeConfig, normalizeAction, deviceKind, resolveMotion };
+return { normalizeEntity, domainIcon, normalizeAnimations, normalizeColumns, validateAction, normalizeMotion, normalizeSwitch, str, normalizeConfig, normalizeAction, deviceKind, resolveMotion };
 })();
 
 __m["state"] = (() => {
@@ -2534,10 +2537,12 @@ __m["render"] = (() => {
 // src/render.mjs — șabloane HTML (șiruri) și patchNodes. Funcții PURE: nu ating DOM-ul, nu au efecte.
 // Tot ce vine din config/entități trece prin esc().
 const { t, intlLocale, getLang, decSep } = __m["i18n"];
+const { str } = __m["config"];
 const { stateOf, secondaryText, formatNumber } = __m["state"];
 const { iconSvg, iconAnim, iconKey, DEFAULT_ANIM } = __m["icons"];
 const { colorVars } = __m["presets"];
-const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// obiectele și NaN (un titlu / nume scris greșit în YAML) nu mai apar ca „[object Object]” / „NaN” pe ecran
+const esc = (v) => String(v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v)) || (typeof v === 'object' && !Array.isArray(v)) ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DAYS = ['dum', 'lun', 'mar', 'mie', 'joi', 'vin', 'sâm'];
 const MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -2603,7 +2608,8 @@ function entityModel(e, idx, hass, config = {}) {
   const members = e.count === true && Array.isArray(attrs.entity_id) ? attrs.entity_id : null;
   const count = members ? members.filter(isOn).length : null;
   if (e.on_as === 'alert' && state === 'on') state = 'alert'; // ex. fum / scurgere de apă: când e „on” nu e „activ”, e alertă
-  const name = e.name && e.name !== autoName(e.entity) ? e.name : (attrs.friendly_name || e.name || autoName(e.entity));
+  const given = str(e.name);   // un nume care nu e text (obiect, NaN) se ignoră
+  const name = given && given !== autoName(e.entity) ? given : (attrs.friendly_name || given || autoName(e.entity));
   const size = SIZES.includes(e.size) ? e.size : 'm';
   const shape = SHAPES.includes(e.shape) ? e.shape : 'chamfer';
 
@@ -2646,7 +2652,7 @@ function entityModel(e, idx, hass, config = {}) {
   }
   return {
     idx, entity: e.entity, name, size, shape, state, secondary, mode, run, ic, delta, count,
-    named: !!(e.name && e.name !== autoName(e.entity)), hidden: e.show_if ? hiddenIf : e.hide_off === true && state !== 'on' && state !== 'alert',
+    named: !!(given && given !== autoName(e.entity)), hidden: e.show_if ? hiddenIf : e.hide_off === true && state !== 'on' && state !== 'alert',
     toggle: e.toggle === true && size === 'l', spark: size === 'xl' && e.spark ? (e.spark.entity || e.entity) : '',
     sparkHours: e.spark && Number.isFinite(Number(e.spark.hours)) ? Math.min(48, Math.max(1, Number(e.spark.hours))) : 6,
     icon: iconSvg(e.icon || (String(e.entity).startsWith('weather.') && stateObj ? WEATHER_ICON[String(stateObj.state)] || 'w-cloud' : undefined), e.entity),
@@ -2697,7 +2703,7 @@ function renderChip(m, e, hass) {
     const raw = hass?.states?.[e.entity];
     let t = m.secondary || (raw ? secondaryText(raw, hass) : '—');
     // text_map: traduce starea text (spinning → Centrifugare); cu `secondary: {entity}` se adaugă și a doua valoare (ex. timpul rămas)
-    if (e.text_map && typeof e.text_map === 'object' && raw && e.text_map[raw.state] !== undefined) { t = String(e.text_map[raw.state]); if (m.secondary && m.secondary !== '—') t += ' · ' + m.secondary; }
+    if (e.text_map && typeof e.text_map === 'object' && raw && e.text_map[raw.state] !== undefined) { t = String(e.text_map[raw.state]); if (e.secondary !== undefined && m.secondary && m.secondary !== '—') t += ' · ' + m.secondary; }   // doar dacă `secondary` e dat în config; altfel m.secondary e chiar valoarea tradusă (altfel „Spin · Spin”)
     label += ` <b>${esc(t)}</b>`;
   }
   return `<span class="ccu-chip" role="button" tabindex="0" data-state="${m.state}" data-id="${m.idx}" data-entity="${esc(m.entity)}"${m.ic ? ` data-ic="${m.ic}"` : ''}${modeAttrs(m)}${styleAttr(m.style)}>`
@@ -2912,7 +2918,7 @@ function normalizePeople(cfg) {
     people.push({ entity: o.entity, name: o.name ? String(o.name) : '' });
   });
   if (people.length > 6) { people.length = 6; warnings.push(t('Persoane: maximum 6; restul sunt ignorate.')); }
-  return { people, label: src.label === false ? '' : (src.label ? String(src.label) : t('Persoane')), layout: src.layout === 'family' ? 'family' : 'chip', title: src.title ? String(src.title) : '', summary: src.summary !== false, warnings };
+  return { people, label: src.label === false ? '' : (src.label ? String(src.label) : t('Persoane')), layout: src.layout === 'family' ? 'family' : 'chip', title: str(src.title) || '', summary: src.summary !== false, warnings };
 }
 
 const STATE_RO = { home: 'Acasă', not_home: 'Plecat', unknown: '—', unavailable: '—' };   // românește; la afișare trece prin t()
@@ -3365,6 +3371,7 @@ __m["graph-card"] = (() => {
 // src/graph-card.mjs — ccu-graph-card (folosește funcțiile de date din graph-data.mjs).
 // Istoric HA: callWS history/history_during_period → { entity_id: [{ s, lu }] } (lu în SECUNDE). SVG fără biblioteci, culori din tokeni.
 const { t } = __m["i18n"];
+const { str } = __m["config"];
 const { niceScale, formatLabel, formatNumber, formatTimeLabel } = __m["graph-data"];
 const { colorVars } = __m["presets"];
 const { esc } = __m["render"];
@@ -3446,7 +3453,7 @@ function normalizeGraphConfig(cfg) {
   const tabs = (Array.isArray(src.tabs) ? src.tabs : []).filter((t) => rangeHours(t) > 0).slice(0, 4);
   const height = Number.isFinite(Number(src.height)) && src.height >= 60 && src.height <= 400 ? Number(src.height) : 0;
   const refresh = Number.isFinite(Number(src.refresh_minutes)) && src.refresh_minutes >= 1 && src.refresh_minutes <= 60 ? Number(src.refresh_minutes) : 5;
-  return { config: { ...src, series, range, tabs, height, refresh_minutes: refresh, legend: src.legend !== false, timeline, title: src.title ? String(src.title) : '' }, warnings };
+  return { config: { ...src, series, range, tabs, height, refresh_minutes: refresh, legend: src.legend !== false, timeline, title: str(src.title) || '' }, warnings };
 }
 
 // ---- axa X: ore rotunjite ----
@@ -3659,6 +3666,7 @@ __m["energy"] = (() => {
 // src/energy.mjs — cardurile de energie: flux (solar / rețea / baterie → consumatori) și baterie.
 // Funcții PURE: model (din config + hass), geometrie și șabloane HTML/SVG. Fără DOM, fără rețea.
 const { t } = __m["i18n"];
+const { str } = __m["config"];
 const { esc } = __m["render"];
 const { iconSvg } = __m["icons"];
 const { formatNumber } = __m["state"];
@@ -3739,7 +3747,7 @@ function normalizeFlowConfig(cfg) {
     if (!okId(o.entity)) { warnings.push(t('Flux: „{k}” are entity_id lipsă sau invalid.', { k: key })); continue; }
     items.push({ kind: 'sunnote', entity: o.entity, name: o.label !== undefined ? String(o.label) : o.name !== undefined ? String(o.name) : src.sun_labels === false ? '' : label, icon: o.icon || icon });
   }
-  return { items, title: src.title ? String(src.title) : '', warnings };
+  return { items, title: str(src.title) || '', warnings };
 }
 
 /**
@@ -3854,7 +3862,7 @@ function normalizeBatteryConfig(cfg) {
   const cfgOut = {
     soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, charge_eta: src.charge_eta === 'now' ? 'now' : 'avg', runtime_while_charging: src.runtime_while_charging === true || src.runtime_while_charging === 'true', load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
     capacity_kwh: num('capacity_kwh', 0, 0.1, 1000), reserve_pct: num('reserve_pct', 20, 0, 100), shutdown_pct: num('shutdown_pct', 10, 0, 100),
-    title: src.title ? String(src.title) : t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
+    title: str(src.title) || t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
   };
   if (cfgOut.shutdown_pct > cfgOut.reserve_pct) warnings.push(t('Baterie: „shutdown_pct” e peste „reserve_pct”; le-am inversat.'));
   if (cfgOut.shutdown_pct > cfgOut.reserve_pct) { const t = cfgOut.shutdown_pct; cfgOut.shutdown_pct = cfgOut.reserve_pct; cfgOut.reserve_pct = t; }
@@ -4045,7 +4053,7 @@ function normalizeBatteriesConfig(cfg) {
   });
   if (items.length > 12) { items.length = 12; warnings.push(t('Baterii: maximum 12; restul sunt ignorate.')); }
   const n = (k, d) => (Number.isFinite(Number(src[k])) && src[k] >= 0 && src[k] <= 100 ? Number(src[k]) : d);
-  return { items, title: src.title ? String(src.title) : 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', auto: normalizeAutoBatteries(src.auto), only_low: src.only_low === true, warnings };
+  return { items, title: str(src.title) || 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', auto: normalizeAutoBatteries(src.auto), only_low: src.only_low === true, warnings };
 }
 
 function buildBatteriesModel(config, hass) {
@@ -4087,6 +4095,7 @@ __m["weather"] = (() => {
 // src/weather.mjs — cardul de vreme. Valorile curente vin din senzorii stației (ex. Ecowitt), NU din prognoză;
 // prognoza pe zile vine din entitatea weather.*. Funcții PURE (model + șabloane); animațiile sunt în theme.js (CSS), doar prin atribute data-*.
 const { t, weekdayShort, decSep } = __m["i18n"];
+const { str } = __m["config"];
 const { esc } = __m["render"];
 const { iconSvg } = __m["icons"];
 const ENTITY = /^[a-z_]+\.[a-z0-9_]+$/;
@@ -4140,7 +4149,7 @@ function normalizeWeatherConfig(cfg) {
   for (const t of tiles) for (const k of NEEDS[t]) if (sensors[k] && !seen.has(sensors[k])) { seen.add(sensors[k]); items.push({ kind: 'sensor', key: k, entity: sensors[k] }); }
   for (const k of ['temperature']) if (sensors[k] && !seen.has(sensors[k])) { seen.add(sensors[k]); items.push({ kind: 'sensor', key: k, entity: sensors[k] }); }
   if (weather) { const w = { kind: 'weather', key: 'weather', entity: weather }; if (src.tap_action !== undefined) w.tap_action = src.tap_action; if (src.hold_action !== undefined) w.hold_action = src.hold_action; items.push(w); } // tap/hold pe scenă și pe zile
-  return { config: { sensors, weather, tiles, days, title: src.title ? String(src.title) : '', scene_fallback: src.scene_fallback !== false, fallback_to_forecast: src.fallback_to_forecast === true, sun: okId(src.sun) ? src.sun : 'sun.sun', items }, warnings };
+  return { config: { sensors, weather, tiles, days, title: str(src.title) || '', scene_fallback: src.scene_fallback !== false, fallback_to_forecast: src.fallback_to_forecast === true, sun: okId(src.sun) ? src.sun : 'sun.sun', items }, warnings };
 }
 
 // ---------------------------------------------------------------- clasificarea scenei
@@ -4183,11 +4192,11 @@ function classifyScene({ tempC = null, rainMmh = null, rainOn = null, windKmh = 
   const sky = precip !== 'none' || bolt ? 'cloudy' : skyOf(cond);
   let label;
   if (bolt) label = precip !== 'none' ? t('Furtună cu ploaie') : t('Furtună');
+  else if (cond === 'hail') label = t('Grindină');   // înainte de ploaie: grindina se desenează ca ploaie torențială, dar se numește grindină
   else if (precip !== 'none') label = t(WORD[precip][intensity - 1]);
-  else if (cond === 'hail') label = t('Grindină');
   else if (sky === 'clear' && night) label = t('Cer senin');
   else label = cond ? t(COND_RO[cond] || 'Noros') : '—';
-  if (wind >= 2 && precip === 'none' && !bolt && sky !== 'fog') label = wind === 3 ? t('Vânt puternic') : (cond ? label + t(' · vânt') : t('Vânt'));
+  if (wind >= 2 && precip === 'none' && !bolt && sky !== 'fog') label = wind === 3 ? t('Vânt puternic') : (cond && !/^windy/.test(cond) ? label + t(' · vânt') : cond ? label : t('Vânt'));   // „windy” se numește deja „Vânt”: fără „Vânt · vânt”
   else if (wind >= 2 && precip !== 'none') label += wind === 3 ? t(' · vânt puternic') : t(' · vânt');
   return { precip, intensity, wind, sky, night: !!night, bolt, label, fromForecast };
 }
@@ -4308,6 +4317,7 @@ __m["controls"] = (() => {
 // src/controls.mjs — controale ccu: termostat (climate), lumină cu luminozitate, număr (slider), selector (select), titlu de secțiune.
 // Funcții PURE (normalizare, model, șabloane HTML). Interacțiunea (slider, +/−, select) e în cards.mjs (CcuControlsCard).
 const { t, decSep } = __m["i18n"];
+const { str } = __m["config"];
 const { esc } = __m["render"];
 const { iconSvg } = __m["icons"];
 const { formatNumber } = __m["state"];
@@ -4334,7 +4344,7 @@ function normalizeControls(cfg) {
   });
   if (items.length > 12) { items.length = 12; warnings.push(t('Controale: maximum 12 per card.')); }
   const c = Number(src.columns);
-  return { items, columns: Number.isFinite(c) ? Math.min(3, Math.max(1, Math.round(c))) : 1, title: src.title ? String(src.title) : '', warnings };
+  return { items, columns: Number.isFinite(c) ? Math.min(3, Math.max(1, Math.round(c))) : 1, title: str(src.title) || '', warnings };
 }
 
 const num = (v) => { const n = Number(v); return v === null || v === undefined || v === '' || !Number.isFinite(n) ? null : n; };
@@ -4531,7 +4541,7 @@ function sliderValue(frac, min, max, step) {
 /** Normalizează `ccu-title-card`: { title, subtitle?, icon? }. */
 function normalizeTitle(cfg) {
   const src = cfg && typeof cfg === 'object' ? cfg : {};
-  return { title: src.title ? String(src.title) : '', subtitle: src.subtitle ? String(src.subtitle) : '', icon: src.icon ? String(src.icon) : '' };
+  return { title: str(src.title) || '', subtitle: str(src.subtitle) || '', icon: src.icon ? String(src.icon) : '' };
 }
 
 function renderTitle(t) {
@@ -4561,7 +4571,7 @@ function normalizeRemote(cfg) {
   extra.forEach((e) => { keys[e.id] = { cmd: e.cmd, icon: e.icon, label: e.label }; });
   let rows = Array.isArray(src.rows) ? src.rows.map((r) => (Array.isArray(r) ? r.filter((k) => keys[k]) : [])).filter((r) => r.length) : TV_ROWS.map((r) => r.slice());
   if (extra.length) rows = rows.concat([extra.map((e) => e.id)]);
-  return { entity, title: src.title ? String(src.title) : '', keys, rows, dpad: src.dpad !== false, warnings };
+  return { entity, title: str(src.title) || '', keys, rows, dpad: src.dpad !== false, warnings };
 }
 
 function renderRemote(config, hass, opts = {}) {
@@ -4582,6 +4592,7 @@ __m["radio"] = (() => {
 // src/radio.mjs — cardul ccu-radio-card: radio cu scală de acordaj, ecran cu echalizator, post anterior / următor, play / stop și volum.
 // Funcții PURE (normalizare, model, șablon HTML). Interacțiunea (atingeri, volum) e în cards.mjs (CcuRadioCard).
 const { t } = __m["i18n"];
+const { str } = __m["config"];
 const { esc } = __m["render"];
 const { iconSvg } = __m["icons"];
 const ID = /^[a-z_]+\.[a-z0-9_]+$/;
@@ -4605,16 +4616,24 @@ function normalizeRadio(cfg) {
   const speakers = list(src.speakers).filter((x) => ID.test(x) && dom(x) === 'media_player');
   return {
     speakers, stations, playing: ent('playing'), player: ent('player', ['media_player']), play: act('play'), stop: act('stop'),
-    title: src.title ? String(src.title) : '', hide: list(src.hide), strip: typeof src.strip_after === 'string' ? src.strip_after : ' - ',
+    title: str(src.title) || '', hide: list(src.hide), strip: typeof src.strip_after === 'string' ? src.strip_after : ' - ',
     labels: src.labels && typeof src.labels === 'object' ? src.labels : {}, warnings,
   };
 }
 
 /** Adresa fluxului dintr-o opțiune de tip „Nume - https://…” (sau șir gol). */
+const URL_RE = /^https?:\/\/\S+$/i;
+/** Desparte „Nume - https://…” la ULTIMUL separator când ce urmează e o adresă (numele poate conține și el „ - ”, ex. „Kiss - FM - https://…”). */
+function splitStation(option, strip) {
+  const o = String(option || ''), sep = strip || ' - ', last = o.lastIndexOf(sep);
+  if (last >= 0 && URL_RE.test(o.slice(last + sep.length).trim())) return { name: o.slice(0, last), url: o.slice(last + sep.length).trim() };
+  if (URL_RE.test(o.trim())) return { name: '', url: o.trim() };
+  const first = o.indexOf(sep);
+  return { name: first >= 0 ? o.slice(0, first) : o, url: '' };
+}
+
 function stationUrl(option, strip) {
-  const o = String(option || ''), sep = strip || ' - ', i = o.indexOf(sep);
-  const u = (i >= 0 ? o.slice(i + sep.length) : o).trim();
-  return /^https?:\/\/\S+$/i.test(u) ? u : '';
+  return splitStation(option, strip).url;
 }
 
 /** Modelul din config + starea HA (+ valori „optimiste” dintr-o atingere recentă: { play, station }). */
@@ -4622,7 +4641,7 @@ function radioModel(c, hass, opt) {
   const o = opt || {}, S = (id) => (id && hass && hass.states ? hass.states[id] : undefined);
   const sel = S(c.stations), options = (sel && sel.attributes && Array.isArray(sel.attributes.options) ? sel.attributes.options : []).map(String);
   const hide = c.hide.map((x) => x.toLowerCase());
-  const label = (v) => c.labels[v] || (c.strip && v.includes(c.strip) ? v.split(c.strip)[0] : v).trim();
+  const label = (v) => c.labels[v] || (c.strip && v.includes(c.strip) ? splitStation(v, c.strip).name : v).trim();
   const stations = options.filter((v) => !hide.some((h) => v.toLowerCase().includes(h))).map((v) => ({ value: v, label: label(v) }));
   const cur = o.station !== undefined ? o.station : sel ? String(sel.state) : '';
   let idx = stations.findIndex((s) => s.value === cur);

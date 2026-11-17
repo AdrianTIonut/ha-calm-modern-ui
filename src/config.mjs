@@ -5,6 +5,9 @@ import { t } from './i18n.mjs';
  * Normalizează config-ul primit din HA. Returnează {config, warnings[]}.
  * Acceptă forma scurtă (entities: [entity_id]) sau lungă (entities: [{entity, name, ...}]).
  */
+/** Texto din YAML, în siguranță: obiectele / NaN devin '' (nu „[object Object]” pe ecran). */
+export const str = (v) => (v === null || v === undefined || typeof v === 'object' || (typeof v === 'number' && Number.isNaN(v)) ? '' : String(v));
+
 export function normalizeConfig(cfg) {
   const warnings = [];
 

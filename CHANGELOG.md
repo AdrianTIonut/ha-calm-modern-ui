@@ -1,5 +1,13 @@
 # Istoric versiuni
 
+## 0.9.9
+- **Chips: valoarea nu se mai dublează.** Un chip cu `show_state: true` și `text_map` (fără `secondary`) arăta „Spin · Spin”; acum arată „Spin”. Cu `secondary` dat, rămâne „Spin · 38 min”.
+- **Titlu sau nume scris greșit în YAML** (de exemplu `title: {}` sau `name: [...]`) nu mai apare ca „[object Object]” / „NaN” pe card; titlul cade pe cel implicit, iar numele pe numele prietenos al entității.
+- **Radio: un post cu „ - ” în nume merge acum.** „Kiss - FM - https://…” își pierdea adresa și nu pornea, pentru că se desprindea la primul separator; acum se desprinde la ultimul (cel dinaintea adresei).
+- **Vreme: grindina se numește grindină** (apărea ca „Ploaie torențială”), iar `windy` nu mai scrie „Vânt · vânt”.
+- *English:* **Radio: a station whose name contains “ - ” now works.** “Kiss - FM - https://…” lost its stream address and did not play, because it was split at the first separator; it is now split at the last one (the one before the address). **Weather: hail is called hail** (it showed as “Heavy rain”), and `windy` no longer reads “Windy · windy”.
+- *English:* **Chips: the value is no longer doubled.** A chip with `show_state: true` and `text_map` (no `secondary`) showed “Spin · Spin”; it now shows “Spin”. With `secondary` set it stays “Spin · 38 min”. **A title or name written wrongly in YAML** (for example `title: {}`) no longer shows “[object Object]” / “NaN” on the card; the title falls back to the default and the name to the entity's friendly name.
+
 ## 0.9.8
 - **Reparat: iconița aleasă în editor nu se vedea.** Cardul are propriul set de ~90 de iconițe; o iconiță din selectorul Home Assistant care nu era în acest set era ignorată în tăcere (butonul rămânea cu iconița implicită, de exemplu becul la o lumină). Acum orice iconiță (`mdi:…` și celelalte pachete) se desenează cu iconița nativă a lui Home Assistant, iar cele uzuale rămân cele proprii, animate.
 - *English:* **Fixed: the icon chosen in the editor did not show.** The card has its own set of about 90 icons; an icon from the Home Assistant picker that was not in that set was silently ignored (the button kept the default icon, for example the bulb for a light). Now any icon (`mdi:…` and the other icon packs) is drawn with Home Assistant's native icon, while the common ones stay the card's own animated icons.

@@ -1,11 +1,13 @@
 // src/render.mjs — șabloane HTML (șiruri) și patchNodes. Funcții PURE: nu ating DOM-ul, nu au efecte.
 // Tot ce vine din config/entități trece prin esc().
 import { t, intlLocale, getLang, decSep } from './i18n.mjs';
+import { str } from './config.mjs';
 import { stateOf, secondaryText, formatNumber } from './state.mjs';
 import { iconSvg, iconAnim, iconKey, DEFAULT_ANIM } from './icons.mjs';
 import { colorVars } from './presets.mjs';
 
-export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// obiectele și NaN (un titlu / nume scris greșit în YAML) nu mai apar ca „[object Object]” / „NaN” pe ecran
+export const esc = (v) => String(v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v)) || (typeof v === 'object' && !Array.isArray(v)) ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DAYS = ['dum', 'lun', 'mar', 'mie', 'joi', 'vin', 'sâm'];
 const MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -71,7 +73,8 @@ export function entityModel(e, idx, hass, config = {}) {
   const members = e.count === true && Array.isArray(attrs.entity_id) ? attrs.entity_id : null;
   const count = members ? members.filter(isOn).length : null;
   if (e.on_as === 'alert' && state === 'on') state = 'alert'; // ex. fum / scurgere de apă: când e „on” nu e „activ”, e alertă
-  const name = e.name && e.name !== autoName(e.entity) ? e.name : (attrs.friendly_name || e.name || autoName(e.entity));
+  const given = str(e.name);   // un nume care nu e text (obiect, NaN) se ignoră
+  const name = given && given !== autoName(e.entity) ? given : (attrs.friendly_name || given || autoName(e.entity));
   const size = SIZES.includes(e.size) ? e.size : 'm';
   const shape = SHAPES.includes(e.shape) ? e.shape : 'chamfer';
 
@@ -114,7 +117,7 @@ export function entityModel(e, idx, hass, config = {}) {
   }
   return {
     idx, entity: e.entity, name, size, shape, state, secondary, mode, run, ic, delta, count,
-    named: !!(e.name && e.name !== autoName(e.entity)), hidden: e.show_if ? hiddenIf : e.hide_off === true && state !== 'on' && state !== 'alert',
+    named: !!(given && given !== autoName(e.entity)), hidden: e.show_if ? hiddenIf : e.hide_off === true && state !== 'on' && state !== 'alert',
     toggle: e.toggle === true && size === 'l', spark: size === 'xl' && e.spark ? (e.spark.entity || e.entity) : '',
     sparkHours: e.spark && Number.isFinite(Number(e.spark.hours)) ? Math.min(48, Math.max(1, Number(e.spark.hours))) : 6,
     icon: iconSvg(e.icon || (String(e.entity).startsWith('weather.') && stateObj ? WEATHER_ICON[String(stateObj.state)] || 'w-cloud' : undefined), e.entity),
@@ -165,7 +168,7 @@ export function renderChip(m, e, hass) {
     const raw = hass?.states?.[e.entity];
     let t = m.secondary || (raw ? secondaryText(raw, hass) : '—');
     // text_map: traduce starea text (spinning → Centrifugare); cu `secondary: {entity}` se adaugă și a doua valoare (ex. timpul rămas)
-    if (e.text_map && typeof e.text_map === 'object' && raw && e.text_map[raw.state] !== undefined) { t = String(e.text_map[raw.state]); if (m.secondary && m.secondary !== '—') t += ' · ' + m.secondary; }
+    if (e.text_map && typeof e.text_map === 'object' && raw && e.text_map[raw.state] !== undefined) { t = String(e.text_map[raw.state]); if (e.secondary !== undefined && m.secondary && m.secondary !== '—') t += ' · ' + m.secondary; }   // doar dacă `secondary` e dat în config; altfel m.secondary e chiar valoarea tradusă (altfel „Spin · Spin”)
     label += ` <b>${esc(t)}</b>`;
   }
   return `<span class="ccu-chip" role="button" tabindex="0" data-state="${m.state}" data-id="${m.idx}" data-entity="${esc(m.entity)}"${m.ic ? ` data-ic="${m.ic}"` : ''}${modeAttrs(m)}${styleAttr(m.style)}>`
@@ -380,7 +383,7 @@ export function normalizePeople(cfg) {
     people.push({ entity: o.entity, name: o.name ? String(o.name) : '' });
   });
   if (people.length > 6) { people.length = 6; warnings.push(t('Persoane: maximum 6; restul sunt ignorate.')); }
-  return { people, label: src.label === false ? '' : (src.label ? String(src.label) : t('Persoane')), layout: src.layout === 'family' ? 'family' : 'chip', title: src.title ? String(src.title) : '', summary: src.summary !== false, warnings };
+  return { people, label: src.label === false ? '' : (src.label ? String(src.label) : t('Persoane')), layout: src.layout === 'family' ? 'family' : 'chip', title: str(src.title) || '', summary: src.summary !== false, warnings };
 }
 
 const STATE_RO = { home: 'Acasă', not_home: 'Plecat', unknown: '—', unavailable: '—' };   // românește; la afișare trece prin t()

@@ -1,6 +1,7 @@
 // src/radio.mjs — cardul ccu-radio-card: radio cu scală de acordaj, ecran cu echalizator, post anterior / următor, play / stop și volum.
 // Funcții PURE (normalizare, model, șablon HTML). Interacțiunea (atingeri, volum) e în cards.mjs (CcuRadioCard).
 import { t } from './i18n.mjs';
+import { str } from './config.mjs';
 import { esc } from './render.mjs';
 import { iconSvg } from './icons.mjs';
 
@@ -25,16 +26,24 @@ export function normalizeRadio(cfg) {
   const speakers = list(src.speakers).filter((x) => ID.test(x) && dom(x) === 'media_player');
   return {
     speakers, stations, playing: ent('playing'), player: ent('player', ['media_player']), play: act('play'), stop: act('stop'),
-    title: src.title ? String(src.title) : '', hide: list(src.hide), strip: typeof src.strip_after === 'string' ? src.strip_after : ' - ',
+    title: str(src.title) || '', hide: list(src.hide), strip: typeof src.strip_after === 'string' ? src.strip_after : ' - ',
     labels: src.labels && typeof src.labels === 'object' ? src.labels : {}, warnings,
   };
 }
 
 /** Adresa fluxului dintr-o opțiune de tip „Nume - https://…” (sau șir gol). */
+const URL_RE = /^https?:\/\/\S+$/i;
+/** Desparte „Nume - https://…” la ULTIMUL separator când ce urmează e o adresă (numele poate conține și el „ - ”, ex. „Kiss - FM - https://…”). */
+function splitStation(option, strip) {
+  const o = String(option || ''), sep = strip || ' - ', last = o.lastIndexOf(sep);
+  if (last >= 0 && URL_RE.test(o.slice(last + sep.length).trim())) return { name: o.slice(0, last), url: o.slice(last + sep.length).trim() };
+  if (URL_RE.test(o.trim())) return { name: '', url: o.trim() };
+  const first = o.indexOf(sep);
+  return { name: first >= 0 ? o.slice(0, first) : o, url: '' };
+}
+
 export function stationUrl(option, strip) {
-  const o = String(option || ''), sep = strip || ' - ', i = o.indexOf(sep);
-  const u = (i >= 0 ? o.slice(i + sep.length) : o).trim();
-  return /^https?:\/\/\S+$/i.test(u) ? u : '';
+  return splitStation(option, strip).url;
 }
 
 /** Modelul din config + starea HA (+ valori „optimiste” dintr-o atingere recentă: { play, station }). */
@@ -42,7 +51,7 @@ export function radioModel(c, hass, opt) {
   const o = opt || {}, S = (id) => (id && hass && hass.states ? hass.states[id] : undefined);
   const sel = S(c.stations), options = (sel && sel.attributes && Array.isArray(sel.attributes.options) ? sel.attributes.options : []).map(String);
   const hide = c.hide.map((x) => x.toLowerCase());
-  const label = (v) => c.labels[v] || (c.strip && v.includes(c.strip) ? v.split(c.strip)[0] : v).trim();
+  const label = (v) => c.labels[v] || (c.strip && v.includes(c.strip) ? splitStation(v, c.strip).name : v).trim();
   const stations = options.filter((v) => !hide.some((h) => v.toLowerCase().includes(h))).map((v) => ({ value: v, label: label(v) }));
   const cur = o.station !== undefined ? o.station : sel ? String(sel.state) : '';
   let idx = stations.findIndex((s) => s.value === cur);

@@ -1,6 +1,7 @@
 // src/weather.mjs — cardul de vreme. Valorile curente vin din senzorii stației (ex. Ecowitt), NU din prognoză;
 // prognoza pe zile vine din entitatea weather.*. Funcții PURE (model + șabloane); animațiile sunt în theme.js (CSS), doar prin atribute data-*.
 import { t, weekdayShort, decSep } from './i18n.mjs';
+import { str } from './config.mjs';
 import { esc } from './render.mjs';
 import { iconSvg } from './icons.mjs';
 
@@ -55,7 +56,7 @@ export function normalizeWeatherConfig(cfg) {
   for (const t of tiles) for (const k of NEEDS[t]) if (sensors[k] && !seen.has(sensors[k])) { seen.add(sensors[k]); items.push({ kind: 'sensor', key: k, entity: sensors[k] }); }
   for (const k of ['temperature']) if (sensors[k] && !seen.has(sensors[k])) { seen.add(sensors[k]); items.push({ kind: 'sensor', key: k, entity: sensors[k] }); }
   if (weather) { const w = { kind: 'weather', key: 'weather', entity: weather }; if (src.tap_action !== undefined) w.tap_action = src.tap_action; if (src.hold_action !== undefined) w.hold_action = src.hold_action; items.push(w); } // tap/hold pe scenă și pe zile
-  return { config: { sensors, weather, tiles, days, title: src.title ? String(src.title) : '', scene_fallback: src.scene_fallback !== false, fallback_to_forecast: src.fallback_to_forecast === true, sun: okId(src.sun) ? src.sun : 'sun.sun', items }, warnings };
+  return { config: { sensors, weather, tiles, days, title: str(src.title) || '', scene_fallback: src.scene_fallback !== false, fallback_to_forecast: src.fallback_to_forecast === true, sun: okId(src.sun) ? src.sun : 'sun.sun', items }, warnings };
 }
 
 // ---------------------------------------------------------------- clasificarea scenei
@@ -98,11 +99,11 @@ export function classifyScene({ tempC = null, rainMmh = null, rainOn = null, win
   const sky = precip !== 'none' || bolt ? 'cloudy' : skyOf(cond);
   let label;
   if (bolt) label = precip !== 'none' ? t('Furtună cu ploaie') : t('Furtună');
+  else if (cond === 'hail') label = t('Grindină');   // înainte de ploaie: grindina se desenează ca ploaie torențială, dar se numește grindină
   else if (precip !== 'none') label = t(WORD[precip][intensity - 1]);
-  else if (cond === 'hail') label = t('Grindină');
   else if (sky === 'clear' && night) label = t('Cer senin');
   else label = cond ? t(COND_RO[cond] || 'Noros') : '—';
-  if (wind >= 2 && precip === 'none' && !bolt && sky !== 'fog') label = wind === 3 ? t('Vânt puternic') : (cond ? label + t(' · vânt') : t('Vânt'));
+  if (wind >= 2 && precip === 'none' && !bolt && sky !== 'fog') label = wind === 3 ? t('Vânt puternic') : (cond && !/^windy/.test(cond) ? label + t(' · vânt') : cond ? label : t('Vânt'));   // „windy” se numește deja „Vânt”: fără „Vânt · vânt”
   else if (wind >= 2 && precip !== 'none') label += wind === 3 ? t(' · vânt puternic') : t(' · vânt');
   return { precip, intensity, wind, sky, night: !!night, bolt, label, fromForecast };
 }

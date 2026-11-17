@@ -1,6 +1,7 @@
 // src/energy.mjs — cardurile de energie: flux (solar / rețea / baterie → consumatori) și baterie.
 // Funcții PURE: model (din config + hass), geometrie și șabloane HTML/SVG. Fără DOM, fără rețea.
 import { t } from './i18n.mjs';
+import { str } from './config.mjs';
 import { esc } from './render.mjs';
 import { iconSvg } from './icons.mjs';
 import { formatNumber } from './state.mjs';
@@ -82,7 +83,7 @@ export function normalizeFlowConfig(cfg) {
     if (!okId(o.entity)) { warnings.push(t('Flux: „{k}” are entity_id lipsă sau invalid.', { k: key })); continue; }
     items.push({ kind: 'sunnote', entity: o.entity, name: o.label !== undefined ? String(o.label) : o.name !== undefined ? String(o.name) : src.sun_labels === false ? '' : label, icon: o.icon || icon });
   }
-  return { items, title: src.title ? String(src.title) : '', warnings };
+  return { items, title: str(src.title) || '', warnings };
 }
 
 /**
@@ -197,7 +198,7 @@ export function normalizeBatteryConfig(cfg) {
   const cfgOut = {
     soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, charge_eta: src.charge_eta === 'now' ? 'now' : 'avg', runtime_while_charging: src.runtime_while_charging === true || src.runtime_while_charging === 'true', load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
     capacity_kwh: num('capacity_kwh', 0, 0.1, 1000), reserve_pct: num('reserve_pct', 20, 0, 100), shutdown_pct: num('shutdown_pct', 10, 0, 100),
-    title: src.title ? String(src.title) : t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
+    title: str(src.title) || t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
   };
   if (cfgOut.shutdown_pct > cfgOut.reserve_pct) warnings.push(t('Baterie: „shutdown_pct” e peste „reserve_pct”; le-am inversat.'));
   if (cfgOut.shutdown_pct > cfgOut.reserve_pct) { const t = cfgOut.shutdown_pct; cfgOut.shutdown_pct = cfgOut.reserve_pct; cfgOut.reserve_pct = t; }
@@ -388,7 +389,7 @@ export function normalizeBatteriesConfig(cfg) {
   });
   if (items.length > 12) { items.length = 12; warnings.push(t('Baterii: maximum 12; restul sunt ignorate.')); }
   const n = (k, d) => (Number.isFinite(Number(src[k])) && src[k] >= 0 && src[k] <= 100 ? Number(src[k]) : d);
-  return { items, title: src.title ? String(src.title) : 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', auto: normalizeAutoBatteries(src.auto), only_low: src.only_low === true, warnings };
+  return { items, title: str(src.title) || 'Baterii dispozitive', warn_pct: n('warn_pct', 20), low_pct: n('low_pct', 10), sort: src.sort === 'none' ? 'none' : 'asc', auto: normalizeAutoBatteries(src.auto), only_low: src.only_low === true, warnings };
 }
 
 export function buildBatteriesModel(config, hass) {

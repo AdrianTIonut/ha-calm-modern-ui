@@ -1,6 +1,7 @@
 // src/graph-card.mjs — ccu-graph-card (folosește funcțiile de date din graph-data.mjs).
 // Istoric HA: callWS history/history_during_period → { entity_id: [{ s, lu }] } (lu în SECUNDE). SVG fără biblioteci, culori din tokeni.
 import { t } from './i18n.mjs';
+import { str } from './config.mjs';
 import { niceScale, formatLabel, formatNumber, formatTimeLabel } from './graph-data.mjs';
 import { colorVars } from './presets.mjs';
 import { esc } from './render.mjs';
@@ -83,7 +84,7 @@ export function normalizeGraphConfig(cfg) {
   const tabs = (Array.isArray(src.tabs) ? src.tabs : []).filter((t) => rangeHours(t) > 0).slice(0, 4);
   const height = Number.isFinite(Number(src.height)) && src.height >= 60 && src.height <= 400 ? Number(src.height) : 0;
   const refresh = Number.isFinite(Number(src.refresh_minutes)) && src.refresh_minutes >= 1 && src.refresh_minutes <= 60 ? Number(src.refresh_minutes) : 5;
-  return { config: { ...src, series, range, tabs, height, refresh_minutes: refresh, legend: src.legend !== false, timeline, title: src.title ? String(src.title) : '' }, warnings };
+  return { config: { ...src, series, range, tabs, height, refresh_minutes: refresh, legend: src.legend !== false, timeline, title: str(src.title) || '' }, warnings };
 }
 
 // ---- axa X: ore rotunjite ----
