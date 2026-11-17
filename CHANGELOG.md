@@ -1,5 +1,9 @@
 # Istoric versiuni
 
+## 0.9.6
+- **Înregistrare în HACS / Marketplace.** Pregătim cererea de includere în lista oficială HACS: am adăugat validarea HACS Action în repo și un release nou, ca să treacă verificările. **Cod neschimbat, nu trebuie să faci nimic**; dacă actualizezi, nu vei observa nicio diferență.
+- *English:* **Registering with HACS / Marketplace.** We are submitting the repository for the official HACS list: the HACS Action validation is now part of the repo, and this release follows it, as the review requires. **No code changes. You do not need to do anything**; if you update, you will see no difference.
+
 ## 0.9.5
 - **Chips: ordine după activare.** `sort: true` (bifa *Ordonează după momentul activării* din editor) pune chips-urile în ordinea în care s-au activat (`last_changed`), cel mai vechi primul; cele care nu mai încap trec pe rândul următor. Cuprinde și gunoiul, bateriile slabe.
 - **Chips inactive în editor.** În editorul cardului și în modul de editare al dashboardului, chips-urile ascunse (`hide_off`, `show_if`) se văd estompate, cu chenar punctat. Pe dashboard rămân ascunse.
