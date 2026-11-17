@@ -94,6 +94,7 @@ const CCU_THEME = `
 .ccu-btn:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 .ccu-btn:active { transform: scale(.985); background: var(--ccu-gloss), var(--ccu-surface-2); }
 .ccu-ico { display: grid; place-items: center; color: color-mix(in srgb, var(--ccu-text) 78%, var(--ccu-muted)); width: var(--ico, 26px); height: var(--ico, 26px); transition: color .25s ease, filter .25s ease; flex: none; position: relative; z-index: 1; }
+.ccu-ico ha-icon.ccu-hai { --mdc-icon-size: var(--ico, 26px); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: inherit; }
 .ccu-ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
 /* accent umplut discret în iconițe (geam, lichid, nivel de baterie…): aceeași culoare, opacitate mică, deci dă volum fără să schimbe contrastul */
 .ccu-ico svg .fl { fill: currentColor; fill-opacity: .2; }
@@ -2416,29 +2417,45 @@ const DOMAIN = {
 };
 
 /** Numele iconiței proprii pentru un nume (`mdi:fan`, `fan`) și/sau o entitate (`light.x`). Mereu o cheie din ICONS. */
+function ownKey(name) {
+  if (typeof name !== 'string' || !name) return '';
+  const n = name.trim().toLowerCase();
+  if (ICONS[n]) return n;
+  const m = n.startsWith('mdi:') ? n.slice(4) : n;
+  return MDI[m] || (ICONS[m] ? m : '');
+}
+
+/**
+ * Iconițe pe care cardul nu le are în setul propriu (orice `mdi:…`, `phu:…` etc. din selectorul HA) se desenează cu elementul `<ha-icon>`
+ * al lui Home Assistant, ca să funcționeze toate, nu doar cele ~90 proprii. Doar în HA (unde `ha-icon` există); în rest (teste, capturi) rămâne iconița de rezervă.
+ */
+const NATIVE_RE = /^[a-z0-9_]+:[a-z0-9_-]+$/;
+function nativeIcon(name) {
+  if (typeof name !== 'string' || ownKey(name)) return '';
+  const n = name.trim().toLowerCase();
+  return NATIVE_RE.test(n) && typeof customElements !== 'undefined' && customElements.get('ha-icon') ? n : '';
+}
+
 function iconKey(name, entityId) {
-  if (typeof name === 'string' && name) {
-    const n = name.trim().toLowerCase();
-    if (ICONS[n]) return n;
-    const m = n.startsWith('mdi:') ? n.slice(4) : n;
-    if (MDI[m]) return MDI[m];
-    if (ICONS[m]) return m;
-  }
+  const own = ownKey(name);
+  if (own) return own;
   const dom = typeof entityId === 'string' ? entityId.split('.')[0] : '';
   return DOMAIN[dom] || 'circle';
 }
 
 /** Șirul SVG pentru o iconiță (niciodată gol). */
 function iconSvg(name, entityId) {
+  const nat = nativeIcon(name);
+  if (nat) return `<ha-icon class="ccu-hai" icon="${nat}"></ha-icon>`;
   return ICONS[iconKey(name, entityId)];
 }
 
 /** Clasa de animație implicită a iconiței sau '' (config.animations === false → ''). */
 function iconAnim(name, entityId, enabled = true) {
-  return enabled ? (DEFAULT_ANIM[iconKey(name, entityId)] || '') : '';
+  return enabled && !nativeIcon(name) ? (DEFAULT_ANIM[iconKey(name, entityId)] || '') : '';
 }
 
-return { ICONS, DEFAULT_ANIM, iconKey, iconSvg, iconAnim };
+return { ICONS, DEFAULT_ANIM, nativeIcon, iconKey, iconSvg, iconAnim };
 })();
 
 __m["presets"] = (() => {

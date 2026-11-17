@@ -89,6 +89,7 @@ export const CCU_THEME = `
 .ccu-btn:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 .ccu-btn:active { transform: scale(.985); background: var(--ccu-gloss), var(--ccu-surface-2); }
 .ccu-ico { display: grid; place-items: center; color: color-mix(in srgb, var(--ccu-text) 78%, var(--ccu-muted)); width: var(--ico, 26px); height: var(--ico, 26px); transition: color .25s ease, filter .25s ease; flex: none; position: relative; z-index: 1; }
+.ccu-ico ha-icon.ccu-hai { --mdc-icon-size: var(--ico, 26px); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: inherit; }
 .ccu-ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
 /* accent umplut discret în iconițe (geam, lichid, nivel de baterie…): aceeași culoare, opacitate mică, deci dă volum fără să schimbe contrastul */
 .ccu-ico svg .fl { fill: currentColor; fill-opacity: .2; }

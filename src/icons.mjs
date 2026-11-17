@@ -167,24 +167,40 @@ const DOMAIN = {
 };
 
 /** Numele iconiței proprii pentru un nume (`mdi:fan`, `fan`) și/sau o entitate (`light.x`). Mereu o cheie din ICONS. */
+function ownKey(name) {
+  if (typeof name !== 'string' || !name) return '';
+  const n = name.trim().toLowerCase();
+  if (ICONS[n]) return n;
+  const m = n.startsWith('mdi:') ? n.slice(4) : n;
+  return MDI[m] || (ICONS[m] ? m : '');
+}
+
+/**
+ * Iconițe pe care cardul nu le are în setul propriu (orice `mdi:…`, `phu:…` etc. din selectorul HA) se desenează cu elementul `<ha-icon>`
+ * al lui Home Assistant, ca să funcționeze toate, nu doar cele ~90 proprii. Doar în HA (unde `ha-icon` există); în rest (teste, capturi) rămâne iconița de rezervă.
+ */
+const NATIVE_RE = /^[a-z0-9_]+:[a-z0-9_-]+$/;
+export function nativeIcon(name) {
+  if (typeof name !== 'string' || ownKey(name)) return '';
+  const n = name.trim().toLowerCase();
+  return NATIVE_RE.test(n) && typeof customElements !== 'undefined' && customElements.get('ha-icon') ? n : '';
+}
+
 export function iconKey(name, entityId) {
-  if (typeof name === 'string' && name) {
-    const n = name.trim().toLowerCase();
-    if (ICONS[n]) return n;
-    const m = n.startsWith('mdi:') ? n.slice(4) : n;
-    if (MDI[m]) return MDI[m];
-    if (ICONS[m]) return m;
-  }
+  const own = ownKey(name);
+  if (own) return own;
   const dom = typeof entityId === 'string' ? entityId.split('.')[0] : '';
   return DOMAIN[dom] || 'circle';
 }
 
 /** Șirul SVG pentru o iconiță (niciodată gol). */
 export function iconSvg(name, entityId) {
+  const nat = nativeIcon(name);
+  if (nat) return `<ha-icon class="ccu-hai" icon="${nat}"></ha-icon>`;
   return ICONS[iconKey(name, entityId)];
 }
 
 /** Clasa de animație implicită a iconiței sau '' (config.animations === false → ''). */
 export function iconAnim(name, entityId, enabled = true) {
-  return enabled ? (DEFAULT_ANIM[iconKey(name, entityId)] || '') : '';
+  return enabled && !nativeIcon(name) ? (DEFAULT_ANIM[iconKey(name, entityId)] || '') : '';
 }

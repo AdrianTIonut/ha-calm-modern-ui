@@ -167,7 +167,7 @@ entities:
   - light.bucatarie                      # formă scurtă
   - entity: sensor.lab
     name: Lab
-    icon: mdi:flask                      # iconiță proprie (mdi:… se potrivește automat)
+    icon: mdi:flask                      # merge orice iconiță din selectorul Home Assistant (mdi:…); cardul o desenează pe a lui pentru cele uzuale
     icon_color: yellow                   # green|yellow|orange|blue|cyan|red|white
     size: m
     shape: chamfer                       # chamfer | round | pill | square

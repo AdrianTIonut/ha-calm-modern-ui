@@ -1,5 +1,9 @@
 # Istoric versiuni
 
+## 0.9.8
+- **Reparat: iconița aleasă în editor nu se vedea.** Cardul are propriul set de ~90 de iconițe; o iconiță din selectorul Home Assistant care nu era în acest set era ignorată în tăcere (butonul rămânea cu iconița implicită, de exemplu becul la o lumină). Acum orice iconiță (`mdi:…` și celelalte pachete) se desenează cu iconița nativă a lui Home Assistant, iar cele uzuale rămân cele proprii, animate.
+- *English:* **Fixed: the icon chosen in the editor did not show.** The card has its own set of about 90 icons; an icon from the Home Assistant picker that was not in that set was silently ignored (the button kept the default icon, for example the bulb for a light). Now any icon (`mdi:…` and the other icon packs) is drawn with Home Assistant's native icon, while the common ones stay the card's own animated icons.
+
 ## 0.9.7
 - **Reparat: editorul vizual putea șterge elemente dintr-o listă.** Rândurile care aveau doar o entitate (`- switch.x`) se pierdeau la prima modificare a unui alt rând din aceeași listă (de exemplu la schimbarea unei iconițe), iar în config rămâneau doar rândurile cu nume sau iconiță. Acum toate rândurile se păstrează. Dacă ți s-a întâmplat, restaurează cardul din istoricul dashboardului (Undo / versiunea salvată) sau adaugă din nou entitățile.
 - *English:* **Fixed: the visual editor could delete items from a list.** Rows that held only an entity (`- switch.x`) were dropped the first time you edited another row of the same list (for example when changing an icon), and only rows with a name or icon stayed in the config. All rows are now kept. If this happened to you, restore the card from the dashboard history or add the entities again.

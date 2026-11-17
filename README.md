@@ -186,7 +186,7 @@ entities:
   - light.kitchen                        # short form
   - entity: sensor.lab
     name: Lab
-    icon: mdi:flask                      # own icon (mdi:… names are matched automatically)
+    icon: mdi:flask                      # any icon of the Home Assistant picker works (mdi:…); the card draws its own for the common ones
     icon_color: yellow                   # green|yellow|orange|blue|cyan|red|white
     size: m
     shape: chamfer                       # chamfer | round | pill | square

@@ -30,6 +30,13 @@ t('iconKey: toate valorile MDI duc la chei existente', () => {
   return true;
 });
 t('iconSvg întoarce mereu SVG', () => iconSvg('mdi:nimic').startsWith('<svg') || 'gol');
+// în HA (unde există <ha-icon>) un nume necunoscut se desenează cu iconița nativă, iar cele proprii rămân proprii
+globalThis.customElements = { get: (n) => (n === 'ha-icon' ? class {} : undefined) };
+t('iconiță necunoscută în HA → <ha-icon>', () => iconSvg('mdi:access-point-plus') === '<ha-icon class="ccu-hai" icon="mdi:access-point-plus"></ha-icon>' || iconSvg('mdi:access-point-plus'));
+t('iconiță proprie în HA rămâne SVG', () => iconSvg('mdi:lightbulb').startsWith('<svg') && iconSvg('fan').startsWith('<svg'));
+t('nume invalid nu devine <ha-icon>', () => iconSvg('mdi:<script>').startsWith('<svg') && iconSvg('xx').startsWith('<svg'));
+t('iconiță nativă fără animație implicită', () => iconAnim('mdi:access-point-plus', 'light.x') === '');
+delete globalThis.customElements;
 t('iconAnim: ventilator = a-fan (se învârte grupul .rot)', () => eq(iconAnim('mdi:fan'), 'a-fan') && ICONS.fan.includes('class="rot'));
 t('iconiță Audi: 4 inele, mdi:logo-audi', () => ICONS.audi.split('<circle').length === 5 && iconKey('mdi:logo-audi') === 'audi');
 t('iconAnim: animații oprite → ""', () => eq(iconAnim('mdi:fan', undefined, false), ''));
