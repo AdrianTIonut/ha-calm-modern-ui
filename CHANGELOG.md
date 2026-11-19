@@ -1,5 +1,9 @@
 # Istoric versiuni
 
+## 0.9.10
+- **Calm Modern UI e în lista oficială HACS.** Îl găsești căutând „Calm Modern UI” în HACS, fără să mai adaugi repository-ul personalizat (pașii rămân în README pentru cine nu îl vede încă). **Cod neschimbat, nu trebuie să faci nimic.**
+- *English:* **Calm Modern UI is in the official HACS list.** Search for “Calm Modern UI” in HACS; the custom repository steps are no longer needed (they stay in the README for anyone who does not see it yet). **No code changes, you do not need to do anything.**
+
 ## 0.9.9
 - **Chips: valoarea nu se mai dublează.** Un chip cu `show_state: true` și `text_map` (fără `secondary`) arăta „Spin · Spin”; acum arată „Spin”. Cu `secondary` dat, rămâne „Spin · 38 min”.
 - **Titlu sau nume scris greșit în YAML** (de exemplu `title: {}` sau `name: [...]`) nu mai apare ca „[object Object]” / „NaN” pe card; titlul cade pe cel implicit, iar numele pe numele prietenos al entității.

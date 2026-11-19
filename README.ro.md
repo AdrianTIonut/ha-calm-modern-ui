@@ -2,7 +2,7 @@
 
 Română · [English](README.md)
 
-[![HACS custom](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://hacs.xyz/docs/faq/custom_repositories/) [![release](https://img.shields.io/github/v/release/AdrianTIonut/ha-calm-modern-ui?style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases) ![downloads](https://img.shields.io/github/downloads/AdrianTIonut/ha-calm-modern-ui/total?style=flat-square) [![build](https://img.shields.io/github/actions/workflow/status/AdrianTIonut/ha-calm-modern-ui/ci.yml?branch=main&style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/actions) ![license](https://img.shields.io/github/license/AdrianTIonut/ha-calm-modern-ui?style=flat-square)
+[![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=flat-square)](https://hacs.xyz) [![release](https://img.shields.io/github/v/release/AdrianTIonut/ha-calm-modern-ui?style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases) ![downloads](https://img.shields.io/github/downloads/AdrianTIonut/ha-calm-modern-ui/total?style=flat-square) [![build](https://img.shields.io/github/actions/workflow/status/AdrianTIonut/ha-calm-modern-ui/ci.yml?branch=main&style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/actions) ![license](https://img.shields.io/github/license/AdrianTIonut/ha-calm-modern-ui?style=flat-square)
 
 Set de carduri pentru Home Assistant, într-un stil calm și modern: plăci sticloase, verde pentru „activ”, albastru pentru informație,
 portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără rețea, fără biblioteci externe, fără `INTERNET` către terți.
@@ -88,7 +88,9 @@ flow_animation: auto    # cardul de flux: auto | on | off (punctele care curg pe
 3. La fiecare actualizare a fișierului schimbă numărul din `?v=` (altfel browserul ține varianta veche).
 4. Reîncarcă pagina (Ctrl+F5 / „Reîncarcă forțat” în aplicația mobilă).
 
-HACS: **Repository-uri personalizate** → `https://github.com/adriantionut/ha-calm-modern-ui`, categoria **Dashboard**; fișierul servit e `ccu.js`.
+**HACS (recomandat):** caută **Calm Modern UI** în HACS și descarcă-l, apoi reîncarcă browserul (Ctrl+F5). HACS adaugă singur resursa; `hacs.json` este inclus, iar fișierul servit e `ccu.js`.
+
+Nu apare încă în HACS-ul tău (adăugările noi pot dura câteva zile)? Adaugă-l manual: HACS → ⋮ → **Repository-uri personalizate** → `https://github.com/adriantionut/ha-calm-modern-ui`, categoria **Dashboard**.
 
 ## Actualizare
 

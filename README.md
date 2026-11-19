@@ -2,7 +2,7 @@
 
 [Română](README.ro.md) · English
 
-[![HACS custom](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://hacs.xyz/docs/faq/custom_repositories/) [![release](https://img.shields.io/github/v/release/AdrianTIonut/ha-calm-modern-ui?style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases) ![downloads](https://img.shields.io/github/downloads/AdrianTIonut/ha-calm-modern-ui/total?style=flat-square) [![build](https://img.shields.io/github/actions/workflow/status/AdrianTIonut/ha-calm-modern-ui/ci.yml?branch=main&style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/actions) ![license](https://img.shields.io/github/license/AdrianTIonut/ha-calm-modern-ui?style=flat-square)
+[![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=flat-square)](https://hacs.xyz) [![release](https://img.shields.io/github/v/release/AdrianTIonut/ha-calm-modern-ui?style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases) ![downloads](https://img.shields.io/github/downloads/AdrianTIonut/ha-calm-modern-ui/total?style=flat-square) [![build](https://img.shields.io/github/actions/workflow/status/AdrianTIonut/ha-calm-modern-ui/ci.yml?branch=main&style=flat-square)](https://github.com/AdrianTIonut/ha-calm-modern-ui/actions) ![license](https://img.shields.io/github/license/AdrianTIonut/ha-calm-modern-ui?style=flat-square)
 
 A set of custom cards for [Home Assistant](https://www.home-assistant.io/) in a calm, modern style: glassy tiles, green for “active”, blue for information,
 orange for attention. **One JavaScript file** (`ccu.js`), no external libraries, no network access, no telemetry.
@@ -87,10 +87,12 @@ flow_animation: auto    # flow card: auto | on | off (the moving dots on the rib
 
 ### HACS (recommended)
 
-1. HACS → ⋮ → **Custom repositories** → add `https://github.com/adriantionut/ha-calm-modern-ui`, category **Dashboard**.
-2. Install **Calm Modern UI**, then reload the browser (Ctrl+F5, or “force refresh” in the mobile app).
+1. In HACS, search for **Calm Modern UI** and download it.
+2. Reload the browser (Ctrl+F5, or “force refresh” in the mobile app).
 
 HACS adds the resource for you. (Newer versions of Home Assistant call it *Marketplace*: Settings → Marketplace.)
+
+Not listed yet in your HACS (new additions can take a few days to show up)? Add it by hand: HACS → ⋮ → **Custom repositories** → `https://github.com/adriantionut/ha-calm-modern-ui`, category **Dashboard**.
 
 ### Manual
 
