@@ -9,7 +9,7 @@ orange for attention. **One JavaScript file** (`ccu.js`), no external libraries,
 
 Every card can be configured **from the Home Assistant UI** (no YAML needed), speaks **English and Romanian**, and works on phone, tablet and wall panels.
 
-<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.gif" alt="Calm Modern UI on a tablet and a phone, through all 8 themes (invented demo data)">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.png" alt="Calm Modern UI on a tablet and a phone (invented demo data)">
 
 | Card | What it does |
 |---|---|
@@ -30,6 +30,8 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 | `ccu-title-card` | Section title with icon and subtitle |
 
 ## What’s new in 0.10.0
+
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.gif" alt="Calm Modern UI on a tablet and a phone, through all 8 themes (invented demo data)">
 
 - **Two new themes:** `quiet-slate` (calm, contrast-tested, no glow) and `cyberpunk` (Neon Glass: very dark indigo, glass, cyan / magenta / amber / coral). There are now 8 themes.
 - **New options on any card** (all off by default, with a visual-editor field): `scale` and `radius` (size and rounding), `glow`, `night` (night mode by the sun), `font` and `font_css`, `effects` (`rim`, `mark`, `cut`, `streak`, `peak`, `plot`, `bar`, `tile`).

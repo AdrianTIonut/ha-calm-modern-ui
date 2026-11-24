@@ -7,7 +7,7 @@ Română · [English](README.md)
 Set de carduri pentru Home Assistant, într-un stil calm și modern: plăci sticloase, verde pentru „activ”, albastru pentru informație,
 portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără rețea, fără biblioteci externe, fără `INTERNET` către terți.
 
-<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.gif" alt="Calm Modern UI pe tabletă și pe telefon, prin toate cele 8 teme (date demo inventate)">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.png" alt="Calm Modern UI pe tabletă și pe telefon (date demo inventate)">
 
 | Card | Ce face |
 |---|---|
@@ -28,6 +28,8 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 | `ccu-title-card` | Titlu de secțiune cu iconiță și subtitlu |
 
 ## Noutăți în 0.10.0
+
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.gif" alt="Calm Modern UI pe tabletă și pe telefon, prin toate cele 8 teme (date demo inventate)">
 
 - **Două teme noi:** `quiet-slate` (calmă, cu contrast verificat, fără strălucire) și `cyberpunk` (Neon Glass: indigo foarte închis, sticlă, cyan / magenta / chihlimbar / coral). Acum sunt 8 teme.
 - **Opțiuni noi pe orice card** (toate oprite implicit, cu câmp în editorul vizual): `scale` și `radius` (mărime și rotunjire), `glow` (strălucire), `night` (mod noapte după soare), `font` și `font_css`, `effects` (`rim`, `mark`, `cut`, `streak`, `peak`, `plot`, `bar`, `tile`).
