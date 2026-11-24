@@ -7,7 +7,7 @@ Română · [English](README.md)
 Set de carduri pentru Home Assistant, într-un stil calm și modern: plăci sticloase, verde pentru „activ”, albastru pentru informație,
 portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără rețea, fără biblioteci externe, fără `INTERNET` către terți.
 
-<img src="docs/img/devices.gif" alt="Calm Modern UI pe tabletă și pe telefon, prin toate cele 8 teme (date demo inventate)">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.gif" alt="Calm Modern UI pe tabletă și pe telefon, prin toate cele 8 teme (date demo inventate)">
 
 | Card | Ce face |
 |---|---|
@@ -41,18 +41,18 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 ## Galerie
 
 <table>
-<tr><td valign="top"><img src="docs/img/hero.png" width="380" alt="hero"></td><td valign="top"><img src="docs/img/buttons.png" width="380" alt="buttons"></td></tr>
-<tr><td valign="top"><img src="docs/img/chips.png" width="380" alt="chips"></td><td valign="top"><img src="docs/img/controls.png" width="380" alt="controls"></td></tr>
-<tr><td valign="top"><img src="docs/img/controls-more.png" width="380" alt="controls-more"></td><td valign="top"><img src="docs/img/radio.png" width="380" alt="radio"></td></tr>
-<tr><td valign="top"><img src="docs/img/remote.png" width="380" alt="remote"></td><td valign="top"><img src="docs/img/flow.png" width="380" alt="flow"></td></tr>
-<tr><td valign="top"><img src="docs/img/battery.png" width="380" alt="battery"></td><td valign="top"><img src="docs/img/graph.png" width="380" alt="graph"></td></tr>
-<tr><td valign="top"><img src="docs/img/weather.png" width="380" alt="weather"></td><td valign="top"><img src="docs/img/weather-rain.png" width="380" alt="weather-rain"></td></tr>
-<tr><td valign="top"><img src="docs/img/people.png" width="380" alt="people"></td><td valign="top"><img src="docs/img/vehicles.png" width="380" alt="vehicles"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/hero.png" width="380" alt="hero"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/buttons.png" width="380" alt="buttons"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/chips.png" width="380" alt="chips"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/controls.png" width="380" alt="controls"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/controls-more.png" width="380" alt="controls-more"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/radio.png" width="380" alt="radio"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/remote.png" width="380" alt="remote"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/flow.png" width="380" alt="flow"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/battery.png" width="380" alt="battery"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/graph.png" width="380" alt="graph"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/weather.png" width="380" alt="weather"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/weather-rain.png" width="380" alt="weather-rain"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/people.png" width="380" alt="people"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/vehicles.png" width="380" alt="vehicles"></td></tr>
 
-<img src="docs/img/hero.png" width="360" alt="header and hero tile">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/hero.png" width="360" alt="header and hero tile">
 
-<img src="docs/img/nav.png" width="420" alt="bottom menu">
-<tr><td valign="top"><img src="docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/nav.png" width="420" alt="bottom menu">
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
 </table>
 
 ## Dashboard exemplu
@@ -60,18 +60,18 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 Un dashboard complet pe care îl poți lipi în Home Assistant: o pagină pentru **tabletă** și una pentru **telefon**, cu aceeași bară de jos pe fiecare pagină (Home duce la pagina dispozitivului pe care îl ții, iar o apăsare lungă sare la celălalt; telefonul arată 5 butoane, tableta toate 9). Toate entitățile și numele din el sunt inventate: înlocuiește-le cu ale tale. Fișier: [`examples/dashboard-calm.yaml`](examples/dashboard-calm.yaml) (modul de folosire e în primele rânduri din fișier).
 
 <table>
-<tr><td valign="top"><img src="docs/img/dashboard-tablet.png" width="620" alt="dashboard exemplu pe tabletă"></td><td valign="top"><img src="docs/img/dashboard-phone.png" width="250" alt="dashboard exemplu pe telefon"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/dashboard-tablet.png" width="620" alt="dashboard exemplu pe tabletă"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/dashboard-phone.png" width="250" alt="dashboard exemplu pe telefon"></td></tr>
 </table>
 
 ## Iconițe animate
 
 Iconițele se mișcă doar când are sens. **Aparatele** se mișcă doar cât sunt pornite: ventilatorul unui aparat de aer condiționat se învârte cât timp chiar răcește, tamburul mașinii de spălat se rotește, becul strălucește, centrala pâlpâie, fulgerul de încărcare, pompa sau boxa pulsează, soarele strălucește. **Iconițele de vreme** (soare, lună, nori, ploaie, ninsoare, lapoviță, grindină, furtună, ceață, vânt) se mișcă mereu. Animațiile se opresc la „reduce motion” (sau cu `animations: false`), iar `motion: calm` le păstrează scurte (vezi mai jos).
 
-<img src="docs/img/animated-icons.png" width="472" alt="animated icons">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/animated-icons.png" width="472" alt="animated icons">
 
 ### Mișcare și baterie
 
-<img src="docs/img/motion.png" width="696" alt="motion: full continuu, motion: calm se oprește după câteva secunde">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/motion.png" width="696" alt="motion: full continuu, motion: calm se oprește după câteva secunde">
 
 Animațiile continue țin ecranul ocupat, ceea ce consumă baterie pe telefon. Fiecare card are opțiunea `motion` (și în editorul vizual, la *Aspect și limbă*):
 
@@ -122,9 +122,9 @@ liste cu ↑ ↓ ✕ și o previzualizare în direct. YAML-ul rămâne disponibi
 
 Opt teme incluse (`green` e implicită; `quiet-slate` e varianta calmă, cu contrast verificat și fără strălucire; `cyberpunk` e „Neon Glass”). Orice card acceptă `preset:` și `colors:`; toate culorile fiecărei teme sunt în [docs/COLORS.md](docs/COLORS.md).
 
-<img src="docs/img/themes.png" alt="The six themes">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/themes.png" alt="The six themes">
 
-<img src="docs/img/palette.png" alt="Color palette" width="700">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/palette.png" alt="Color palette" width="700">
 
 Suprascrie orice rol pe un card:
 
@@ -252,7 +252,7 @@ Implicit: lumini, prize, lacăte, jaluzele, scene → `toggle`; restul → `more
 
 ## ccu-buttons-card
 
-<img src="docs/img/buttons.png" width="360" alt="buttons">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/buttons.png" width="360" alt="buttons">
 
 ```yaml
 type: custom:ccu-buttons-card
@@ -323,7 +323,7 @@ entities:
 
 ## ccu-chips-card
 
-<img src="docs/img/chips.png" width="360" alt="chips">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/chips.png" width="360" alt="chips">
 
 ```yaml
 type: custom:ccu-chips-card
@@ -395,7 +395,7 @@ items:
 
 ## ccu-graph-card
 
-<img src="docs/img/graph.png" width="360" alt="graph">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/graph.png" width="360" alt="graph">
 
 ```yaml
 type: custom:ccu-graph-card
@@ -464,7 +464,7 @@ O serie a cărei entitate nu are stare numerică și nici pornit / oprit nu dese
 
 ## ccu-flow-card
 
-<img src="docs/img/flow-animated.png" width="360" alt="flux de energie cu punctele care curg pe panglici">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/flow-animated.png" width="360" alt="flux de energie cu punctele care curg pe panglici">
 
 ```yaml
 type: custom:ccu-flow-card
@@ -485,7 +485,7 @@ Punctele curg pe panglici în sensul energiei (spre nod sau spre un consumator).
 
 ## ccu-battery-card
 
-<img src="docs/img/battery.png" width="360" alt="battery">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/battery.png" width="360" alt="battery">
 
 ```yaml
 type: custom:ccu-battery-card
@@ -553,7 +553,7 @@ auto: { threshold: 20, exclude: [invertor, audi], include: [sensor.alta_baterie]
 
 ## ccu-people-card
 
-<img src="docs/img/people.png" width="360" alt="people">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/people.png" width="360" alt="people">
 
 ```yaml
 type: custom:ccu-people-card
@@ -567,7 +567,7 @@ Poza vine din `entity_picture` și e acceptată doar dacă e o cale relativă la
 
 ## ccu-weather-card
 
-<img src="docs/img/weather.png" width="360" alt="weather">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/weather.png" width="360" alt="weather">
 
 Valorile curente (temperatură, umiditate, vânt, ploaie, presiune, UV, radiație) vin **din senzorii stației tale**, nu din prognoză;
 prognoza pe zile vine din entitatea `weather.*` (serviciul `weather.get_forecasts`, tip `daily`, reîmprospătat la 30 de minute).
@@ -702,7 +702,7 @@ icon: pot
 
 ## ccu-controls-card
 
-<img src="docs/img/controls.png" width="360" alt="controls">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/controls.png" width="360" alt="controls">
 
 Controale pentru ce nu se rezolvă cu o atingere: termostat, lumină cu luminozitate, ventilator, media player, slider de număr și selector. `kind` se deduce din domeniu.
 
@@ -723,7 +723,7 @@ Atingerea titlului aprinde/stinge; apăsarea lungă nu e necesară (butonul rotu
 
 ## ccu-vehicle-card
 
-<img src="docs/img/vehicles.png" width="360" alt="vehicles">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/vehicles.png" width="360" alt="vehicles">
 
 Termene pe mașină (RCA, ITP, rovinietă, revizie / ulei): zile rămase, bară care devine portocalie cu `alert_days` zile înainte și roșie după dată, iar datele se schimbă chiar din card.
 
@@ -743,7 +743,7 @@ Chip pe cardul de chips-uri: `deadlines: { alert_days: 3, vehicles: [...], tap_a
 
 ## ccu-radio-card
 
-<img src="docs/img/radio-ro.png" width="360" alt="radio">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/radio-ro.png" width="360" alt="radio">
 
 ```yaml
 type: custom:ccu-radio-card
@@ -761,7 +761,7 @@ hide: [Custom]                              # ascunde posturile care conțin ace
 
 ## ccu-remote-card
 
-<img src="docs/img/remote.png" width="360" alt="remote">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/remote.png" width="360" alt="remote">
 
 ```yaml
 type: custom:ccu-remote-card
@@ -788,7 +788,7 @@ Volumul și canalele se repetă cât ții apăsat.
 
 ## ccu-radio-card
 
-<img src="docs/img/radio.png" width="360" alt="radio">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/radio.png" width="360" alt="radio">
 
 Player de muzică / radio: ecran cu echalizator, scală de acordaj cu ac, post anterior / următor, play / stop, volum și alegerea boxei.
 

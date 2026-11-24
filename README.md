@@ -9,7 +9,7 @@ orange for attention. **One JavaScript file** (`ccu.js`), no external libraries,
 
 Every card can be configured **from the Home Assistant UI** (no YAML needed), speaks **English and Romanian**, and works on phone, tablet and wall panels.
 
-<img src="docs/img/devices.gif" alt="Calm Modern UI on a tablet and a phone, through all 8 themes (invented demo data)">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/devices.gif" alt="Calm Modern UI on a tablet and a phone, through all 8 themes (invented demo data)">
 
 | Card | What it does |
 |---|---|
@@ -43,18 +43,18 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 ## Gallery
 
 <table>
-<tr><td valign="top"><img src="docs/img/hero.png" width="380" alt="hero"></td><td valign="top"><img src="docs/img/buttons.png" width="380" alt="buttons"></td></tr>
-<tr><td valign="top"><img src="docs/img/chips.png" width="380" alt="chips"></td><td valign="top"><img src="docs/img/controls.png" width="380" alt="controls"></td></tr>
-<tr><td valign="top"><img src="docs/img/controls-more.png" width="380" alt="controls-more"></td><td valign="top"><img src="docs/img/radio.png" width="380" alt="radio"></td></tr>
-<tr><td valign="top"><img src="docs/img/remote.png" width="380" alt="remote"></td><td valign="top"><img src="docs/img/flow.png" width="380" alt="flow"></td></tr>
-<tr><td valign="top"><img src="docs/img/battery.png" width="380" alt="battery"></td><td valign="top"><img src="docs/img/graph.png" width="380" alt="graph"></td></tr>
-<tr><td valign="top"><img src="docs/img/weather.png" width="380" alt="weather"></td><td valign="top"><img src="docs/img/weather-rain.png" width="380" alt="weather-rain"></td></tr>
-<tr><td valign="top"><img src="docs/img/people.png" width="380" alt="people"></td><td valign="top"><img src="docs/img/vehicles.png" width="380" alt="vehicles"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/hero.png" width="380" alt="hero"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/buttons.png" width="380" alt="buttons"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/chips.png" width="380" alt="chips"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/controls.png" width="380" alt="controls"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/controls-more.png" width="380" alt="controls-more"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/radio.png" width="380" alt="radio"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/remote.png" width="380" alt="remote"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/flow.png" width="380" alt="flow"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/battery.png" width="380" alt="battery"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/graph.png" width="380" alt="graph"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/weather.png" width="380" alt="weather"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/weather-rain.png" width="380" alt="weather-rain"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/people.png" width="380" alt="people"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/vehicles.png" width="380" alt="vehicles"></td></tr>
 
-<img src="docs/img/hero.png" width="360" alt="header and hero tile">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/hero.png" width="360" alt="header and hero tile">
 
-<img src="docs/img/nav.png" width="420" alt="bottom menu">
-<tr><td valign="top"><img src="docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/nav.png" width="420" alt="bottom menu">
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/nav.png" width="380" alt="nav"></td><td valign="top"></td></tr>
 </table>
 
 ## Example dashboard
@@ -62,18 +62,18 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 A complete dashboard you can paste into Home Assistant: a **tablet** page and a **phone** page, with the same bottom bar on every page (Home goes to the page of the device you hold, a long press jumps to the other one; a phone shows 5 buttons, a tablet shows all 9). Every entity and name in it is invented: replace them with yours. File: [`examples/dashboard-calm.yaml`](examples/dashboard-calm.yaml) (how to use it is in the first lines of the file).
 
 <table>
-<tr><td valign="top"><img src="docs/img/dashboard-tablet.png" width="620" alt="example dashboard on a tablet"></td><td valign="top"><img src="docs/img/dashboard-phone.png" width="250" alt="example dashboard on a phone"></td></tr>
+<tr><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/dashboard-tablet.png" width="620" alt="example dashboard on a tablet"></td><td valign="top"><img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/dashboard-phone.png" width="250" alt="example dashboard on a phone"></td></tr>
 </table>
 
 ## Animated icons
 
 The icons move only when it makes sense. **Devices** move only while they are on: the fan of an A/C turns while it is actually cooling, a washer drum turns, a bulb glows, a heater flickers, a charging bolt, a pump or a speaker pulses, the sun glows. The **weather icons** (sun, moon, clouds, rain, snow, sleet, hail, storm, fog, wind) always move. Animations stop on “reduce motion” (or with `animations: false`), and `motion: calm` keeps them short (see below).
 
-<img src="docs/img/animated-icons.png" width="472" alt="animated icons">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/animated-icons.png" width="472" alt="animated icons">
 
 ### Motion and battery
 
-<img src="docs/img/motion.png" width="696" alt="motion: full keeps moving, motion: calm stops after a few seconds">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/motion.png" width="696" alt="motion: full keeps moving, motion: calm stops after a few seconds">
 
 Continuous animations keep the screen busy, which costs battery on a phone. Every card has a `motion` option (also in the visual editor, under *Look and language*):
 
@@ -139,9 +139,9 @@ subtitle: Calm Modern UI
 
 Eight built-in themes (`green` is the default; `quiet-slate` is the calm one, contrast-tested and without glow; `cyberpunk` is “Neon Glass”). Any card accepts `preset:` and `colors:`; every color of every theme is listed in [docs/COLORS.md](docs/COLORS.md).
 
-<img src="docs/img/themes.png" alt="The six themes">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/themes.png" alt="The six themes">
 
-<img src="docs/img/palette.png" alt="Color palette" width="700">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/palette.png" alt="Color palette" width="700">
 
 Override any role on a single card (or all of them):
 
@@ -271,7 +271,7 @@ Lights, plugs and fans are switched with `turn_on` / `turn_off` (many relays do 
 
 ### ccu-buttons-card
 
-<img src="docs/img/buttons.png" width="360" alt="buttons">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/buttons.png" width="360" alt="buttons">
 
 ```yaml
 type: custom:ccu-buttons-card
@@ -336,7 +336,7 @@ Groups and alerts (also on chips):
 
 ### ccu-chips-card
 
-<img src="docs/img/chips.png" width="360" alt="chips">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/chips.png" width="360" alt="chips">
 
 ```yaml
 type: custom:ccu-chips-card
@@ -383,7 +383,7 @@ It shows only when something is low: the count (“Low batteries 3”) or, with 
 
 ### ccu-controls-card
 
-<img src="docs/img/controls.png" width="360" alt="controls">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/controls.png" width="360" alt="controls">
 
 ```yaml
 type: custom:ccu-controls-card
@@ -400,7 +400,7 @@ items:
 
 ### ccu-radio-card
 
-<img src="docs/img/radio.png" width="360" alt="radio">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/radio.png" width="360" alt="radio">
 
 ```yaml
 type: custom:ccu-radio-card
@@ -418,7 +418,7 @@ hide: [Custom]                              # hide stations containing these wor
 
 ### ccu-vehicle-card
 
-<img src="docs/img/vehicles.png" width="360" alt="vehicles">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/vehicles.png" width="360" alt="vehicles">
 
 Insurance, inspection, road tax and service deadlines per vehicle: days left, a bar that turns orange `alert_days` before and red after the date, and dates you change from the card itself.
 
@@ -450,7 +450,7 @@ deadlines:
 
 ### ccu-remote-card
 
-<img src="docs/img/remote.png" width="360" alt="remote">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/remote.png" width="360" alt="remote">
 
 ```yaml
 type: custom:ccu-remote-card
@@ -464,7 +464,7 @@ extra:
 
 ### ccu-flow-card
 
-<img src="docs/img/flow-animated.png" width="360" alt="energy flow with the dots flowing along the ribbons">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/flow-animated.png" width="360" alt="energy flow with the dots flowing along the ribbons">
 
 ```yaml
 type: custom:ccu-flow-card
@@ -488,7 +488,7 @@ The dots flow along the ribbons in the direction of the energy (towards the node
 
 ### ccu-battery-card · ccu-batteries-card
 
-<img src="docs/img/battery.png" width="360" alt="battery">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/battery.png" width="360" alt="battery">
 
 ```yaml
 type: custom:ccu-battery-card
@@ -552,7 +552,7 @@ auto: { threshold: 20, exclude: [inverter, car], include: [sensor.some_battery] 
 
 ### ccu-graph-card
 
-<img src="docs/img/graph.png" width="360" alt="graph">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/graph.png" width="360" alt="graph">
 
 ```yaml
 type: custom:ccu-graph-card
@@ -620,7 +620,7 @@ A series whose entity has no numeric state and no on/off state draws nothing (fo
 
 ### ccu-weather-card
 
-<img src="docs/img/weather.png" width="360" alt="weather">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/weather.png" width="360" alt="weather">
 
 Current values come from **your station sensors**, the daily forecast from the `weather.*` entity.
 
@@ -641,7 +641,7 @@ days: 5                               # 1–7
 
 ### ccu-people-card · ccu-header-card · ccu-nav-card · ccu-title-card
 
-<img src="docs/img/people.png" width="360" alt="people">
+<img src="https://raw.githubusercontent.com/AdrianTIonut/ha-calm-modern-ui/main/docs/img/people.png" width="360" alt="people">
 
 ```yaml
 type: custom:ccu-people-card
