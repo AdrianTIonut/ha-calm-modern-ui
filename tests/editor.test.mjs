@@ -1,6 +1,6 @@
 // tests/editor.test.mjs — logica pură a editorului vizual: conversii de config și detectarea automată a senzorilor. Rulare: node tests/editor.test.mjs
 import { setLang } from '../src/i18n.mjs'; setLang('ro');
-import { cleanObj, compactSource, consumerToForm, consumerFromForm, consumerReady, detectEnergy, listRows } from '../src/editor.mjs';
+import { cleanObj, compactSource, consumerToForm, consumerFromForm, consumerReady, detectEnergy, listRows, contentInherit } from '../src/editor.mjs';
 import { normalizeFlowConfig } from '../src/energy.mjs';
 import { runAction } from '../src/actions.mjs';
 
@@ -29,6 +29,18 @@ T('config produs de editor e acceptat de card (fără avertismente)', () => {
   const cfg = { solar: 'sensor.s', grid: { entity: 'sensor.g', invert: true }, battery: { entity: 'sensor.b', soc: 'sensor.soc' }, consumers: [consumerFromForm(consumerToForm({ entity: 'sensor.c', name: 'Casă' }), { entity: 'sensor.c', name: 'Casă' })], stats: [{ entity: 'sensor.d', label: 'Azi' }] };
   const n = normalizeFlowConfig(cfg); return n.warnings.length === 0 && n.items.length === 5 || n.warnings;
 });
+
+import { readFileSync } from 'node:fs';
+T('presetările: lista din editor și din validare vine dintr-o singură sursă (presets.mjs), fără liste scrise de mână', () => {
+  const read = (f) => readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
+  const ed = read('editor.mjs'), cf = read('config.mjs');
+  const literal = /\[\s*'green'\s*,\s*'calm'/;
+  return (ed.includes('SEL(PRESET_NAMES)') && cf.includes('PRESET_NAMES.includes(config.preset)') && !literal.test(ed) && !literal.test(cf)) || 'listă scrisă de mână';
+});
+
+T('contentInherit: implicit = iconiță, nume, valoare da; starea nu; stil punct', () => eq(contentInherit({}), { show_icon: true, show_name: true, show_value: true, show_state: false, state_style: 'dot', wave: false }) || contentInherit({}));
+T('contentInherit: urmează cardul (nume ascuns, stare arătată, stil text)', () => eq(contentInherit({ show_name: false, show_state: true, state_style: 'text' }), { show_icon: true, show_name: false, show_value: true, show_state: true, state_style: 'text', wave: false }) || contentInherit({ show_name: false }));
+T('contentInherit: valoare necunoscută de stil → punct; fără card → implicit', () => contentInherit({ state_style: 'xyz' }).state_style === 'dot' && contentInherit(undefined).show_icon === true || 'valori');
 
 // ---- detectare automată (nume reale dintr-o instalare tipică) ----
 const states = {

@@ -1,4 +1,5 @@
 import { t } from './i18n.mjs';
+import { PRESET_NAMES } from './presets.mjs';
 // src/config.mjs — validare și normalizare config pentru ccu-buttons-card
 
 /**
@@ -43,7 +44,7 @@ export function normalizeConfig(cfg) {
   const config = {
     // implicite
     density: cfg.density ?? 'm',      // xs|s|m|l|xl
-    preset: cfg.preset ?? 'green',     // green|calm|contrast|mono|warm|light
+    preset: cfg.preset ?? 'green',     // vezi PRESET_NAMES (presets.mjs): green|calm|quiet-slate|contrast|mono|warm|light
     animations: normalizeAnimations(cfg.animations, warnings),
     columns: normalizeColumns(cfg.columns),
 
@@ -63,7 +64,7 @@ export function normalizeConfig(cfg) {
   }
 
   // Validare preset
-  if (!['green', 'calm', 'contrast', 'mono', 'warm', 'light'].includes(config.preset)) {
+  if (!PRESET_NAMES.includes(config.preset)) {
     config.preset = 'green';
     warnings.push(t('Preset necunoscut "{v}" → înlocuit cu "green".', { v: cfg.preset }));
   }
@@ -90,6 +91,9 @@ export function normalizeConfig(cfg) {
     }
   }
 
+  // ce se vede pe buton (la nivel de card)
+  cleanContentOpts(config, warnings, t('Card'));
+
   // Setează size și shape implicite pentru entități (punct 8)
   // fără size → size = config.density
   // fără shape → shape = config.shape sau 'chamfer'
@@ -101,6 +105,28 @@ export function normalizeConfig(cfg) {
   }
 
   return { config, warnings };
+}
+
+/**
+ * Opțiunile „ce se vede pe buton”: show_icon / show_name / show_value / show_state (true|false), state_style (dot|text), state_labels ({ on, off, alert, ok, unavailable }).
+ * Se pot da pe card și pe fiecare buton. Valorile invalide se șterg, cu avertisment (cardul continuă cu implicitul).
+ */
+const CONTENT_FLAGS = ['show_icon', 'show_name', 'show_value', 'show_state', 'wave'];
+const STATE_KEYS = ['on', 'off', 'alert', 'ok', 'unavailable'];
+export function cleanContentOpts(obj, warnings, who) {
+  for (const k of CONTENT_FLAGS) {
+    if (obj[k] !== undefined && typeof obj[k] !== 'boolean') { warnings.push(t('{w}: „{k}” trebuie să fie true sau false — ignorat.', { w: who, k })); delete obj[k]; }
+  }
+  if (obj.state_style !== undefined && !['dot', 'text'].includes(obj.state_style)) { warnings.push(t('{w}: stilul stării „{v}” nu există (dot sau text) — ignorat.', { w: who, v: String(obj.state_style).slice(0, 20) })); delete obj.state_style; }
+  if (obj.state_labels !== undefined) {
+    const sl = obj.state_labels, ok = sl && typeof sl === 'object' && !Array.isArray(sl);
+    if (!ok) { warnings.push(t('{w}: state_labels trebuie să fie un obiect cu texte (on, off, alert, ok, unavailable) — ignorat.', { w: who })); delete obj.state_labels; }
+    else {
+      const clean = {};
+      for (const k of STATE_KEYS) if (typeof sl[k] === 'string' && sl[k].trim()) clean[k] = sl[k].trim().slice(0, 40);
+      if (Object.keys(clean).length) obj.state_labels = clean; else delete obj.state_labels;
+    }
+  }
 }
 
 /**
@@ -191,6 +217,9 @@ function normalizeEntity(e, idx) {
     warnings.push(t('Entitate "{e}": formă "{v}" ignorată.', { e: entity.name, v: entity.shape }));
     delete entity.shape;
   }
+
+  // ce se vede pe acest buton (suprascrie cardul)
+  cleanContentOpts(entity, warnings, entity.name);
 
   // secondary text: funcție sau șir (pentru viitor, când vom suporta template)
   // aici îl lăsăm așa cum e (interpretat ulterior în render sau state)

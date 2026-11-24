@@ -9,7 +9,7 @@ orange for attention. **One JavaScript file** (`ccu.js`), no external libraries,
 
 Every card can be configured **from the Home Assistant UI** (no YAML needed), speaks **English and Romanian**, and works on phone, tablet and wall panels.
 
-<img src="docs/img/devices.png" alt="Calm Modern UI on a tablet and a phone (invented demo data)">
+<img src="docs/img/devices.gif" alt="Calm Modern UI on a tablet and a phone, through all 8 themes (invented demo data)">
 
 | Card | What it does |
 |---|---|
@@ -28,6 +28,17 @@ Every card can be configured **from the Home Assistant UI** (no YAML needed), sp
 | `ccu-header-card` | One-line header: icon, up to 3 values (with the battery runtime under the percentage), clock or an outdoor value |
 | `ccu-nav-card` | Bottom navigation for tablet and phone: different pages and buttons per device, long press, badges, conditional buttons, sticky |
 | `ccu-title-card` | Section title with icon and subtitle |
+
+## What’s new in 0.10.0
+
+- **Two new themes:** `quiet-slate` (calm, contrast-tested, no glow) and `cyberpunk` (Neon Glass: very dark indigo, glass, cyan / magenta / amber / coral). There are now 8 themes.
+- **New options on any card** (all off by default, with a visual-editor field): `scale` and `radius` (size and rounding), `glow`, `night` (night mode by the sun), `font` and `font_css`, `effects` (`rim`, `mark`, `cut`, `streak`, `peak`, `plot`, `bar`, `tile`).
+- **Buttons, chips and menu:** choose what is shown (`show_icon`, `show_name`, `show_value`, `show_state`, `labels`), `selected: true` on a button, danger separate from attention (`danger`, `danger_above`, `danger_below`, `badge_style: danger`).
+- **The Solar wave** (`wave: true` on an `xl` button) follows today’s production: the curve, the peak and the glow come from the entity’s history.
+- **Graph:** `icon`, `x_step` (round hours every 3) and `axis_unit: false`; series from an attribute; the temperature axis no longer starts at 0.
+- **Fonts shipped** in the `fonts/` folder (Exo 2, Chakra Petch, Oxanium); download `fonts.zip` from the latest release and unzip it once into `/config/www/ccu/` (so the files are in `/config/www/ccu/fonts/`).
+- **Battery:** the capacity is chosen in the editor (`capacity_source`); “full in” and the autonomy show minutes under an hour.
+- Existing cards do not change without the new options. The full list, with explanations, is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Gallery
 
@@ -126,7 +137,7 @@ subtitle: Calm Modern UI
 
 ## Themes and colours
 
-Six built-in themes (`green` is the default). Any card accepts `preset:` and `colors:`; every color of every theme is listed in [docs/COLORS.md](docs/COLORS.md).
+Eight built-in themes (`green` is the default; `quiet-slate` is the calm one, contrast-tested and without glow; `cyberpunk` is “Neon Glass”). Any card accepts `preset:` and `colors:`; every color of every theme is listed in [docs/COLORS.md](docs/COLORS.md).
 
 <img src="docs/img/themes.png" alt="The six themes">
 
@@ -136,7 +147,7 @@ Override any role on a single card (or all of them):
 
 
 ```yaml
-preset: green        # default. Others: calm, contrast, mono, warm, light
+preset: green        # default. Others: calm, quiet-slate, contrast, mono, warm, light
 colors:              # optional, overrides any colour
   on: '#22c55e'      # active
   alert: '#f59e0b'   # attention
@@ -151,6 +162,91 @@ language: en         # optional; default is the Home Assistant profile language
 
 Only valid colours are accepted (`#hex`, `rgb()`, `hsl()`, `var(--…)`); anything else is ignored with a warning on the card.
 YAML tip: an unquoted `on` becomes `true`; the cards treat it as “on”, but quoting (`"on"`) is the safe form elsewhere.
+
+### Size and corner radius (on every card)
+
+```yaml
+scale: 1.25     # 0.7–1.6; default 1. Makes the whole card bigger / smaller, proportionally (text, icons, buttons)
+radius: 8       # 0–32 px; default 14. Corner radius (0 = square corners)
+```
+
+- **`scale`** is for different screens (a wall tablet, a phone, a screen seen from afar, weaker eyesight). When you enlarge, fewer columns fit, so the grid re-flows by itself. The range is 0.7–1.6; outside it the value is clamped, with a warning on the card.
+- **`radius`** applies to buttons with the `chamfer` and `square` shapes, panels and the header (panels get ~1.3× the radius). The `round` and `pill` shapes stay round.
+- Both are in the visual editor, under “Appearance and language”. Without them the cards look exactly as before.
+
+### Glow and luminous wave
+
+```yaml
+glow: soft      # auto (default, as the theme) | off | soft | full — on every card
+wave: true      # luminous wave on big cards (size: xl); on the card or on each entity
+```
+
+- **`glow`** sets how much the “on” / “attention” states, bulbs and the wave glow. `auto` keeps exactly what the theme defines (the older themes glow as before; `quiet-slate` does not). `off` = none, `soft` = half, `full` = maximum.
+- **`wave`** draws a thin wave with a discreet halo under the value, on `xl` buttons only. The line shows even with `glow: off`; the halo follows `glow`. It moves slowly (“breathes”) and stops with `animations: false` or on “reduce motion”.
+- Lit bulbs use the theme’s `lamp` / `lamp-hi` colors (a discreet amber in `quiet-slate`, the usual yellow elsewhere); change them with `colors: { lamp: '#e0bd86' }`.
+- Both have fields in the visual editor (“Appearance and language” and “What the button shows”). Without them the cards look exactly as before.
+
+### Night mode
+
+```yaml
+night: auto          # off (default) | auto — dims the card when the sun is below the horizon (sun.sun)
+night_dim: 20        # 0–60 %, how much it dims; default 15
+night_entity: binary_sensor.dark   # optional: another entity instead of sun.sun
+```
+
+- Without `night` nothing changes. With `night: auto` the card becomes a little less bright at night (so a wall tablet does not glare) and returns by itself in the day.
+- For another entity, “on”, “night” or “below_horizon” means night. If the entity is missing the card stays as in the day.
+- It is in the visual editor, under “Appearance and language”.
+
+### Danger (red), separate from attention
+
+```yaml
+entities:
+  - entity: sensor.boiler
+    alert_above: 30        # attention (amber in quiet-slate)
+    danger_above: 35       # danger (red); likewise danger_below
+  - entity: binary_sensor.smoke
+    on_as: alert
+    danger: true           # this entity's alert shows as danger
+```
+
+- On buttons and chips. Without these keys nothing changes: an alert stays “attention”, as before.
+- `danger_above` / `danger_below` turn the entity into a danger alert (zero is a valid threshold). `danger: true` makes the alert the entity already had red.
+- In the bottom menu: `badge_style: danger` makes the whole item red while the badge count is above 0.
+- The color comes from the theme (`danger`, the old red by default; a pastel red in `quiet-slate`) and can be changed with `colors: { danger: '#e88f8a' }`. In themes where “attention” is already red (e.g. `calm`) danger just looks stronger.
+- Fields in the visual editor, on each button and chip.
+
+### What chips and the bottom menu show
+
+```yaml
+# ccu-chips-card
+show_icon: true     # false = no icon (on the card or on each chip)
+show_name: true     # false = only the icon / value; the name stays as the aria-label
+# ccu-nav-card
+show_icon: true     # false = text only
+labels: true        # false = icons only
+items:
+  - { icon: home, label: Home, path: /a, show_label: false }   # per-item override (and show_icon)
+```
+
+- If a chip or button would be left empty (no icon, name or value), the icon stays. The menu badge stays visible even without the icon.
+- Without these keys nothing changes. Visual-editor fields, on the card and on each chip / button.
+
+### The `cyberpunk` theme (Neon Glass), fonts and effects
+
+```yaml
+preset: cyberpunk          # very dark indigo, glass, cyan = on, magenta = selected, amber = attention, coral = danger
+font: Exo 2                # Exo 2 | Chakra Petch | Oxanium (shipped), or the name of your own font + font_css
+effects: [rim, mark]       # rim | mark | cut | streak | peak | plot | bar | tile | none; empty = as the chosen theme
+```
+
+- **Effects** (all optional, off in the older themes): `rim` = neon outline lit from the top-left; `mark` = the “//” mark on lit and big cards; `cut` = cut corners on big cards, panels, the header and the bottom menu; `streak` = a light streak along the top edge of active cards; `peak` = a diamond at the wave peak and a white dot at the graph maximum; `plot` = a graph with vertical dashed lines (no horizontal ones) and the left axis; `bar` = the header (label above the value, white icons, clock with an icon) and the bottom menu (icon beside the text, separators, the current item = a glowing pill). `tile` = the “Neon Smart Home UI” style: on tiles icon | separator | name and state, the big value centred below, “//” on all of them, and on the Solar card title and subtitle on one line and a star at the wave peak. `cut` corners are 9 px and the border follows the diagonal (the header and menu use 7 px; the lit row has only its top-left and bottom-right corners cut). The `cyberpunk` theme turns on only the style effects (`rim`, `mark`, `cut`, `streak`, `peak`, `plot`); the format (sizes, layout) stays as in the other themes, so the menu and header fit on a phone. `bar` and `tile` change the layout (menu in a row, tile with a separator) and are added only with `effects:`; `effects:` lets you choose.
+- **Fonts** are in the repository’s `fonts/` folder (Exo 2, Chakra Petch, Oxanium, all SIL Open Font License; they include the letters ă â î ș ț). Download `fonts.zip` from the [latest release](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases/latest) and unzip it into `/config/www/ccu/`, so the files end up in `/config/www/ccu/fonts/` (HACS / Marketplace installs only `ccu.js`, never the fonts; this step is needed even then). Manual installs can copy the repository’s `fonts/` folder instead. The browser then caches them: nothing is downloaded every time and nothing is requested from the internet. Without the files the text uses Inter / the system font.
+- **Your own font:** put the `.woff2` files and a stylesheet with `@font-face` in `/config/www/ccu/fonts/` and write `font: My Font` and `font_css: /local/ccu/fonts/my-sheet.css`. Only addresses starting with `/` or `https://` are accepted.
+- The graph also has `icon:` (an icon in the title, with a separator in the `tile` style), `x_step: 3` (labels `00 03 06 …` every 3 hours, for ranges up to 48 h) and `axis_unit: false` (no unit on the Y axis: `2.0` instead of `2 kW`), a good match for `plot`.
+- **The wave (`wave: true`) follows today’s production:** the curve is drawn from the entity’s history, from the start of today’s production until now, with the peak (diamond / star, the `peak` effect) at the real maximum of the day. The glow grows with the current power relative to the day’s maximum; with no production today it stays a flat, dim line, and after sunset the day’s curve stays but dim. Without history (e.g. in the visual editor) the decorative shape is shown.
+- On a button: `selected: true` shows it as “selected” (magenta in `cyberpunk`). `danger` alerts read “Alert”.
+- Visual-editor fields: “Font” and “Effects” under “Appearance and language”, “Highlighted (selected)” on each button.
 
 ## Actions
 
@@ -199,6 +295,34 @@ entities:
 Sizes: **xs** pill · **s** vertical · **m** horizontal tile · **l** wide row (`toggle: true` = switch) ·
 **xl** hero: big value, `delta: { entity, percent_entity }`, `spark: { hours: 6 }`, `active: true`.
 Powers in W from 1000 up are shown as kW (`auto_kw: false` keeps W).
+
+### What a button shows
+
+Each button can show an **icon, a name, a state line and a value**. Set them on the card (for all buttons) and override them on any single button. Everything is also in the visual editor (the “What the button shows” section; on a button, the “Choose what this button shows” switch).
+
+```yaml
+type: custom:ccu-buttons-card
+show_icon: true        # default true
+show_name: true        # default true
+show_value: true       # default true (the value / secondary text)
+show_state: true       # default false: the “● On” / “○ Off” line
+state_style: dot       # dot = dot + text (default) | text = text only
+state_labels:          # optional: other texts for the states (for example in another language)
+  on: Aprins
+  off: Stins
+  alert: Atenție
+  unavailable: Indisponibil
+entities:
+  - entity: light.kitchen
+    secondary: { entity: sensor.kitchen_temperature }   # “24.6 °C” under the “On” state
+  - entity: sensor.lab
+    show_state: false  # on a button, overrides the card
+```
+
+- With `show_state: true` a button has three lines: **name / state / value**. If you hide a line the button re-lays out (two lines are left) and never drops below the minimum touch size.
+- Numeric sensors (`sensor`, `number`…) are not “on / off”: for them the state line only appears for *Attention*, *OK* and *Unavailable*.
+- When you hide the name or the value, screen readers still get them (`aria-label`: name, state, value).
+- Without these options the buttons look exactly as before.
 
 Groups and alerts (also on chips):
 
@@ -369,7 +493,9 @@ The dots flow along the ribbons in the direction of the energy (towards the node
 ```yaml
 type: custom:ccu-battery-card
 soc: sensor.battery_soc
-capacity_entity: sensor.battery_capacity      # or capacity_kwh: 38.6
+capacity_source: ah                           # where the capacity comes from: kwh | entity | ah (see “Battery capacity” below)
+capacity_ah_entity: number.battery_capacity_ah  # Ah, read from the inverter (or capacity_ah: 942)
+nominal_voltage: 51.2                         # V, for the Ah × V calculation
 load: sensor.load_power                       # for the runtime estimate
 load_entities: [sensor.other_load]            # optional: more loads on the battery, added to `load`
 power: sensor.battery_power                   # optional: + = discharging, − = charging (power_invert: true flips it)
@@ -380,12 +506,28 @@ reserve_pct: 20
 shutdown_pct: 10
 ```
 
+#### Battery capacity: what to enter
+
+The card turns the percentage into kWh with **one number: the energy of the whole battery at 100 %** (the nominal capacity). It is **not** the energy left after the shutdown or reserve levels: the card subtracts those itself. In the editor, *Battery capacity comes from* offers three sources, and only the fields of the chosen one are shown:
+
+| Source (`capacity_source`) | You give | Use it when |
+|---|---|---|
+| **A value I type** (`kwh`) | `capacity_kwh: 48.2` | simplest and safest; the nominal kWh of the battery |
+| **Sensor in kWh** (`entity`) | `capacity_entity: sensor.…` | you have a sensor that reports the nominal kWh |
+| **Ah × nominal voltage** (`ah`) | `capacity_ah_entity` (a sensor or number in Ah) or `capacity_ah`, and `nominal_voltage` (default 51.2 V) | the inverter reports Ah, e.g. Deye: 942 Ah × 51.2 V = **48.2 kWh** |
+
+- With a chosen source the card uses **only** that source. If its value is missing (for example the sensor is `unavailable`) it shows “—” instead of silently taking another field. Without `capacity_source` it behaves as before: the sensor if it has a value, otherwise `capacity_kwh`.
+- **Do not use “estimate” sensors.** Some integrations publish a “battery capacity” that is a learned estimate (for example the Solarman *Battery Capacity* sensor, which stays near one value and is computed from energy counters). It is not the capacity of the percentage scale and made the card show about 20 % too little energy.
+- **Check it yourself:** over a charge of, say, 30 points of the percentage, the energy that went into the battery divided by 0.30 should be close to the number you entered.
+- Example, 48.2 kWh with `reserve_pct: 20` and `shutdown_pct: 10`: with grid the usable band is 80 % × 48.2 = **38.6 kWh** (the 20 % below the reserve are left out, shutdown included); without grid it is 90 % × 48.2 = **43.4 kWh**. The 10 % shutdown and the reserve are levels on the same 0–100 % scale, they are not added.
+
 How the numbers are computed (exactly, from percentages and capacity; rounding only when shown):
 
 - **With grid**: the usable band is `reserve_pct` → 100 %. The card shows the energy in that band, “X kWh of Y kWh”, with Y = (100 − reserve)% × capacity, and the runtime until the reserve at the current load.
 - **Without grid (backup active)**: the band becomes `shutdown_pct` → 100 %, the same “X kWh of Y kWh” and the runtime until the shutdown level. Only then the card shows “Backup active” and the shutdown marker.
 - **The runtime** is the usable energy divided by the current load (`load` plus `load_entities`, summed), as if the charging stopped now. If any of those sensors has no value, no runtime is shown rather than a too-optimistic one.
 - **While charging** (needs `power`) the card shows “Full in”: the time to 100 % at the charging power, taken as the **average of the last 10 minutes** so the number does not jump when a cloud passes (`charge_eta: now` uses the current power instead). The runtime is hidden while charging; `runtime_while_charging: true` shows it as well. Above 99 % “Full in” goes away and the runtime comes back. The same works in the header (`runtime_power`, `runtime_charge_eta`, `runtime_while_charging`).
+- **Durations** (“Full in” and the runtime, on the battery card and under the percentage in the header) are shown in **minutes under one hour** (“~42 min”), as **hours and minutes** up to 10 hours, rounded to 5 minutes (“~1 h 25 min”), and with one decimal from 10 hours on (“~16.2 h”).
 - Change `reserve_pct` (for example 20 → 30) and everything follows. The big percentage is always the real state of charge.
 
 
@@ -449,6 +591,29 @@ series:                       # up to 8; the name is the row label
   - { entity: binary_sensor.bedroom_valve, name: Bedroom, color: yellow }
 ```
 
+**An attribute instead of the state** (`attribute`): a series can read a numeric attribute of the entity, for example the temperature of an air conditioner (`climate` entities have the state `off` / `cool` / `heat`, and the temperatures are attributes). Optional `unit` (for temperatures the unit of Home Assistant is used). Checkbox *Read an attribute instead of the state* in the editor.
+
+```yaml
+type: custom:ccu-graph-card
+title: A/C kitchen, actual vs set (24 h)
+series:
+  - { entity: climate.ac_kitchen, attribute: current_temperature, name: Actual }
+  - { entity: climate.ac_kitchen, attribute: temperature, name: Set, color: yellow }
+```
+
+**Active only while the state is…** (`state_is`): the series is “on” while the state is one of the listed values (comma separated or a list). With the timeline this gives one row per mode of a thermostat, with durations and totals. Checkbox *Active only while the state is…* in the editor.
+
+```yaml
+type: custom:ccu-graph-card
+title: A/C kitchen, mode (24 h)
+timeline: true
+series:
+  - { entity: climate.ac_kitchen, state_is: cool, name: Cooling }
+  - { entity: climate.ac_kitchen, state_is: heat, name: Heating, color: yellow }
+```
+
+(`attribute` and `state_is` do not go together on the same series. Any entity can be used, not only sensors.)
+
 On the timeline each bar shows **how long it ran** (“3 h”, “1 h 25 min”; narrow bars get a short form or none), the right edge shows the **total per row**, periods when the entity was **unavailable** are **hatched amber**, and the axis uses round hours (00:00, 03:00, …). Touch or hover a bar, a hatched gap or an off period to read the exact interval and duration. `hide_durations: true` removes the durations and the totals (checkbox in the editor).
 
 A series whose entity has no numeric state and no on/off state draws nothing (for example a `climate` entity: its state is the mode, not a temperature). Use its temperature sensor instead.
@@ -504,7 +669,7 @@ header:
       icon: battery
       color: ok
       runtime_load: sensor.house_load_power      # the load, as on the battery card (+ runtime_load_entities to add more)
-      runtime_capacity_kwh: 10                   # or runtime_capacity_entity
+      runtime_capacity_kwh: 10                   # or runtime_capacity_entity, or runtime_capacity_ah_entity + runtime_nominal_voltage (with runtime_capacity_source: kwh | entity | ah)
       runtime_reserve_pct: 20
       runtime_power: sensor.battery_power        # optional: while charging it shows “full in …” instead of the runtime
       runtime_charge_eta: avg                    # avg (average of the last 10 min, default) | now

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
 // ordinea contează: un modul vine după cele de care depinde
-const ORDER = ['theme.js', 'i18n.mjs', 'config.mjs', 'state.mjs', 'actions.mjs', 'gestures.mjs', 'icons.mjs', 'presets.mjs', 'render.mjs',
+const ORDER = ['theme.js', 'i18n.mjs', 'presets.mjs', 'config.mjs', 'state.mjs', 'actions.mjs', 'gestures.mjs', 'icons.mjs', 'render.mjs',
   'graph-data.mjs', 'graph-card.mjs', 'energy.mjs', 'weather.mjs', 'controls.mjs', 'radio.mjs', 'vehicles.mjs', 'editor.mjs', 'cards.mjs'];
 const OPTIONAL = new Set();
 

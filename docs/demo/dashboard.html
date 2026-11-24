@@ -17,7 +17,8 @@
 // The example dashboard drawn like a Home Assistant "sections" view, with the fake Home Assistant of the demo (invented data).
 // ?device=tablet | phone picks the view; the page width is the width of the window.
 const q = new URLSearchParams(location.search), device = q.get('device') === 'phone' ? 'phone' : 'tablet', sticky = q.get('sticky') === '1';
-const D = window.CCU_DEMO, hass = D.makeHass('en');
+const LANG = q.get('lang') === 'ro' ? 'ro' : 'en';
+const D = window.CCU_DEMO, hass = D.makeHass(LANG);
 if (Number(q.get('pad'))) document.body.style.paddingTop = Number(q.get('pad')) + 'px';   // room for a status bar / camera island in a device mock-up
 const view = window.CCU_DASHBOARD.views.find((v) => v.path === device);
 const root = document.getElementById('view');
@@ -31,7 +32,7 @@ const pass = (c) => { // `conditional` card: only numeric_state is needed here
 const make = (cfg, into) => {
   if (cfg.type === 'conditional') { if (!(cfg.conditions || []).every(pass)) return; return make({ ...cfg.card, grid_options: cfg.grid_options }, into); }
   const el = document.createElement(cfg.type.replace('custom:', ''));
-  const c = { language: 'en', preset: 'green', device, ...cfg };   // `device` makes the page behave as that device even inside an iframe
+  const c = { language: LANG, preset: 'green', device, ...cfg };   // `device` makes the page behave as that device even inside an iframe
   if (c.type === 'custom:ccu-nav-card' && !sticky) { c.sticky = false; c.spacer = false; }   // for a still full-page screenshot the bar stays at the end of the page; ?sticky=1 keeps it fixed at the bottom of the window
   el.setConfig(c); el.hass = hass;
   el.style.gridColumn = `span ${span(cfg.grid_options && cfg.grid_options.columns)}`;

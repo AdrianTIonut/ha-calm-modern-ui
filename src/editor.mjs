@@ -2,6 +2,7 @@
 // Partea pură (conversii de config, detectare automată) e exportată și testată în Node; clasele DOM se creează doar în browser, prin defineEditors().
 import { t, setLang } from './i18n.mjs';
 import { discoverBatteries } from './energy.mjs';
+import { PRESET_NAMES } from './presets.mjs';
 
 // ---------- logică pură ----------
 /** Scoate valorile goale (șir gol, listă goală, false, undefined) dintr-un obiect de config. */
@@ -123,6 +124,14 @@ const SEL = (values, multiple) => ({ select: { mode: 'dropdown', multiple: !!mul
 const ACTION = { ui_action: {} };
 const COLORS = ['green', 'yellow', 'orange', 'blue', 'cyan', 'red', 'white'];
 const grid = (...fields) => ({ type: 'grid', name: '', schema: fields });
+/** Valorile „ce se vede pe buton” pe care un buton le moștenește de la card (implicit: iconiță, nume, valoare da; starea nu; stil punct). */
+export function contentInherit(c) {
+  const o = c || {};
+  return { show_icon: o.show_icon !== false, show_name: o.show_name !== false, show_value: o.show_value !== false, show_state: o.show_state === true, state_style: o.state_style === 'text' ? 'text' : 'dot', wave: o.wave === true };
+}
+const CONTENT_LABELS = () => ({ show_icon: t('Arată iconița'), show_name: t('Arată numele'), show_value: t('Arată valoarea'), show_state: t('Arată starea (Pornit / Oprit)'), state_style: t('Stilul stării'), wave: t('Val luminos pe cardurile mari (xl)') });
+const STATE_STYLES = () => [{ value: 'dot', label: t('Punct și text') }, { value: 'text', label: t('Doar text') }];
+const contentSchema = () => [grid({ name: 'show_icon', selector: BOOL }, { name: 'show_name', selector: BOOL }), grid({ name: 'show_value', selector: BOOL }, { name: 'show_state', selector: BOOL }), { name: 'state_style', selector: SEL(STATE_STYLES()) }, { name: 'wave', selector: BOOL }];
 const names = (schema) => schema.flatMap((s) => (s.type === 'grid' ? names(s.schema) : [s.name]));
 const isEmpty = (v) => v === undefined || v === null || v === '' || v === false || (Array.isArray(v) && !v.length);
 const pick = (o, keys) => { const r = {}; for (const k of keys) if (o && o[k] !== undefined) r[k] = o[k]; return r; };
@@ -133,6 +142,40 @@ const pick = (o, keys) => { const r = {}; for (const k of keys) if (o && o[k] !=
  */
 export function listRows(cur) {
   return (Array.isArray(cur) ? cur : []).filter((x) => x && (typeof x === 'string' || typeof x === 'object')).map((x) => (typeof x === 'string' ? { entity: x } : x));
+}
+
+/**
+ * Capacitatea bateriei în editor: o alegere „de unde vine” (kWh scris / senzor kWh / Ah × V) și doar câmpurile ei.
+ * `p` = prefixul cheilor ('' la cardul de baterie, 'runtime_' la antet). Fără `capacity_source` în config, sursa se deduce din ce e completat.
+ */
+const CAP_FIELDS = { kwh: ['capacity_kwh'], entity: ['capacity_entity'], ah: ['capacity_ah_entity', 'capacity_ah', 'nominal_voltage'] };
+export function capacitySourceOf(obj, p = '') {
+  const g = (k) => (obj ? obj[p + k] : undefined);
+  const s = g('capacity_source');
+  return s === 'kwh' || s === 'entity' || s === 'ah' ? s : g('capacity_entity') ? 'entity' : (g('capacity_ah_entity') || g('capacity_ah')) ? 'ah' : 'kwh';
+}
+export const capacityKeys = (p = '') => ['capacity_source'].concat(...Object.values(CAP_FIELDS)).map((k) => p + k);
+export function capacitySchema(src, p = '') {
+  const F = {
+    capacity_kwh: { name: p + 'capacity_kwh', selector: NUM(0, 1000, 0.1) },
+    capacity_entity: { name: p + 'capacity_entity', selector: SENSOR() },
+    capacity_ah_entity: { name: p + 'capacity_ah_entity', selector: ENT({ domain: ['sensor', 'number'] }) },
+    capacity_ah: { name: p + 'capacity_ah', selector: NUM(0, 100000, 1) },
+    nominal_voltage: { name: p + 'nominal_voltage', selector: NUM(1, 1000, 0.1) },
+  };
+  const opts = [{ value: 'kwh', label: t('Valoare scrisă de mine (kWh)') }, { value: 'entity', label: t('Senzor în kWh') }, { value: 'ah', label: t('Ah × tensiune nominală (calcul)') }];
+  const rest = (CAP_FIELDS[src] || CAP_FIELDS.kwh).map((k) => F[k]);
+  return [{ name: p + 'capacity_source', selector: SEL(opts) }].concat(src === 'ah' ? [rest[0], grid(rest[1], rest[2])] : rest);
+}
+export const capacityLabels = (p = '') => ({ [p + 'capacity_source']: t('Capacitatea bateriei vine din'), [p + 'capacity_kwh']: t('Capacitate (kWh)'), [p + 'capacity_entity']: t('Senzor capacitate (kWh)'),
+  [p + 'capacity_ah_entity']: t('Senzor sau număr în Ah'), [p + 'capacity_ah']: t('sau Ah scriși de mine'), [p + 'nominal_voltage']: t('Tensiune nominală (V)') });
+export const capacityHelpers = (p = '') => ({ [p + 'capacity_source']: t('Introdu energia pentru 100% din nivel (capacitatea nominală), nu cea rămasă după oprire. Nu folosi senzori de tip „estimare”.'),
+  [p + 'nominal_voltage']: t('De exemplu 51,2 V (LiFePO4, 16 celule), 48 V sau 25,6 V.') });
+/** Scoate cheile surselor nealese (la schimbarea sursei config-ul rămâne curat) și scrie sursa explicit. */
+export function pruneCapacity(obj, src, p = '') {
+  if (!obj) return;
+  for (const s of Object.keys(CAP_FIELDS)) if (s !== src) for (const k of CAP_FIELDS[s]) delete obj[p + k];
+  obj[p + 'capacity_source'] = src;
 }
 
 export function defineEditors() {
@@ -166,7 +209,7 @@ export function defineEditors() {
       f.computeLabel = (s) => (labels && labels[s.name]) || s.name;
       f.computeHelper = (s) => (helpers && helpers[s.name]) || '';
       // ha-form e „controlat”: dacă nu-i dăm înapoi valoarea nouă, la următoarea actualizare a lui `hass` (HA o trimite des) câmpul revine la valoarea veche și se pierd literele tastate
-      f.addEventListener('value-changed', (e) => { e.stopPropagation(); const v = e.detail.value || {}; f.data = v; onChange(v); });
+      f.addEventListener('value-changed', (e) => { e.stopPropagation(); const v = e.detail.value || {}; const prev = f.data; f.data = v; onChange(v, prev); });   // `prev` = datele de dinainte (ca să se vadă ce câmp s-a schimbat)
       return f;
     }
     _obj(path, create) { let o = this._cfg; for (const p of path) { if (!o[p] || typeof o[p] !== 'object') { if (!create) return {}; o[p] = {}; } o = o[p]; } return o; }
@@ -179,8 +222,14 @@ export function defineEditors() {
     }
     /** Bloc cu un formular legat de cheile unui obiect din config (rădăcina sau o sub-cheie, ex. ['sensors']). */
     _fields(path, title, hint, schema, labels, helpers, opts) {
-      const o = opts || {}, keys = names(schema), keepFalse = new Set(o.defTrue || []);
-      const form = this._form(schema, pick(this._obj(path), keys), labels, (v) => { for (const k of keys) this._set(path, k, v[k], keepFalse.has(k)); }, helpers);
+      // `schema` poate fi o funcție (config-ul curent → schema): câmpurile apar în funcție de o alegere (ex. sursa capacității). Atunci `opts.keys` = toate cheile posibile.
+      const o = opts || {}, sch = typeof schema === 'function' ? schema(this._obj(path)) : schema, keys = o.keys || names(sch), keepFalse = new Set(o.defTrue || []);
+      const data = { ...(o.infer ? o.infer(this._obj(path)) : {}), ...pick(this._obj(path), keys) };
+      const form = this._form(sch, data, labels, (v, prev) => {
+        const changed = (o.redraw || []).some((k) => v[k] !== (prev || {})[k]);
+        for (const k of keys) this._set(path, k, v[k], keepFalse.has(k));
+        if (changed) { if (o.after) o.after(this._obj(path, true), v, prev); this._emit(); this._draw(); }
+      }, helpers);
       const body = [hint ? h('p', { class: 'hint', text: hint }) : null, form];
       if (o.collapsed) return h('details', { class: 'blk', open: keys.some((k) => !isEmpty(this._obj(path)[k])) }, h('summary', { text: title }), body);
       return h('div', { class: 'blk' }, title ? h('h3', {}, title) : null, body);
@@ -232,16 +281,20 @@ export function defineEditors() {
     _items(key, o) {
       const forms = o.forms, ready = o.ready || ((x) => !!(x && x.entity));
       const rowBuilder = (item, i, onChange) => [...forms.map((fm) => {
-        const ks = names(fm.schema), keep = new Set(fm.defTrue || []);
-        const f = this._form(fm.schema, { ...(fm.defaults || {}), ...pick(item, ks) }, fm.labels, (v) => {
+        const sch = typeof fm.schema === 'function' ? fm.schema(item) : fm.schema;   // funcție = câmpuri în funcție de rând (ex. sursa capacității)
+        const ks = fm.keys || names(sch), keep = new Set(fm.defTrue || []);
+        const f = this._form(sch, { ...(fm.defaults || {}), ...(fm.infer ? fm.infer(item) : {}), ...pick(item, ks) }, fm.labels, (v, prev) => {
+          const changed = (fm.redraw || []).some((k) => v[k] !== (prev || {})[k]);
           const next = { ...item };
           for (const k of ks) { if (isEmpty(v[k]) && !(keep.has(k) && v[k] === false)) delete next[k]; else next[k] = v[k]; }
           Object.keys(item).forEach((k) => delete item[k]); Object.assign(item, next);
+          if (changed && fm.after) fm.after(item, v, prev);
           onChange(item);
+          if (changed) this._draw();
         }, fm.helpers);
         if (fm.toggle) {   // grup opțional: o bifă; debifat = cheile dispar din config
           const tid = key + '/' + i + '/' + fm.toggle;
-          if (this._open[tid] === undefined) this._open[tid] = ks.some((k) => !isEmpty(item[k]));
+          if (this._open[tid] === undefined) this._open[tid] = ks.some((k) => !isEmpty(item[k]) || (keep.has(k) && item[k] === false));
           return h('div', { class: 'tg' }, this._form([{ name: 'on', selector: BOOL }], { on: this._open[tid] }, { on: fm.toggle }, (v) => { this._open[tid] = !!v.on; if (!v.on) { ks.forEach((k) => delete item[k]); onChange(item); } this._draw(); }), this._open[tid] ? f : null);
         }
         return fm.details ? h('details', { open: ks.some((k) => !isEmpty(item[k])) }, h('summary', { text: fm.details }), f) : f;
@@ -277,17 +330,25 @@ export function defineEditors() {
     }
     /** Blocul „Aspect și limbă” (preset, limbă), comun tuturor cardurilor. */
     _common() {
+      const efList = (e) => (e === 'none' || e === false ? ['none'] : Array.isArray(e) ? e : typeof e === 'string' && e !== 'auto' ? e.split(/[\s,]+/).filter(Boolean) : []);
       const c = this._cfg, type = String(c.type || '');
       const mv = [{ value: 'auto', label: t('Automat (tabletă: complet, telefon: calm)') }, { value: 'full', label: t('Complet (animații continue)') }, { value: 'calm', label: t('Calm (câteva secunde, apoi static)') }, { value: 'off', label: t('Oprit') }];
       const sw = [{ value: 'auto', label: t('Ca mișcarea cardului') }, { value: 'on', label: t('Mereu pornit') }, { value: 'off', label: t('Oprit') }];
-      const fields = [{ name: 'motion', selector: SEL(mv) }];
-      const labels = { preset: t('Temă'), language: t('Limbă'), motion: t('Mișcare (economie de baterie)'), weather_effects: t('Efecte vreme (ploaie, nori)'), flow_animation: t('Animația fluxului') };
-      const keys = ['preset', 'language', 'motion'];
+      const gl = [{ value: 'auto', label: t('Ca tema') }, { value: 'off', label: t('Oprită') }, { value: 'soft', label: t('Discretă') }, { value: 'full', label: t('Plină') }];
+      const nt = [{ value: 'off', label: t('Oprit') }, { value: 'auto', label: t('După soare') }];
+      const ft = [{ value: 'auto', label: t('Ca tema') }, 'Exo 2', 'Chakra Petch', 'Oxanium'];
+      const efx = [{ value: 'none', label: t('Niciunul') }, { value: 'rim', label: t('Contur neon (rim)') }, { value: 'mark', label: t('Semnul „//” (mark)') }, { value: 'cut', label: t('Colțuri tăiate (cut)') }, { value: 'streak', label: t('Linie de lumină (streak)') }, { value: 'peak', label: t('Vârf: diamant / punct (peak)') }, { value: 'plot', label: t('Grafic în stil neon (plot)') }, { value: 'bar', label: t('Antet și meniu ca o bară de sticlă (bar)') }, { value: 'tile', label: t('Cardul „tile”: iconiță | separator | text (tile)') }];
+      const fields = [{ name: 'glow', selector: SEL(gl) }, { name: 'font', selector: SEL(ft) }, { name: 'effects', selector: SEL(efx, true) }, { name: 'motion', selector: SEL(mv) }, { name: 'night', selector: SEL(nt) }];
+      const night = c.night === 'auto' || c.night === true;
+      if (night) fields.push({ name: 'night_entity', selector: ENT() }, { name: 'night_dim', selector: NUM(0, 60, 5) });
+      const labels = { preset: t('Temă'), language: t('Limbă'), glow: t('Strălucire (glow)'), font: t('Font'), effects: t('Efecte'), font_css: t('Foaia de stil a fontului (font_css)'), scale: t('Mărime (scală)'), radius: t('Rotunjirea colțurilor (px)'), motion: t('Mișcare (economie de baterie)'), weather_effects: t('Efecte vreme (ploaie, nori)'), flow_animation: t('Animația fluxului'), night: t('Mod noapte'), night_entity: t('Entitate pentru noapte'), night_dim: t('Întunecare noaptea (%)') };
+      const keys = ['preset', 'language', 'glow', 'font', 'motion'], look = ['scale', 'radius', 'night_entity', 'night_dim', 'font_css'];
       if (type.includes('weather')) { fields.push({ name: 'weather_effects', selector: SEL(sw) }); keys.push('weather_effects'); }
       if (type.includes('flow')) { fields.push({ name: 'flow_animation', selector: SEL(sw) }); keys.push('flow_animation'); }
-      return h('details', { class: 'blk', open: !!(c.preset || c.language || c.motion) }, h('summary', { text: t('Aspect și limbă') }),
-        this._form([grid({ name: 'preset', selector: SEL(['green', 'calm', 'contrast', 'mono', 'warm', 'light']) }, { name: 'language', selector: SEL(['en', 'ro']) }), ...fields], { motion: 'auto', weather_effects: 'auto', flow_animation: 'auto', ...pick(c, keys) },
-          labels, (v) => { this._set([], 'preset', v.preset); this._set([], 'language', v.language); for (const k of keys.slice(2)) this._set([], k, v[k] === 'auto' ? '' : v[k]); }));
+      const helpers = { font: t('Fonturile livrate cu ccu: pune folderul fonts din depozit în /config/www/ccu/fonts/. „Ca tema” = fontul temei.'), effects: t('Gol = ca în temă. „Niciunul” oprește toate efectele.'), font_css: t('Doar pentru un font al tău: adresa foii de stil cu @font-face, ex. /local/ccu/fonts/fontul-meu.css'), night: t('Cardul se întunecă noaptea (după sun.sun). Oprit = ca până acum.'), night_entity: t('Altă entitate decât sun.sun (ex. un senzor de lumină sau un comutator); „on” sau „below_horizon” = noapte.'), night_dim: t('Cât de mult se întunecă noaptea, în procente (0–60). Implicit 15.'), glow: t('Cât strălucesc stările pornit / atenție și valul luminos. „Ca tema” = cum e în temă (quiet-slate nu strălucește).'), scale: t('1 = mărimea obișnuită. 0,85 = mai mic, 1,25 = mai mare. Se aplică întregului card (interval 0,7–1,6).'), radius: t('0 = colțuri drepte. Implicit 14. Se aplică butoanelor (formele chamfer și square), panourilor și antetului (interval 0–32).') };
+      return h('details', { class: 'blk', open: !!(c.preset || c.language || c.motion || c.glow !== undefined || c.font !== undefined || c.effects !== undefined || c.night !== undefined || c.scale !== undefined || c.radius !== undefined) }, h('summary', { text: t('Aspect și limbă') }),
+        this._form([grid({ name: 'preset', selector: SEL(PRESET_NAMES) }, { name: 'language', selector: SEL(['en', 'ro']) }), grid({ name: 'scale', selector: NUM(0.7, 1.6, 0.05) }, { name: 'radius', selector: NUM(0, 32, 1) }), ...fields], { glow: 'auto', font: 'auto', effects: efList(c.effects), motion: 'auto', night: night ? 'auto' : 'off', weather_effects: 'auto', flow_animation: 'auto', ...pick(c, keys.concat(look)), ...(c.glow === false ? { glow: 'off' } : c.glow === true ? { glow: 'full' } : {}) },
+          labels, (v) => { this._set([], 'preset', v.preset); this._set([], 'language', v.language); for (const k of look) this._set([], k, v[k] === '' || v[k] === null ? undefined : v[k]); for (const k of keys.slice(2)) this._set([], k, v[k] === 'auto' ? '' : v[k]); { const l = Array.isArray(v.effects) ? v.effects : []; this._set([], 'effects', l.includes('none') ? 'none' : l.length ? l : ''); } const was = night; this._set([], 'night', v.night === 'auto' ? 'auto' : ''); if ((v.night === 'auto') !== was) this._draw(); }, helpers));
     }
     _draw() { this._root.replaceChildren(this._style(), h('div', { class: 'ed' }, this._body(), this._common())); }
     _body() { return []; }
@@ -359,8 +420,16 @@ export function defineEditors() {
       return [
         this._fields([], t('Card'), '', [{ name: 'title', selector: TXT }, grid({ name: 'columns', selector: NUM(1, 6) }, { name: 'columns_wide', selector: NUM(1, 6) }), grid({ name: 'density', selector: SEL(['xs', 's', 'm', 'l', 'xl']) }, { name: 'panel', selector: BOOL })],
           { title: t('Titlu (opțional)'), columns: t('Coloane (ecran îngust)'), columns_wide: t('Coloane (ecran lat)'), density: t('Mărime implicită'), panel: t('Panou cu chenar') }),
+        this._fields([], t('Ce se vede pe buton'), t('Valabil pentru toate butoanele; fiecare buton îl poate suprascrie.'), contentSchema(), CONTENT_LABELS(), null,
+          { defTrue: ['show_icon', 'show_name', 'show_value'], infer: contentInherit }),
+        this._fields(['state_labels'], t('Texte pentru stări'), t('Înlocuiește „Pornit”, „Oprit”… (de exemplu într-o altă limbă). Lasă gol pentru textul obișnuit.'),
+          [grid({ name: 'on', selector: TXT }, { name: 'off', selector: TXT }), grid({ name: 'alert', selector: TXT }, { name: 'ok', selector: TXT }), { name: 'unavailable', selector: TXT }],
+          { on: t('Text pentru „pornit”'), off: t('Text pentru „oprit”'), alert: t('Text pentru „atenție”'), ok: t('Text pentru „ok”'), unavailable: t('Text pentru „indisponibil”') }, null, { collapsed: true }),
         this._items('entities', { title: t('Butoane'), hint: t('Fiecare buton comandă o entitate: lumină, priză, senzor, climă…'), max: 40, addLabel: t('Adaugă buton'), rowLabel: t('Buton'),
-          forms: entityForms([{ schema: [grid({ name: 'size', selector: SEL(['xs', 's', 'm', 'l', 'xl']) }, { name: 'icon_color', selector: SEL(COLORS) }), grid({ name: 'shape', selector: SEL(['chamfer', 'round', 'pill', 'square']) }, { name: 'toggle', selector: BOOL })], labels: { size: t('Mărime'), icon_color: t('Culoarea iconiței'), shape: t('Formă'), toggle: t('Comutator (doar mărimea l)') } }]) }),
+          forms: entityForms([{ schema: [grid({ name: 'size', selector: SEL(['xs', 's', 'm', 'l', 'xl']) }, { name: 'icon_color', selector: SEL(COLORS) }), grid({ name: 'shape', selector: SEL(['chamfer', 'round', 'pill', 'square']) }, { name: 'toggle', selector: BOOL }), { name: 'selected', selector: BOOL }], labels: { size: t('Mărime'), icon_color: t('Culoarea iconiței'), shape: t('Formă'), toggle: t('Comutator (doar mărimea l)'), selected: t('Evidențiat (selectat)') } },
+            { schema: [grid({ name: 'danger_above', selector: NUM() }, { name: 'danger_below', selector: NUM() }), { name: 'danger', selector: BOOL }], labels: { danger_above: t('Pericol peste'), danger_below: t('Pericol sub'), danger: t('Alerta se arată ca pericol (roșu)') } },
+            { toggle: t('Alege ce se vede pe acest buton'), keys: ['show_icon', 'show_name', 'show_value', 'show_state', 'state_style', 'wave'], schema: contentSchema(), labels: CONTENT_LABELS(),
+              defTrue: ['show_icon', 'show_name', 'show_value'], infer: () => contentInherit(this._cfg) }]) }),
       ];
     }
   }
@@ -375,9 +444,12 @@ export function defineEditors() {
           this._fields(['low_batteries'], '', '', [grid({ name: 'threshold', selector: NUM(0, 100) }, { name: 'label', selector: TXT }), { name: 'exclude', selector: this._batteryIgnore() }, { name: 'include', selector: ENT({ multiple: true }) }, { name: 'mobile', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
             { threshold: t('Prag baterie slabă (%)'), label: t('Text (opțional)'), exclude: t('Ignoră dispozitivele'), include: t('Adaugă dispozitive'), mobile: t('Exclude telefoanele și tabletele'), tap_action: t('La atingere (ex. deschide lista bateriilor)') }, { exclude: t('Alege din listă un dispozitiv pe care nu-l mai folosești (ex. o periuță stricată) sau scrie un cuvânt din nume și apasă Enter.'), include: t('Senzori adăugați chiar dacă nu sunt găsiți singuri sau sunt ignorați (ex. un senzor de baterie fără tip).') }, { defTrue: ['mobile'] }),
         ]),
+        this._fields([], t('Ce se vede pe chip'), t('Valabil pentru toate chip-urile; fiecare chip îl poate suprascrie.'), [grid({ name: 'show_icon', selector: BOOL }, { name: 'show_name', selector: BOOL })], { show_icon: t('Arată iconița'), show_name: t('Arată numele') }, null, { defTrue: ['show_icon', 'show_name'], infer: () => ({ show_icon: true, show_name: true }) }),
         this._fields([], t('Ordine'), t('Chips-urile apar în ordinea în care s-au activat (cel mai vechi primul); când nu mai încap pe un rând, trec pe următorul.'), [{ name: 'sort', selector: BOOL }], { sort: t('Ordonează după momentul activării') }),
         this._items('entities', { title: t('Chips'), hint: t('Etichete mici de stare; pot apărea doar când sunt active.'), max: 40, addLabel: t('Adaugă chip'), rowLabel: t('Chip'),
-          forms: entityForms([{ schema: [grid({ name: 'icon_color', selector: SEL(COLORS) }, { name: 'on_as', selector: SEL(['alert']) }), grid({ name: 'show_state', selector: BOOL }, { name: 'hide_off', selector: BOOL })], labels: { icon_color: t('Culoarea iconiței'), on_as: t('Când e pornit arată ca'), show_state: t('Arată valoarea'), hide_off: t('Ascunde când e oprit') } }]) }),
+          forms: entityForms([{ schema: [grid({ name: 'icon_color', selector: SEL(COLORS) }, { name: 'on_as', selector: SEL(['alert']) }), grid({ name: 'show_state', selector: BOOL }, { name: 'hide_off', selector: BOOL })], labels: { icon_color: t('Culoarea iconiței'), on_as: t('Când e pornit arată ca'), show_state: t('Arată valoarea'), hide_off: t('Ascunde când e oprit') } },
+            { toggle: t('Alege ce se vede pe acest chip'), keys: ['show_icon', 'show_name'], schema: [grid({ name: 'show_icon', selector: BOOL }, { name: 'show_name', selector: BOOL })], labels: { show_icon: t('Arată iconița'), show_name: t('Arată numele') }, defTrue: ['show_icon', 'show_name'], infer: () => ({ show_icon: this._cfg.show_icon !== false, show_name: this._cfg.show_name !== false }) },
+            { schema: [grid({ name: 'danger_above', selector: NUM() }, { name: 'danger_below', selector: NUM() }), { name: 'danger', selector: BOOL }], labels: { danger_above: t('Pericol peste'), danger_below: t('Pericol sub'), danger: t('Alerta se arată ca pericol (roșu)') } }]) }),
       ];
     }
   }
@@ -389,9 +461,11 @@ export function defineEditors() {
         this._fields(['header'], t('Antet'), '', [grid({ name: 'icon', selector: ICON }, { name: 'clock', selector: BOOL })], { icon: t('Iconiță'), clock: t('Arată ceasul') }, null, { defTrue: ['clock'] }),
         this._items('values', { path: ['header'], title: t('Valori'), hint: t('Maximum 3 valori în antet.'), max: 3, addLabel: t('Adaugă valoare'), rowLabel: t('Valoare'), compact: false,
           forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'color', selector: SEL(['accent', 'on', 'ok', 'alert']) }], labels: { entity: t('Senzor'), label: t('Etichetă'), icon: t('Iconiță'), color: t('Culoare') } },
-            { toggle: t('Arată autonomia sub valoare (pentru procentul bateriei)'), schema: [{ name: 'runtime_load', selector: SENSOR() }, { name: 'runtime_load_entities', selector: SENSOR({ multiple: true }) }, grid({ name: 'runtime_capacity_entity', selector: SENSOR() }, { name: 'runtime_capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'runtime_grid_present', selector: ENT({ domain: 'binary_sensor' }) }, grid({ name: 'runtime_reserve_pct', selector: NUM(0, 100) }, { name: 'runtime_shutdown_pct', selector: NUM(0, 100) }), { name: 'runtime_power', selector: SENSOR() }, { name: 'runtime_charge_eta', selector: SEL([{ value: 'avg', label: t('Media ultimelor 10 minute') }, { value: 'now', label: t('Puterea de acum') }]) }, { name: 'runtime_while_charging', selector: BOOL }], defaults: { runtime_charge_eta: 'avg' },
-              labels: { runtime_charge_eta: t('Calculează „Plin în” după'), runtime_while_charging: t('Arată autonomia și în timpul încărcării'), runtime_load: t('Consum curent (W)'), runtime_load_entities: t('Alți consumatori (se adună la consum)'), runtime_capacity_entity: t('Senzor capacitate'), runtime_capacity_kwh: t('sau capacitate (kWh)'), runtime_grid_present: t('Rețea prezentă (senzor binar)'), runtime_reserve_pct: t('Rezervă (%)'), runtime_shutdown_pct: t('Oprire (%)'), runtime_power: t('Putere baterie (W)') },
-              helpers: { runtime_load: t('Completează consumul și apare autonomia sub procent, ca pe cardul de baterie.'), runtime_power: t('+ = descărcare, − = încărcare. Cât timp se încarcă, apare „plin în …”.') } }] }),
+            { toggle: t('Arată autonomia sub valoare (pentru procentul bateriei)'), keys: ['runtime_load', 'runtime_load_entities', ...capacityKeys('runtime_'), 'runtime_grid_present', 'runtime_reserve_pct', 'runtime_shutdown_pct', 'runtime_power', 'runtime_charge_eta', 'runtime_while_charging'],
+              infer: (item) => ({ runtime_capacity_source: capacitySourceOf(item, 'runtime_') }), redraw: ['runtime_capacity_source'], after: (item, v) => pruneCapacity(item, v.runtime_capacity_source, 'runtime_'),
+              schema: (item) => [{ name: 'runtime_load', selector: SENSOR() }, { name: 'runtime_load_entities', selector: SENSOR({ multiple: true }) }, ...capacitySchema(capacitySourceOf(item, 'runtime_'), 'runtime_'), { name: 'runtime_grid_present', selector: ENT({ domain: 'binary_sensor' }) }, grid({ name: 'runtime_reserve_pct', selector: NUM(0, 100) }, { name: 'runtime_shutdown_pct', selector: NUM(0, 100) }), { name: 'runtime_power', selector: SENSOR() }, { name: 'runtime_charge_eta', selector: SEL([{ value: 'avg', label: t('Media ultimelor 10 minute') }, { value: 'now', label: t('Puterea de acum') }]) }, { name: 'runtime_while_charging', selector: BOOL }], defaults: { runtime_charge_eta: 'avg' },
+              labels: { runtime_charge_eta: t('Calculează „Plin în” după'), runtime_while_charging: t('Arată autonomia și în timpul încărcării'), runtime_load: t('Consum curent (W)'), runtime_load_entities: t('Alți consumatori (se adună la consum)'), ...capacityLabels('runtime_'), runtime_grid_present: t('Rețea prezentă (senzor binar)'), runtime_reserve_pct: t('Rezervă (%)'), runtime_shutdown_pct: t('Oprire (%)'), runtime_power: t('Putere baterie (W)') },
+              helpers: { ...capacityHelpers('runtime_'), runtime_load: t('Completează consumul și apare autonomia sub procent, ca pe cardul de baterie.'), runtime_power: t('+ = descărcare, − = încărcare. Cât timp se încarcă, apare „plin în …”.') } }] }),
         this._fields(['header', 'right'], t('În dreapta (în loc de ceas)'), t('Opțional: o valoare afișată în locul ceasului, ex. temperatura de afară.'), [{ name: 'entity', selector: ENT() }, grid({ name: 'attribute', selector: TXT }, { name: 'label', selector: TXT })], { entity: t('Entitate'), attribute: t('Atribut (opțional)'), label: t('Etichetă') }, null, { collapsed: true }),
       ];
     }
@@ -400,11 +474,13 @@ export function defineEditors() {
     _body() {
       return [
         this._fields([], t('Meniu'), '', [grid({ name: 'sticky', selector: BOOL }, { name: 'compact', selector: BOOL })], { sticky: t('Fixat jos pe ecran'), compact: t('Compact') }),
+        this._fields([], t('Ce se vede pe buton'), t('Valabil pentru toate butoanele; fiecare buton îl poate suprascrie.'), [grid({ name: 'show_icon', selector: BOOL }, { name: 'labels', selector: BOOL })], { show_icon: t('Arată iconița'), labels: t('Arată textul') }, null, { defTrue: ['show_icon', 'labels'], infer: () => ({ show_icon: true, labels: true }) }),
         this._items('items', { title: t('Butoane meniu'), hint: t('Fiecare buton duce la o pagină (cale completă, ex. /dashboard-casa/camere).'), max: 12, addLabel: t('Adaugă buton'), rowLabel: t('Buton'), compact: false, ready: (x) => !!(x && (x.path || x.path_tablet || x.path_phone || x.back)),
           forms: [{ schema: [grid({ name: 'label', selector: TXT }, { name: 'icon', selector: ICON }), { name: 'path', selector: TXT }, { name: 'device', selector: SEL([{ value: 'all', label: t('Oriunde') }, { value: 'tablet', label: t('Doar pe tabletă') }, { value: 'phone', label: t('Doar pe telefon') }]) }], labels: { label: t('Etichetă'), icon: t('Iconiță'), path: t('Adresa paginii'), device: t('Se vede') }, helpers: { path: t('Începe cu /, ex. /lovelace/0') } },
+            { toggle: t('Alege ce se vede pe acest buton'), keys: ['show_icon', 'show_label'], schema: [grid({ name: 'show_icon', selector: BOOL }, { name: 'show_label', selector: BOOL })], labels: { show_icon: t('Arată iconița'), show_label: t('Arată textul') }, defTrue: ['show_icon', 'show_label'], infer: () => ({ show_icon: this._cfg.show_icon !== false, show_label: this._cfg.labels !== false }) },
             { toggle: t('Apăsare lungă: altă pagină'), schema: [{ name: 'hold_path', selector: TXT }, grid({ name: 'hold_path_tablet', selector: TXT }, { name: 'hold_path_phone', selector: TXT })], labels: { hold_path: t('Adresa la apăsare lungă'), hold_path_tablet: t('Pe tabletă'), hold_path_phone: t('Pe telefon') }, helpers: { hold_path: t('Merge pe orice dispozitiv; câmpurile de dedesubt au prioritate pe tabletă / telefon.'), hold_path_phone: t('Ex. pe telefon, apăsat lung pe Home duce la pagina tabletei.') } },
             { toggle: t('Adresă diferită pe tabletă și pe telefon'), schema: [{ name: 'path_tablet', selector: TXT }, { name: 'path_phone', selector: TXT }], labels: { path_tablet: t('Adresa pe tabletă'), path_phone: t('Adresa pe telefon') }, helpers: { path_tablet: t('Ex. Home duce la pagina tabletei.'), path_phone: t('Ex. Home duce la pagina telefonului.') } },
-            { details: t('Insignă cu număr'), schema: [{ name: 'badge', selector: ENT({ multiple: true }) }, { name: 'badge_style', selector: SEL(['light']) }], labels: { badge: t('Entități numărate'), badge_style: t('Aspect insignă') }, helpers: { badge: t('Numără entitățile pornite; un senzor numeric adaugă valoarea lui (ex. „becuri aprinse”).'), badge_style: t('„light” = galben, pentru lumini; implicit roșu (alertă).') } }] }),
+            { details: t('Insignă cu număr'), schema: [{ name: 'badge', selector: ENT({ multiple: true }) }, { name: 'badge_style', selector: SEL(['light', 'danger']) }], labels: { badge: t('Entități numărate'), badge_style: t('Aspect insignă') }, helpers: { badge: t('Numără entitățile pornite; un senzor numeric adaugă valoarea lui (ex. „becuri aprinse”).'), badge_style: t('„light” = galben, pentru lumini; „danger” = fila întreagă roșie; implicit chihlimbar (atenție), insigna roșie.') } }] }),
       ];
     }
   }
@@ -414,10 +490,12 @@ export function defineEditors() {
   class CcuGraphEditor extends CcuEditor {
     _body() {
       return [
-        this._fields([], t('Grafic'), '', [{ name: 'title', selector: TXT }, grid({ name: 'range', selector: SEL(RANGES) }, { name: 'tabs', selector: SEL(RANGES, true) }), grid({ name: 'y_axis', selector: SEL(['left', 'right']) }, { name: 'height', selector: NUM(60, 400, 10) }), { name: 'compact', selector: BOOL }, { name: 'timeline', selector: BOOL }, { name: 'hide_durations', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
-          { timeline: t('Cronologie: un rând pe serie (pornit / oprit)'), hide_durations: t('Cronologie: ascunde durata de pe bare și totalul pe rând'), tap_action: t('La atingere (ex. deschide pagina graficului)'), title: t('Titlu (opțional)'), range: t('Interval'), tabs: t('File pentru schimbarea intervalului'), y_axis: t('Axa Y'), height: t('Înălțime (px)'), compact: t('Compact') }),
+        this._fields([], t('Grafic'), '', [{ name: 'title', selector: TXT }, grid({ name: 'range', selector: SEL(RANGES) }, { name: 'tabs', selector: SEL(RANGES, true) }), grid({ name: 'y_axis', selector: SEL(['left', 'right']) }, { name: 'height', selector: NUM(60, 400, 10) }), { name: 'compact', selector: BOOL }, { name: 'axis_unit', selector: BOOL }, grid({ name: 'icon', selector: ICON }, { name: 'x_step', selector: NUM(1, 24, 1) }), { name: 'timeline', selector: BOOL }, { name: 'hide_durations', selector: BOOL }, { name: 'tap_action', selector: ACTION }],
+          { timeline: t('Cronologie: un rând pe serie (pornit / oprit)'), hide_durations: t('Cronologie: ascunde durata de pe bare și totalul pe rând'), tap_action: t('La atingere (ex. deschide pagina graficului)'), title: t('Titlu (opțional)'), range: t('Interval'), tabs: t('File pentru schimbarea intervalului'), y_axis: t('Axa Y'), height: t('Înălțime (px)'), compact: t('Compact'), axis_unit: t('Unitatea pe axa Y'), icon: t('Iconiță în titlu (opțional)'), x_step: t('Ore între etichetele axei X') }, { x_step: t('Ex. 3 → 00 03 06 … (doar pentru intervale până la 48 h). Gol = automat.') }, { defTrue: ['axis_unit'], infer: () => ({ axis_unit: true }) }),
         this._items('series', { title: t('Serii'), hint: this._cfg.timeline ? t('Până la 8 rânduri, unul pe serie.') : t('Între 1 și 3 linii pe grafic.'), max: this._cfg.timeline ? 8 : 3, addLabel: t('Adaugă serie'), rowLabel: t('Serie'), compact: false,
-          forms: [{ schema: [{ name: 'entity', selector: SENSOR() }, grid({ name: 'name', selector: TXT }, { name: 'color', selector: SEL(['accent', 'yellow', 'green', 'blue', 'orange', 'red', 'cyan']) }), { name: 'kind', selector: SEL(['area', 'line']) }], labels: { entity: t('Senzor'), name: t('Nume'), color: t('Culoare'), kind: t('Tip') } }] }),
+          forms: [{ schema: [{ name: 'entity', selector: ENT() }, grid({ name: 'name', selector: TXT }, { name: 'color', selector: SEL(['accent', 'yellow', 'green', 'blue', 'orange', 'red', 'cyan']) }), { name: 'kind', selector: SEL(['area', 'line']) }], labels: { entity: t('Entitate'), name: t('Nume'), color: t('Culoare'), kind: t('Tip') } },
+            { toggle: t('Citește un atribut în loc de stare (ex. temperatura unui aparat de aer condiționat)'), schema: [grid({ name: 'attribute', selector: TXT }, { name: 'unit', selector: TXT })], labels: { attribute: t('Atribut'), unit: t('Unitate (opțional)') }, helpers: { attribute: t('Numele atributului, de exemplu current_temperature, temperature sau humidity.') } },
+            { toggle: t('Activ doar cât starea e…'), schema: [{ name: 'state_is', selector: TXT }], labels: { state_is: t('Stări (separate prin virgulă)') }, helpers: { state_is: t('De exemplu cool, heat. Seria e „pornită” cât starea entității e una dintre ele (potrivit pentru cronologie).') } }] }),
       ];
     }
   }
@@ -425,10 +503,12 @@ export function defineEditors() {
     _body() {
       return [
         this._fields([], t('Baterie'), t('Nivelul de încărcare și, opțional, capacitatea și consumul pentru autonomie.'), [
-          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, grid({ name: 'capacity_entity', selector: SENSOR() }, { name: 'capacity_kwh', selector: NUM(0, 1000, 0.1) }), { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
+          { name: 'soc', selector: SENSOR() }, { name: 'load', selector: SENSOR() }, { name: 'grid_present', selector: ENT({ domain: 'binary_sensor' }) },
           grid({ name: 'reserve_pct', selector: NUM(0, 100) }, { name: 'shutdown_pct', selector: NUM(0, 100) }), grid({ name: 'color', selector: SEL(['yellow', 'green', 'blue', 'orange']) }, { name: 'show_title', selector: BOOL })],
-          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), capacity_entity: t('Senzor capacitate'), capacity_kwh: t('sau capacitate (kWh)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
+          { soc: t('Nivel încărcare (%)'), load: t('Consum curent (W)'), grid_present: t('Rețea prezentă (senzor binar)'), reserve_pct: t('Rezervă (%)'), shutdown_pct: t('Oprire (%)'), color: t('Culoare'), show_title: t('Arată titlul') },
           { grid_present: t('Când e oprit, cardul arată „Backup activ”.') }, { defTrue: ['show_title'] }),
+        this._fields([], t('Capacitatea bateriei'), t('Capacitatea totală, ca să se afle kWh din procente. Alege de unde o ia cardul.'), (cur) => capacitySchema(capacitySourceOf(cur), ''), capacityLabels(''), capacityHelpers(''),
+          { keys: capacityKeys(''), infer: (cur) => ({ capacity_source: capacitySourceOf(cur) }), redraw: ['capacity_source'], after: (obj, v) => pruneCapacity(obj, v.capacity_source, '') }),
         this._optional([], t('Consum din mai multe circuite'), t('Dacă bateria alimentează mai multe circuite, adaugă-le aici: autonomia se calculează la suma lor.'), [{ name: 'load_entities', selector: SENSOR({ multiple: true }) }], { load_entities: t('Alți consumatori (se adună la consum)') }),
         this._optional([], t('Arată „Plin în” cât se încarcă'), t('+ = descărcare, − = încărcare.'), [{ name: 'power', selector: SENSOR() }, { name: 'power_invert', selector: BOOL }, { name: 'charge_eta', selector: SEL([{ value: 'avg', label: t('Media ultimelor 10 minute') }, { value: 'now', label: t('Puterea de acum') }]) }, { name: 'runtime_while_charging', selector: BOOL }],
           { power: t('Putere baterie (W)'), power_invert: t('Inversează semnul puterii'), charge_eta: t('Calculează „Plin în” după'), runtime_while_charging: t('Arată autonomia și în timpul încărcării') },

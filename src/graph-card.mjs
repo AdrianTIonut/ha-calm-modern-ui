@@ -5,6 +5,7 @@ import { str } from './config.mjs';
 import { niceScale, formatLabel, formatNumber, formatTimeLabel } from './graph-data.mjs';
 import { colorVars } from './presets.mjs';
 import { esc } from './render.mjs';
+import { iconSvg } from './icons.mjs';
 
 const RANGE_H = { '6h': 6, '12h': 12, '24h': 24, '7d': 168, '30d': 720 };
 const KINDS = ['area', 'line'];
@@ -76,6 +77,12 @@ export function normalizeGraphConfig(cfg) {
     const o = typeof s === 'string' ? { entity: s } : s && typeof s === 'object' ? { ...s } : null;
     if (!o || typeof o.entity !== 'string' || !/^[a-z_]+\.[a-z0-9_]+$/.test(o.entity)) { warnings.push(t('Seria #{n}: entity_id lipsă sau invalid.', { n: i + 1 })); return; }
     o.kind = KINDS.includes(o.kind) ? o.kind : (i === 0 ? 'area' : 'line');
+    // `attribute`: seria citește un atribut numeric (nu starea); `state_is`: seria e „pornită” cât starea e una din listă (separate prin virgulă)
+    if (o.attribute !== undefined && !(typeof o.attribute === 'string' && /^[A-Za-z0-9_]+$/.test(o.attribute.trim()))) { if (o.attribute !== '') warnings.push(t('Seria #{n}: „attribute” trebuie să fie un nume de atribut (litere, cifre, _).', { n: i + 1 })); delete o.attribute; } else if (o.attribute !== undefined) o.attribute = o.attribute.trim();
+    if (!o.attribute) delete o.attribute;
+    const si = o.state_is === undefined ? [] : (Array.isArray(o.state_is) ? o.state_is : String(o.state_is).split(',')).map((x) => String(x).trim()).filter(Boolean);
+    if (si.length) o.state_is = si; else delete o.state_is;
+    if (o.attribute && o.state_is) { warnings.push(t('Seria #{n}: „attribute” și „state_is” nu merg împreună; se folosește „attribute”.', { n: i + 1 })); delete o.state_is; }
     series.push(o);
   });
   if (Array.isArray(src.series) && src.series.length > maxSeries) warnings.push(timeline ? t('Grafic: maximum 8 serii (cronologie); restul sunt ignorate.') : t('Grafic: maximum 3 serii; restul sunt ignorate.'));
@@ -88,10 +95,11 @@ export function normalizeGraphConfig(cfg) {
 }
 
 // ---- axa X: ore rotunjite ----
-function timeTicks(startMs, endMs, hours) {
-  const stepH = hours <= 6 ? 1 : hours <= 12 ? 2 : hours <= 24 ? 4 : hours <= 72 ? 12 : hours <= 168 ? 24 : 24 * 5;
+function timeTicks(startMs, endMs, hours, stepOverride) {
+  const stepH = stepOverride || (hours <= 6 ? 1 : hours <= 12 ? 2 : hours <= 24 ? 4 : hours <= 72 ? 12 : hours <= 168 ? 24 : 24 * 5);
   const d = new Date(startMs); d.setMinutes(0, 0, 0);
   if (stepH >= 24) d.setHours(0);
+  else if (stepOverride) d.setHours(Math.floor(d.getHours() / stepH) * stepH);   // x_step: etichetele cad pe ore „rotunde” (00, 03, 06 …)
   const out = [];
   for (let t = d.getTime(); t <= endMs; t += stepH * 3600e3) {
     if (t >= startMs) out.push(t);
@@ -119,14 +127,16 @@ export function buildGraphModel(config, data, width, height, now = Date.now()) {
     let lo = Infinity, hi = -Infinity;
     for (const i of idxs) for (const p of (data[i] || [])) if (p.v !== null && Number.isFinite(p.v)) { lo = Math.min(lo, p.v); hi = Math.max(hi, p.v); }
     if (!Number.isFinite(lo)) { lo = 0; hi = 1; }
-    if (lo > 0 && lo < hi * 0.6) lo = 0; // zona pornește de la 0 când valorile sunt „mari” față de minim
+    // axa pornește de la 0 când valorile sunt „mari” față de minim (putere, energie…); nu la temperaturi: 0 °C nu e un „zero”, iar axa 0–60 turtește liniile
+    const temperature = idxs.length > 0 && idxs.every((i) => /°\s*[CF]|^\s*[CFK]\s*$/i.test(units[i] || ''));
+    if (!temperature && lo > 0 && lo < hi * 0.6) lo = 0;
     return niceScale(lo, hi, H < 120 ? 2 : 4);
   };
   const leftIdx = config.series.map((s, i) => i).filter((i) => !rightIdx.includes(i));
   const binAll = leftIdx.length > 0 && leftIdx.every((i) => data[i] && data[i].binary);   // doar serii pornit / oprit: axa are două trepte
   const sL = binAll ? { min: -0.15, max: 1.15, ticks: [0, 1] } : extent(leftIdx), sR = hasRight ? extent(rightIdx) : null;
   // lățimea etichetelor Y după cea mai lungă etichetă (ex. „2 000 ppb” nu mai iese din cadru)
-  const tickText = (tv) => (binAll ? (tv >= 1 ? t('Pornit') : t('Oprit')) : formatValue(tv, units[0]));
+  const tickText = (tv) => (binAll ? (tv >= 1 ? t('Pornit') : t('Oprit')) : formatValue(tv, config.axis_unit === false ? '' : units[0]));
   const labLen = Math.max(...sL.ticks.map((tv) => tickText(tv).length), ...(sR ? sR.ticks.map((tv) => formatValue(tv, units[rightIdx[0]]).length) : [0]));
   const lab = Math.max(Math.round(fs * 3.4), Math.ceil(labLen * fs * 0.62 + 8));
   const padL = axisRight ? 10 : lab, padR = hasRight || axisRight ? lab : 10, padT = 8, padB = fs + 14;
@@ -135,10 +145,11 @@ export function buildGraphModel(config, data, width, height, now = Date.now()) {
   const Y = (v, sc) => padT + (1 - (v - sc.min) / ((sc.max - sc.min) || 1)) * ph;
 
   const grid = sL.ticks.map((tv) => ({ y: +Y(tv, sL).toFixed(1), label: tickText(tv), right: sR ? formatValue(sR.ticks[Math.round(sL.ticks.indexOf(tv) * (sR.ticks.length - 1) / Math.max(1, sL.ticks.length - 1))], units[rightIdx[0]]) : '' }));
-  const xt = timeTicks(t0, t1, hours).map((t) => ({ x: +X(t).toFixed(1), label: formatTimeLabel(t, lblRange(hours)) }));
+  const xStep = Number.isInteger(Number(config.x_step)) && Number(config.x_step) >= 1 && Number(config.x_step) <= 24 && hours <= 48 ? Number(config.x_step) : 0;   // x_step: ore între etichete, scrise „HH” (ex. 3 → 00 03 06 …)
+  const xt = timeTicks(t0, t1, hours, xStep).map((t) => ({ x: +X(t).toFixed(1), label: xStep ? String(new Date(t).getHours()).padStart(2, '0') : formatTimeLabel(t, lblRange(hours)) }));
   // etichete X fără suprapuneri: păstrăm doar cele la ≥ 46 px una de alta
   const xticks = []; let lastX = -1e9;
-  for (const t of xt) if (t.x - lastX >= (W < 420 ? 52 : 60)) { xticks.push(t); lastX = t.x; }
+  for (const t of xt) if (t.x - lastX >= (xStep ? 30 : W < 420 ? 52 : 60)) { xticks.push(t); lastX = t.x; }
 
   const seriesOut = config.series.map((s, i) => {
     const sc = rightIdx.includes(i) ? sR : sL;
@@ -244,7 +255,7 @@ export function timelineHit(m, x, y) {
 }
 
 function renderTimelineSvg(m) {
-  const ticks = m.xticks.map((tk) => `<line class="grid" x1="${tk.x}" x2="${tk.x}" y1="${m.padT}" y2="${m.padT + m.ph}"/><text x="${tk.x}" y="${m.H - 4}" text-anchor="middle">${esc(tk.label)}</text>`).join('');
+  const ticks = m.xticks.map((tk) => `<line class="grid gx" x1="${tk.x}" x2="${tk.x}" y1="${m.padT}" y2="${m.padT + m.ph}"/><text x="${tk.x}" y="${m.H - 4}" text-anchor="middle">${esc(tk.label)}</text>`).join('');
   const fit = (w, text) => w >= text.length * m.fs * 0.56 + 8;
   const rows = m.lanes.map((l) => {
     const bars = l.segs.map((s) => {
@@ -261,19 +272,28 @@ function renderTimelineSvg(m) {
 /** SVG-ul graficului (șir). Fără NaN: coordonatele vin din buildGraphModel. */
 export function renderGraphSvg(m) {
   if (m.timeline) return renderTimelineSvg(m);
-  const g = m.grid.map((r) => `<line class="grid" x1="${m.padL}" x2="${m.W - m.padR}" y1="${r.y}" y2="${r.y}"/>${m.axisRight ? `<text x="${m.W - m.padR + 6}" y="${r.y + 3.5}">${esc(r.label)}</text>` : `<text x="${m.padL - 6}" y="${r.y + 3.5}" text-anchor="end">${esc(r.label)}</text>`}${m.hasRight && r.right ? `<text x="${m.W - m.padR + 6}" y="${r.y + 3.5}">${esc(r.right)}</text>` : ''}`).join('');
-  const x = m.xticks.map((t) => `<text x="${t.x}" y="${m.H - 4}" text-anchor="middle">${esc(t.label)}</text>`).join('');
-  const s = m.series.map((se, i) => (se.line ? `<g class="ser" style="--sc:${esc(se.color)}">${se.kind === 'area' ? `<defs><linearGradient id="gr${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sc);stop-opacity:.38"/><stop offset="1" style="stop-color:var(--sc);stop-opacity:0"/></linearGradient></defs><path class="area" style="fill:url(#gr${i})" d="${se.fill}"/>` : ''}<path class="line" d="${se.line}"/></g>` : '')).join('');
+  const g = m.grid.map((r) => `<line class="grid gy" x1="${m.padL}" x2="${m.W - m.padR}" y1="${r.y}" y2="${r.y}"/>${m.axisRight ? `<text x="${m.W - m.padR + 6}" y="${r.y + 3.5}">${esc(r.label)}</text>` : `<text x="${m.padL - 6}" y="${r.y + 3.5}" text-anchor="end">${esc(r.label)}</text>`}${m.hasRight && r.right ? `<text x="${m.W - m.padR + 6}" y="${r.y + 3.5}">${esc(r.right)}</text>` : ''}`).join('');
+  const x = `<line class="axis ax" x1="${m.padL}" x2="${m.padL}" y1="${m.padT}" y2="${m.padT + m.ph}"/>` + m.xticks.map((t) => `<line class="grid gx" x1="${t.x}" x2="${t.x}" y1="${m.padT}" y2="${m.padT + m.ph}"/><text x="${t.x}" y="${m.H - 4}" text-anchor="middle">${esc(t.label)}</text>`).join('');
+  const s = m.series.map((se, i) => (se.line ? `<g class="ser" style="--sc:${esc(se.color)}">${se.kind === 'area' ? `<defs><linearGradient id="gr${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sc);stop-opacity:.38"/><stop offset="1" style="stop-color:var(--sc);stop-opacity:0"/></linearGradient></defs><path class="area" style="fill:url(#gr${i})" d="${se.fill}"/>` : ''}<path class="line" d="${se.line}"/>${peakDot(se)}</g>` : '')).join('');
   return `<svg class="ccu-graph" viewBox="0 0 ${m.W} ${m.H}" width="${m.W}" height="${m.H}" role="img" aria-label="grafic">${g}${x}${s}<line class="cursor" x1="0" x2="0" y1="${m.padT}" y2="${m.padT + m.ph}" opacity="0"/><g class="dots"></g></svg>`;
+}
+
+/** Punctul de maxim al unei serii (efectul peak): un cerc ascuns de CSS dacă tema nu îl pornește. Doar serii numerice, cu cel puțin 3 puncte. */
+function peakDot(se) {
+  if (!se || se.binary || !se.points || se.points.length < 3) return '';
+  let best = se.points[0];
+  for (const p of se.points) if (p.v > best.v) best = p;
+  if (!Number.isFinite(best.x) || !Number.isFinite(best.y)) return '';
+  return `<circle class="pk" cx="${best.x.toFixed(1)}" cy="${best.y.toFixed(1)}" r="3.6"/>`;
 }
 
 /** Tot cardul (șir): titlu + file + grafic + legendă. */
 export function renderGraphCard(config, m, state, opts = {}) {
-  const tabs = config.tabs.length > 1 ? `<div class="ccu-tabs">${config.tabs.map((t, i) => `<button type="button" class="ccu-tab" data-tab="${i}" data-state="${rangeKey(t) === rangeKey(state.range) ? 'on' : 'off'}">${esc(tabLabel(t))}</button>`).join('')}</div>` : '';
+  const tabs = config.tabs.length > 1 ? `<div class="ccu-tabs">${config.tabs.map((t, i) => `<button type="button" class="ccu-tab" data-tab="${i}" data-state="${rangeKey(t) === rangeKey(state.range) ? 'on' : 'off'}" aria-pressed="${rangeKey(t) === rangeKey(state.range)}">${esc(tabLabel(t))}</button>`).join('')}</div>` : '';
   const legend = config.legend && !config.timeline && m.series.length > 1 ? `<div class="ccu-legend">${m.series.map((s) => `<span><i style="background:${esc(s.color)}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
   // compact: legenda urcă în rândul titlului (între titlu și file) — cardul e mai scund
   const inHead = config.compact === true ? legend : '';
-  const head = config.title || tabs ? `<div class="ccu-graph-head${inHead ? ' compact' : ''}"><div class="ccu-title">${esc(config.title)}</div>${inHead}${tabs}</div>` : '';
+  const head = config.title || tabs || config.icon ? `<div class="ccu-graph-head${inHead ? ' compact' : ''}"><div class="ccu-title">${config.icon ? `<span class="ccu-ico" aria-hidden="true">${iconSvg(config.icon)}</span>` : ''}${esc(config.title)}</div>${inHead}${tabs}</div>` : '';
   let body;
   if (state.loading && m.empty) body = `<div class="ccu-graph-msg" style="height:${m.H}px">${t('se încarcă…')}</div>`;
   else if (m.empty) body = `<div class="ccu-graph-msg" style="height:${m.H}px">${t('fără date istorice')}</div>`;

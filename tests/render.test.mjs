@@ -1,6 +1,6 @@
 // tests/render.test.mjs — render.mjs (șabloane + patchNodes). Rulare: node tests/render.test.mjs
 import { setLang } from '../src/i18n.mjs'; setLang('ro');   // testele verifică textele în română (limba sursă)
-import { esc, formatClock, defaultTap, entityModel, renderButton, renderButtons, renderChips, normalizeHeader, renderHeader, patchNodes, sparkPath, normalizeNav, renderNav, safePicture, normalizePeople, renderPeople, visibleChips, normalizeWaste, wasteModel } from '../src/render.mjs';
+import { waveModel, esc, formatClock, defaultTap, entityModel, renderButton, renderButtons, renderChips, normalizeHeader, renderHeader, patchNodes, sparkPath, normalizeNav, renderNav, safePicture, normalizePeople, renderPeople, visibleChips, normalizeWaste, wasteModel } from '../src/render.mjs';
 import { normalizeConfig } from '../src/config.mjs';
 
 let pass = 0, fail = 0;
@@ -230,5 +230,118 @@ t('patchNodes: două randări cu valori diferite păstrează nodurile', () => {
   return (r === true && o.childNodes[0] === btn && btn._a['data-state'] === 'on' && btn.childNodes[0].nodeValue === 'on') || 'noduri înlocuite';
 });
 
+// ---- ce se vede pe buton: show_icon / show_name / show_value / show_state / state_style / state_labels ----
+const html = (c, i = 0) => renderButton(entityModel(c.entities[i], i, hass, c));
+t('conținut: implicit = ca până acum (iconiță, nume, valoare; fără stare, fără aria-label, aceeași clasă)', () => {
+  const h = html(cfg({ entities: ['light.a'] }));
+  return (h.includes('class="ccu-ico') && h.includes('class="ccu-name"') && h.includes('class="ccu-sec"') && !h.includes('ccu-st') && !h.includes('aria-label') && h.includes('class="ccu-btn m chamfer"')) || h;
+});
+t('conținut: show_state → linia de stare cu punct + text, clasa has-st', () => {
+  const h = html(cfg({ show_state: true, entities: ['light.a'] }));
+  return (h.includes('class="ccu-st" data-style="dot"><i></i><span class="t">Pornit</span>') && h.includes('has-st')) || h;
+});
+t('conținut: state_style: text → fără punct', () => { const h = html(cfg({ show_state: true, state_style: 'text', entities: ['light.a'] })); return (h.includes('data-style="text"') && !h.includes('<i></i>')) || h; });
+t('conținut: textul stării după stare: oprit → „Oprit”, lacăt deblocat (alert) → „Atenție”', () => {
+  const c = cfg({ show_state: true, entities: ['light.b', 'lock.u'] });
+  return (html(c, 0).includes('>Oprit<') && html(c, 1).includes('>Atenție<')) || [html(c, 0), html(c, 1)];
+});
+t('conținut: senzor numeric nu e „pornit/oprit” (fără linie de stare); la alertă apare „Atenție”', () => {
+  const c = cfg({ show_state: true, entities: ['sensor.t', { entity: 'sensor.t', alert_above: 20 }] });
+  return (!html(c, 0).includes('ccu-st') && html(c, 1).includes('>Atenție<')) || [html(c, 0), html(c, 1)];
+});
+t('conținut: entitate indisponibilă → „Indisponibil”', () => html(cfg({ show_state: true, entities: ['light.nu_exista'] })).includes('>Indisponibil<') || 'lipsește');
+t('conținut: show_icon false → fără iconiță, clasa no-ico', () => { const h = html(cfg({ show_icon: false, entities: ['light.a'] })); return (!h.includes('ccu-ico') && h.includes('no-ico') && h.includes('ccu-name')) || h; });
+t('conținut: show_name false → fără nume, aria-label cu numele, starea și valoarea', () => {
+  const h = html(cfg({ show_name: false, show_state: true, entities: ['sensor.t'] }));
+  return (!h.includes('class="ccu-name"') && h.includes('no-name') && h.includes('aria-label="Temp, 24,6 °C"')) || h;
+});
+t('conținut: show_value false → fără valoare; aria-label păstrează valoarea', () => {
+  const h = html(cfg({ show_value: false, entities: ['sensor.t'] }));
+  return (!h.includes('class="ccu-sec"') && h.includes('aria-label="Temp, 24,6 °C"')) || h;
+});
+t('conținut: pe buton suprascrie cardul (card: fără nume, buton: cu nume)', () => {
+  const c = cfg({ show_name: false, entities: ['light.a', { entity: 'light.b', show_name: true }] });
+  return (!html(c, 0).includes('class="ccu-name"') && html(c, 1).includes('class="ccu-name"')) || 'prioritate';
+});
+t('conținut: state_labels pe card și pe buton (butonul câștigă)', () => {
+  const c = cfg({ show_state: true, state_labels: { on: 'Aprins', off: 'Stins' }, entities: ['light.a', { entity: 'light.b', state_labels: { off: 'Închis' } }, 'light.b'] });
+  return (html(c, 0).includes('>Aprins<') && html(c, 1).includes('>Închis<') && html(c, 2).includes('>Stins<')) || [html(c, 0), html(c, 1), html(c, 2)];
+});
+t('conținut: textele de stare sunt scăpate (fără injecție HTML)', () => {
+  const h = html(cfg({ show_state: true, state_labels: { on: '<img src=x onerror=alert(1)>' }, entities: ['light.a'] }));
+  return (!h.includes('<img') && h.includes('&lt;img')) || h;
+});
+t('conținut: toate mărimile desenează linia de stare când e cerută', () => ['xs', 's', 'm', 'l', 'xl'].every((s) => html(cfg({ show_state: true, entities: [{ entity: 'light.a', size: s }] })).includes('ccu-st')) || 'o mărime nu are linia');
+t('conținut: cu show_value false valoarea nu mai e în model.secondary dar rămâne în valueText', () => { const c = cfg({ show_value: false, entities: ['sensor.t'] }); const m = entityModel(c.entities[0], 0, hass, c); return (m.secondary === '' && m.valueText === '24,6 °C') || JSON.stringify([m.secondary, m.valueText]); });
+t('conținut: renderButtons păstrează opțiunile de card în toate butoanele', () => { const o = renderButtons(cfg({ show_state: true, entities: ['light.a', 'light.b'] }), hass); return ((o.match(/ccu-st"/g) || []).length === 2) || 'număr'; });
+
+// ---- etapa 4: val luminos (wave) ----
+t('wave: nu apare implicit', () => !renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'xl' }] }), hass).includes('ccu-wave'));
+t('wave: pe xl cu wave: true apare SVG-ul și clasa has-wave', () => { const h = renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'xl', wave: true }] }), hass); return (h.includes('class="ccu-wave"') && h.includes('has-wave')) || h; });
+t('wave: pe butoane mici (m) nu apare, chiar dacă e cerut', () => !renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'm', wave: true }] }), hass).includes('ccu-wave'));
+t('wave: setat pe card se aplică cardurilor xl; entitatea îl poate opri', () => { const a = renderButtons(cfg({ wave: true, entities: [{ entity: 'sensor.p', size: 'xl' }] }), hass), b = renderButtons(cfg({ wave: true, entities: [{ entity: 'sensor.p', size: 'xl', wave: false }] }), hass); return (a.includes('ccu-wave') && !b.includes('ccu-wave')) || 'card/entitate'; });
+t('wave: SVG-ul e decorativ (aria-hidden) și fără filtre', () => { const h = renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'xl', wave: true }] }), hass); return (h.includes('class="ccu-wave"') && h.includes('aria-hidden="true"') && !h.includes('<filter')) || 'svg'; });
+
+// ---- etapa 6: starea „selectat” ----
+t('nav: elementul curent are aria-current="page", celelalte nu', () => { const h = renderNav(normalizeNav({ items: [{ icon: 'home', label: 'A', path: '/d/a' }, { icon: 'sun', label: 'B', path: '/d/b' }] }), '/d/a'); return ((h.match(/aria-current="page"/g) || []).length === 1 && h.indexOf('aria-current') < h.indexOf('>B<')) || h; });
+t('nav: fără pagină curentă, niciun aria-current', () => !renderNav(normalizeNav({ items: [{ icon: 'home', label: 'A', path: '/d/a' }] }), '/x').includes('aria-current'));
+// ---- etapa 7: pericol (danger) separat de atenție ----
+const dh = (extra, state) => { const h2 = { states: { ...hass.states, 'sensor.t': st(state, { unit_of_measurement: '°C' }) } }; return renderButtons(cfg({ entities: [{ entity: 'sensor.t', ...extra }] }), h2); };
+t('danger: implicit nicio alertă nu are data-level', () => !dh({ alert_above: 20 }, '25').includes('data-level'));
+t('danger: danger: true face din alertă pericol (data-state alert + data-level danger)', () => { const h = dh({ alert_above: 20, danger: true }, '25'); return (h.includes('data-state="alert"') && h.includes('data-level="danger"')) || h; });
+t('danger: danger: true fără alertă nu schimbă nimic', () => !dh({ alert_above: 20, danger: true }, '10').includes('data-level'));
+t('danger: danger_above trece peste alert_above (alertă de pericol)', () => { const a = dh({ alert_above: 20, danger_above: 30 }, '25'), b = dh({ alert_above: 20, danger_above: 30 }, '35'); return (!a.includes('data-level') && b.includes('data-level="danger"') && b.includes('data-state="alert"')) || [a, b]; });
+t('danger: danger_below funcționează și cu 0 (zero e prag valid)', () => dh({ danger_below: 0 }, '-5').includes('data-level="danger"') && !dh({ danger_below: 0 }, '5').includes('data-level') || 'zero');
+t('danger: prag nenumeric sau boolean e ignorat', () => !dh({ danger_above: 'mare', danger_below: true }, '99').includes('data-level'));
+t('danger: și chips-urile primesc data-level', () => renderChips(cfg({ entities: [{ entity: 'sensor.t', alert_above: 1, danger: true }] }), { states: { ...hass.states, 'sensor.t': st('5', {}) } }).includes('data-level="danger"') || 'chip');
+t('nav: badge_style danger → data-level pe element; fără badge nu', () => { const c = normalizeNav({ items: [{ icon: 'home', label: 'A', path: '/a', badge: ['binary_sensor.x'], badge_style: 'danger' }] }); const on = renderNav(c, '/z', { hass: { states: { 'binary_sensor.x': { state: 'on' } } } }), off = renderNav(c, '/z', { hass: { states: { 'binary_sensor.x': { state: 'off' } } } }); return (on.includes('data-level="danger"') && !off.includes('data-level')) || [on, off]; });
+// ---- etapa 8: show_* pe chips și meniu ----
+const chipH = (extra, card) => renderChips(cfg({ ...(card || {}), entities: [{ entity: 'light.a', name: 'Lampa', ...extra }] }), hass);
+t('chip: implicit iconiță + nume (neschimbat)', () => { const h = chipH({}); return (h.includes('ccu-ico') && h.includes('Lampa') && !h.includes('aria-label')) || h; });
+t('chip: show_name false → fără nume, cu aria-label, iconița rămâne', () => { const h = chipH({ show_name: false }); return (h.includes('ccu-ico') && !h.includes('>Lampa') && h.includes('aria-label="Lampa"')) || h; });
+t('chip: show_icon false → fără iconiță, numele rămâne', () => { const h = chipH({ show_icon: false }); return (!h.includes('ccu-ico') && h.includes('Lampa')) || h; });
+t('chip: fără icon și fără nume și fără valoare → iconița rămâne (chip nu rămâne gol)', () => chipH({ show_icon: false, show_name: false }).includes('ccu-ico') || 'gol');
+t('chip: setarea de pe card se aplică, entitatea o poate suprascrie', () => { const a = chipH({}, { show_name: false }), b = chipH({ show_name: true }, { show_name: false }); return (!a.includes('>Lampa') && b.includes('Lampa')) || [a, b]; });
+t('chip: fără nume dar cu valoare (show_state) arată doar valoarea', () => { const h = chipH({ show_name: false, show_state: true }); return (!h.includes('>Lampa') && h.includes('<b>')) || h; });
+const navH = (cfgN, items) => renderNav({ ...normalizeNav({ items }), ...cfgN }, '/a');
+const NI = [{ icon: 'home', label: 'Acasă', path: '/a' }, { icon: 'sun', label: 'Solar', path: '/b' }];
+t('nav: implicit iconiță + text (neschimbat)', () => { const h = navH({}, NI); return (h.includes('ccu-ico') && h.includes('>Solar<') && !h.includes('aria-label') && !h.includes('no-ico')) || h; });
+t('nav: show_icon false pe card → doar text, fără iconițe', () => { const h = navH({ show_icon: false }, NI); return (!h.includes('ccu-ico') && h.includes('>Solar<') && h.includes('no-ico')) || h; });
+t('nav: show_label false pe un element → iconiță + aria-label, fără text', () => { const h = navH({}, [{ ...NI[0], show_label: false }, NI[1]]); return (h.includes('aria-label="Acasă"') && !h.includes('>Acasă<') && h.includes('>Solar<')) || h; });
+t('nav: fără iconiță și fără text → iconița rămâne', () => navH({}, [{ ...NI[0], show_icon: false, show_label: false }]).includes('ccu-ico') || 'gol');
+t('nav: show_icon nebooleană → ignorat, cu avertisment', () => { const n = normalizeNav({ items: [{ ...NI[0], show_icon: 'nu' }] }); return (n.items[0].showIcon === undefined && n.warnings.length === 1) || JSON.stringify(n); });
+t('nav: insigna rămâne vizibilă și fără iconiță', () => { const n = normalizeNav({ items: [{ ...NI[0], show_icon: false, badge: ['binary_sensor.x'] }] }); const h = renderNav({ ...n }, '/z', { hass: { states: { 'binary_sensor.x': { state: 'on' } } } }); return (h.includes('ccu-badge') && !h.includes('ccu-ico')) || h; });
+// ---- revizuire finală ----
+t('wave: două carduri xl au id-uri de gradient diferite (fără dubluri în același DOM)', () => { const h = renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'xl', wave: true }, { entity: 'sensor.d', size: 'xl', wave: true }] }), hass); const ids = [...h.matchAll(/ id="(ccu-wv-[^"]+)"/g)].map((m) => m[1]); return (ids.length === 4 && new Set(ids).size === 4) || ids.join(); });
+t('opțiuni noi cu valori nesănătoase nu aruncă (butoane, chips, meniu)', () => {
+  const junk = [null, undefined, 0, -1, '', 'x', NaN, Infinity, [], {}, true, false, () => 1];
+  for (const j of junk) {
+    const e = { entity: 'sensor.p', size: 'xl', wave: j, danger: j, danger_above: j, danger_below: j, show_icon: j, show_name: j, show_value: j, show_state: j, state_style: j, state_labels: j };
+    renderButtons(cfg({ ...e, entities: [e] }), hass); renderChips(cfg({ ...e, entities: [e] }), hass);
+    renderNav(normalizeNav({ show_icon: j, items: [{ icon: j, label: j, path: '/a', show_icon: j, show_label: j, badge: j, badge_style: j }] }), '/a', { hass });
+  }
+  return true;
+});
+// ---- cyberpunk: selectat, pericol, element decorativ, val ----
+t('selected: entitatea cu selected: true primește data-sel; implicit nu', () => renderButtons(cfg({ entities: [{ entity: 'light.a', selected: true }] }), hass).includes('data-sel="1"') && !renderButtons(cfg({ entities: ['light.a'] }), hass).includes('data-sel') || 'sel');
+t('buton: are elementul decorativ ccu-cut (ascuns de CSS fără efecte), aria-hidden', () => { const h = renderButtons(cfg({ entities: ['light.a'] }), hass); return h.includes('<i class="ccu-cut" aria-hidden="true"></i>') || h; });
+t('wave: diamantul ccu-wd apare doar cu wave', () => renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'xl', wave: true }] }), hass).includes('ccu-wd') && !renderButtons(cfg({ entities: [{ entity: 'sensor.p', size: 'xl' }] }), hass).includes('ccu-wd') || 'wd');
+t('danger: textul stării e „Alertă”, nu „Atenție”; state_labels îl poate schimba', () => { const a = dh({ alert_above: 20, danger: true, show_state: true }, '25'), b = dh({ alert_above: 20, show_state: true }, '25'), c = dh({ alert_above: 20, danger: true, show_state: true, state_labels: { alert: 'Pericol' } }, '25'); return (a.includes('Alertă') && b.includes('Atenție') && c.includes('Pericol')) || [a, b, c]; });
+// ---- val luminos din datele zilei ----
+const H = 3600e3, DAY0 = new Date(2026, 10, 24).getTime();
+const bell = (h) => (h < 6 || h > 19 ? 0 : Math.round(3200 * Math.sin(((h - 6) / 13) * Math.PI)));
+const rowsTo = (hEnd) => { const r = []; for (let h = 0; h <= hEnd; h += 0.25) r.push([DAY0 + h * H, bell(h)]); return r; };
+t('waveModel: fără date → null (se folosește forma decorativă)', () => waveModel([], DAY0) === null && waveModel(null, DAY0) === null && waveModel([[NaN, 1], 'x', null], DAY0) === null);
+t('waveModel: nicio producție azi → linie plată, idle, fără vârf', () => { const m = waveModel([[DAY0, 0], [DAY0 + 6 * H, 0]], DAY0 + 7 * H); return (m.idle === true && m.peak === null && m.fill === '' && m.k === 0) || JSON.stringify(m); });
+t('waveModel: la 15:00 vârful (13:00) e în dreapta, curba are valori valide, k = producția de acum / maximul zilei', () => { const m = waveModel(rowsTo(15), DAY0 + 15 * H); return (!m.idle && m.peak.x > 68 && m.peak.x < 88 && !/NaN|Infinity/.test(m.d + m.fill) && Math.abs(m.k - bell(15) / 3200) < 0.05) || JSON.stringify(m); });
+t('waveModel: la 09:00 (dimineața) vârful e la marginea dreaptă, adică chiar „acum”', () => { const m = waveModel(rowsTo(9), DAY0 + 9 * H); return (m.peak.x > 85 && m.k > 0.9) || JSON.stringify(m); });
+t('waveModel: după apus (producție 0 acum) curba zilei rămâne, dar stinsă (k mic), cu vârf la ~13:00', () => { const m = waveModel(rowsTo(22), DAY0 + 22 * H); return (!m.idle && m.k <= 0.13 && m.peak.x > 35 && m.peak.x < 65) || JSON.stringify(m); });
+t('waveModel: o singură valoare pozitivă și date prea puține nu aruncă', () => { for (const r of [[[DAY0, 5]], [[DAY0, 5], [DAY0 + 1, 5]], [[DAY0 + 10 * H, 1], [DAY0 + 10 * H, 1]]]) { const m = waveModel(r, DAY0 + 11 * H); if (!m || /NaN|Infinity/.test(m.d)) return JSON.stringify(m); } return true; });
+t('renderButton: wave cu istoric → --wk și vârful (ccu-wd) pozitionat din date; fără istoric → forma decorativă (fără stil inline)', () => {
+  const c = cfg({ entities: [{ entity: 'sensor.p', size: 'xl', wave: true }] });
+  const a = renderButtons(c, hass, { sparks: { 'wave:sensor.p': rowsTo(15) }, now: DAY0 + 15 * H }), b = renderButtons(c, hass, {});
+  return (/--wk:\d\.\d\d/.test(a) && /class="ccu-wd" aria-hidden="true" style="left:[\d.]+%;top:[\d.]+%"/.test(a) && b.includes('class="ccu-wd" aria-hidden="true"></i>') && !/--wk/.test(b)) || [a.slice(0, 200), b.slice(0, 100)];
+});
+t('renderButton: wave fără producție azi → clasa idle și niciun vârf', () => { const c = cfg({ entities: [{ entity: 'sensor.p', size: 'xl', wave: true }] }); const a = renderButtons(c, hass, { sparks: { 'wave:sensor.p': [[DAY0, 0], [DAY0 + H, 0]] }, now: DAY0 + 2 * H }); return (a.includes('ccu-wave idle') && !a.includes('ccu-wd')) || a.slice(0, 200); });
 console.log(`\n${pass} / ${pass + fail} teste OK`);
 process.exit(fail ? 1 : 0);

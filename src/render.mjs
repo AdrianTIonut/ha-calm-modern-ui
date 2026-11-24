@@ -12,6 +12,7 @@ export const esc = (v) => String(v === null || v === undefined || (typeof v === 
 const DAYS = ['dum', 'lun', 'mar', 'mie', 'joi', 'vin', 'sâm'];
 const MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const SIZES = ['xs', 's', 'm', 'l', 'xl'];
+const NUMERIC_DOMAINS = ['sensor', 'number', 'input_number', 'counter', 'weather', 'sun', 'person'];
 const SHAPES = ['chamfer', 'round', 'pill', 'square'];
 const TOKENS = ['accent', 'on', 'alert', 'ok', 'muted'];
 const IC = ['green', 'yellow', 'orange', 'blue', 'cyan', 'red', 'white'];
@@ -73,6 +74,12 @@ export function entityModel(e, idx, hass, config = {}) {
   const members = e.count === true && Array.isArray(attrs.entity_id) ? attrs.entity_id : null;
   const count = members ? members.filter(isOn).length : null;
   if (e.on_as === 'alert' && state === 'on') state = 'alert'; // ex. fum / scurgere de apă: când e „on” nu e „activ”, e alertă
+  // pericol (roșu, separat de „atenție”/chihlimbar): `danger: true` = alerta entității se arată ca pericol; `danger_above` / `danger_below` = peste / sub pragul acesta e alertă de pericol
+  const nOf = (v) => (v === undefined || v === null || v === '' || typeof v === 'boolean' ? NaN : Number(v));
+  const dA = nOf(e.danger_above), dB = nOf(e.danger_below), nv = stateObj ? Number(stateObj.state) : NaN;
+  let level = '';
+  if (Number.isFinite(nv) && stateObj && ((Number.isFinite(dA) && nv > dA) || (Number.isFinite(dB) && nv < dB))) { state = 'alert'; level = 'danger'; }
+  else if (e.danger === true && state === 'alert') level = 'danger';
   const given = str(e.name);   // un nume care nu e text (obiect, NaN) se ignoră
   const name = given && given !== autoName(e.entity) ? given : (attrs.friendly_name || given || autoName(e.entity));
   const size = SIZES.includes(e.size) ? e.size : 'm';
@@ -115,8 +122,21 @@ export function entityModel(e, idx, hass, config = {}) {
     if (d.percent_entity && txt && txt !== '—') { const pn = Number(hass?.states?.[d.percent_entity]?.state); if (Number.isFinite(pn)) txt += ` (${formatNumber(pn)}%)`; }
     if (txt && txt !== '—') delta = { text: txt, dir: Number.isFinite(n) ? (n < 0 ? 'down' : 'up') : (/^[−-]/.test(txt) ? 'down' : 'up') };
   }
+  // ce se vede pe buton: pe buton (e.show_*) > pe card (config.show_*) > implicit (iconiță, nume, valoare da; starea nu)
+  const flag = (k, d) => (typeof e[k] === 'boolean' ? e[k] : typeof config[k] === 'boolean' ? config[k] : d);
+  const showIcon = flag('show_icon', true), showName = flag('show_name', true), showValue = flag('show_value', true), showState = flag('show_state', false);
+  const wave = size === 'xl' && flag('wave', false);   // val luminos: doar pe cardurile mari (xl)
+  const stateStyle = ['dot', 'text'].includes(e.state_style) ? e.state_style : ['dot', 'text'].includes(config.state_style) ? config.state_style : 'dot';
+  const labelOf = (k) => { const own = e.state_labels && typeof e.state_labels[k] === 'string' && e.state_labels[k].trim(); const card = config.state_labels && typeof config.state_labels[k] === 'string' && config.state_labels[k].trim();
+    return own || card || { on: t('Pornit'), off: t('Oprit'), alert: level === 'danger' ? t('Alertă') : t('Atenție'), ok: 'OK', unavailable: t('Indisponibil') }[k] || ''; };
+  // senzorii numerici nu sunt „pornit / oprit”: la ei linia de stare apare doar pentru atenție / ok / indisponibil
+  const numeric = NUMERIC_DOMAINS.includes(String(e.entity).split('.')[0]);
+  const stateText = numeric && (state === 'on' || state === 'off') ? '' : labelOf(state);
+  const valueText = secondary;
+  if (!showValue) secondary = '';
   return {
-    idx, entity: e.entity, name, size, shape, state, secondary, mode, run, ic, delta, count,
+    idx, entity: e.entity, name, size, shape, state, level, selected: e.selected === true, secondary, valueText, mode, run, ic, delta, count,
+    showIcon, showName, showValue, stateText, showState: showState && !!stateText, stateStyle, wave,
     named: !!(given && given !== autoName(e.entity)), hidden: e.show_if ? hiddenIf : e.hide_off === true && state !== 'on' && state !== 'alert',
     toggle: e.toggle === true && size === 'l', spark: size === 'xl' && e.spark ? (e.spark.entity || e.entity) : '',
     sparkHours: e.spark && Number.isFinite(Number(e.spark.hours)) ? Math.min(48, Math.max(1, Number(e.spark.hours))) : 6,
@@ -151,28 +171,94 @@ export function sparkPath(values, w = 100, h = 40, pad = 3) {
   return { line, fill: `${line} L${w} ${h} L0 ${h} Z` };
 }
 
-export function renderButton(m, sparks) {
+// ---- val luminos pe cardurile xl (opțiunea `wave`): SVG simplu, fără filtre (ușor pentru tablete slabe) ----
+// Forma e măsurată pe imaginea Quiet Slate cu stylex trace (x și y în % din cardul-erou); creasta e mapată pe jumătatea de jos a cardului.
+const WAVE_PTS = [[0, 93.6], [6.3, 86.6], [12.4, 79.7], [18.5, 74.3], [24.6, 72.3], [30.7, 74.3], [36.8, 78.7], [42.9, 80.2], [48.9, 76.2], [55, 68.3], [61.1, 60.4], [67.2, 55], [73.3, 53], [79.4, 55.4], [85.5, 61.4], [91.6, 70.3], [100, 81]];
+const splineD = (P) => {
+  let d = `M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
+  for (let i = 0; i < P.length - 1; i++) {
+    const a = P[Math.max(i - 1, 0)], b = P[i], c = P[i + 1], e = P[Math.min(i + 2, P.length - 1)];
+    d += ` C${(b[0] + (c[0] - a[0]) / 6).toFixed(1)} ${(b[1] + (c[1] - a[1]) / 6).toFixed(1)} ${(c[0] - (e[0] - b[0]) / 6).toFixed(1)} ${(c[1] - (e[1] - b[1]) / 6).toFixed(1)} ${c[0].toFixed(1)} ${c[1].toFixed(1)}`;
+  }
+  return d;
+};
+const WAVE_D = splineD(WAVE_PTS.map(([x, y]) => [x, Math.max(0, Math.min(40, ((y - 45) / 55) * 40))]));   // forma decorativă (fără istoric)
+
+/**
+ * Valul din datele reale ale zilei. `rows` = [[timp_ms, valoare], …] de la miezul nopții, `now` = ms.
+ * Axa X: de la începutul producției de azi până acum (sau până la ultima producție, după apus); axa Y: 0 … maximul zilei.
+ * Întoarce { d, fill, peak: {x, top}|null, k (0–1, cât de aproape de maxim e producția de acum), idle } sau null fără date (atunci se folosește forma decorativă).
+ */
+export function waveModel(rows, now) {
+  const r = (Array.isArray(rows) ? rows : []).filter((p) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1])).sort((a, b) => a[0] - b[0]);
+  if (!r.length) return null;
+  const hi = Math.max(...r.map((p) => p[1])), last = r[r.length - 1][1];
+  if (!(hi > 0)) return { d: 'M0 35.9 L100 36', fill: '', peak: null, k: 0, idle: true };   // nicio producție azi: linie plată, fără strălucire
+  const first = r.find((p) => p[1] > 0)[0];
+  let lastProd = r[0][0]; for (const p of r) if (p[1] > 0) lastProd = p[0];
+  const t0 = Math.max(r[0][0], first - 20 * 60e3);
+  let t1 = last > 0 ? Math.max(now, r[r.length - 1][0]) : lastProd + 20 * 60e3;
+  if (t1 - t0 < 3600e3) t1 = t0 + 3600e3;
+  const B = 48, vals = [];
+  let j = 0, cur = r[0][1];
+  for (let i = 0; i < B; i++) {
+    const tc = t0 + ((i + 0.5) / B) * (t1 - t0), te = t0 + ((i + 1) / B) * (t1 - t0);
+    let mx = -Infinity;
+    while (j < r.length && r[j][0] <= te) { if (r[j][0] >= t0) mx = Math.max(mx, r[j][1]); cur = r[j][1]; j++; }
+    vals.push(Number.isFinite(mx) ? (mx + cur) / 2 : cur);   // în găleată: media dintre maxim și ultima valoare; fără puncte: se ține ultima valoare
+  }
+  for (let pass = 0; pass < 2; pass++) { const c = vals.slice(); for (let i = 1; i < B - 1; i++) vals[i] = (c[i - 1] + 2 * c[i] + c[i + 1]) / 4; }   // netezire ușoară
+  const vmax = Math.max(...vals);
+  const P = vals.map((v, i) => [(i / (B - 1)) * 100, 36 - (Math.max(0, v) / vmax) * 32]);
+  const pk = P.reduce((m, p) => (p[1] < m[1] ? p : m), P[0]);
+  const d = splineD(P);
+  return { d, fill: `${d} L100 40 L0 40Z`, peak: { x: +pk[0].toFixed(1), top: +(44 + (pk[1] / 40) * 56).toFixed(1) }, k: last > 0 ? Math.min(1, Math.max(0.12, last / hi)) : 0.12, idle: false };
+}
+const waveSvg = (k, wm) => {
+  const d = wm ? wm.d : WAVE_D, fill = wm ? wm.fill : `${WAVE_D} L100 40 L0 40Z`;
+  return `<svg class="ccu-wave${wm && wm.idle ? ' idle' : ''}" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"${wm ? ` style="--wk:${wm.k.toFixed(2)}"` : ''}><defs>`
+  + `<linearGradient id="ccu-wv-f${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".36"/><stop offset=".45" stop-color="currentColor" stop-opacity=".13"/><stop offset="1" stop-color="currentColor" stop-opacity=".02"/></linearGradient>`
+  + `<linearGradient id="ccu-wv-s${k}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity=".35"/><stop offset=".3" stop-color="currentColor" stop-opacity=".85"/><stop offset=".62" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity=".6"/></linearGradient></defs>`
+  + `<path class="wf" fill="url(#ccu-wv-f${k})" d="${fill}"/><path class="w2" transform="translate(0 4)" d="${d}"/><path class="w3" transform="translate(-6 8) scale(1.06 .72)" d="${d}"/>`
+  + `<path class="wh" d="${d}"/><path class="wm" d="${d}"/><path class="wc" stroke="url(#ccu-wv-s${k})" d="${d}"/></svg>`;
+};
+// vârful (diamant / stea, efectul peak): la maximul real al zilei; fără date, în poziția formei decorative
+const wavePeak = (wm) => (wm && wm.idle ? '' : `<i class="ccu-wd" aria-hidden="true"${wm && wm.peak ? ` style="left:${wm.peak.x}%;top:${wm.peak.top}%"` : ''}></i>`);
+
+// element decorativ (aria-hidden): colțuri tăiate + semnul „//”; ascuns (display: none) dacă tema nu pornește efectele cut / mark
+const CUT_EL = '<i class="ccu-cut" aria-hidden="true"></i>';
+
+export function renderButton(m, sparks, now) {
+  const wm = m.wave ? waveModel(sparks && sparks['wave:' + m.entity], now === undefined ? Date.now() : now) : null;
   const sp = m.spark ? (sparks && sparks[m.spark]) : null;
   const spark = m.spark ? `<svg class="ccu-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path class="fill" d="${sp ? sp.fill : ''}"/><path d="${sp ? sp.line : ''}"/></svg>` : '';
   const sec = m.secondary ? `<span class="ccu-sec">${m.size === 'xl' ? bigValue(m.secondary) : esc(m.secondary)}</span>` : '';
   const delta = m.delta ? `<span class="ccu-delta" data-dir="${m.delta.dir}">${m.delta.dir === 'down' ? '▼' : '▲'} ${esc(m.delta.text)}</span>` : '';
-  return `<button type="button" class="ccu-btn ${m.size} ${m.shape}"${m.lamp ? ' data-lamp="1"' : ''} data-state="${m.state}" data-id="${m.idx}" data-entity="${esc(m.entity)}"${m.ic ? ` data-ic="${m.ic}"` : ''}${modeAttrs(m)}${styleAttr(m.style)}>`
-    + `<span class="ccu-ico ${m.anim}">${m.icon}</span><span class="ccu-name">${esc(m.name)}</span>` + sec + delta + spark
+  const st = m.showState ? `<span class="ccu-st" data-style="${m.stateStyle}">${m.stateStyle === 'dot' ? '<i></i>' : ''}<span class="t">${esc(m.stateText)}</span></span>` : '';
+  const ico = m.showIcon === false ? '' : `<span class="ccu-ico ${m.anim}">${m.icon}</span>`;
+  const nm = m.showName === false ? '' : `<span class="ccu-name">${esc(m.name)}</span>`;
+  // când ceva e ascuns din ochi, cititoarele de ecran tot primesc numele, starea și valoarea
+  const cls = (m.showIcon === false ? ' no-ico' : '') + (m.showName === false ? ' no-name' : '') + (st ? ' has-st' : '') + (m.wave ? ' has-wave' : '');
+  const aria = m.showName === false || m.showValue === false ? ` aria-label="${esc([m.name, m.stateText, m.valueText].filter(Boolean).join(', '))}"` : '';
+  return `<button type="button" class="ccu-btn ${m.size} ${m.shape}${cls}"${aria}${m.lamp ? ' data-lamp="1"' : ''} data-state="${m.state}"${m.level ? ` data-level="${m.level}"` : ''}${m.selected ? ' data-sel="1"' : ''} data-id="${m.idx}" data-entity="${esc(m.entity)}"${m.ic ? ` data-ic="${m.ic}"` : ''}${modeAttrs(m)}${styleAttr(m.style)}>`
+    + ico + nm + st + sec + delta + spark + (m.wave ? waveSvg(m.idx, wm) + wavePeak(wm) : '') + CUT_EL
     + (m.toggle ? `<span class="ccu-sw" aria-hidden="true"><i></i></span>` : '') + `</button>`;
 }
 
 export function renderChip(m, e, hass) {
-  let label = esc(m.name);
-  if (m.count !== null && m.count !== undefined) label = `<b>${m.count}</b>${m.named ? ' ' + esc(m.name) : ''}`;
-  else if (e.show_state) {
+  const hasCount = m.count !== null && m.count !== undefined, hasVal = !!e.show_state;
+  const showName = m.showName !== false, showIcon = m.showIcon !== false || (!showName && !hasCount && !hasVal);   // fără nimic de arătat → iconița rămâne
+  let label = hasCount ? `<b>${m.count}</b>${m.named && showName ? ' ' + esc(m.name) : ''}` : showName ? esc(m.name) : '';
+  if (!hasCount && hasVal) {
     const raw = hass?.states?.[e.entity];
     let t = m.secondary || (raw ? secondaryText(raw, hass) : '—');
     // text_map: traduce starea text (spinning → Centrifugare); cu `secondary: {entity}` se adaugă și a doua valoare (ex. timpul rămas)
     if (e.text_map && typeof e.text_map === 'object' && raw && e.text_map[raw.state] !== undefined) { t = String(e.text_map[raw.state]); if (e.secondary !== undefined && m.secondary && m.secondary !== '—') t += ' · ' + m.secondary; }   // doar dacă `secondary` e dat în config; altfel m.secondary e chiar valoarea tradusă (altfel „Spin · Spin”)
-    label += ` <b>${esc(t)}</b>`;
+    label += (label ? ' ' : '') + `<b>${esc(t)}</b>`;
   }
-  return `<span class="ccu-chip" role="button" tabindex="0" data-state="${m.state}" data-id="${m.idx}" data-entity="${esc(m.entity)}"${m.ic ? ` data-ic="${m.ic}"` : ''}${modeAttrs(m)}${styleAttr(m.style)}>`
-    + `<span class="ccu-ico ${m.anim}">${m.icon}</span>${label}</span>`;
+  const aria = !showName ? ` aria-label="${esc(m.name)}"` : '';
+  return `<span class="ccu-chip" role="button" tabindex="0" data-state="${m.state}"${m.level ? ` data-level="${m.level}"` : ''} data-id="${m.idx}" data-entity="${esc(m.entity)}"${m.ic ? ` data-ic="${m.ic}"` : ''}${aria}${modeAttrs(m)}${styleAttr(m.style)}>`
+    + (showIcon ? `<span class="ccu-ico ${m.anim}">${m.icon}</span>` : '') + label + `</span>`;
 }
 
 const notes = (warnings) => (warnings && warnings.length ? `<div class="ccu-note">${warnings.slice(0, 3).map(esc).join('<br>')}</div>` : '');
@@ -183,7 +269,7 @@ export function renderButtons(config, hass, opts = {}) {
   const wide = pickInt(config.columns_wide, 1, 8, cols);
   // lățimea minimă a unei plăci (px): coloanele de pe ecran lat se reduc singure ca numele și valorile să nu se taie
   const minTile = Math.max(0, ...(config.entities || []).map((e) => ({ m: 168, l: 240 }[SIZES.includes(e.size) ? e.size : 'm'] || 0)));
-  const items = (config.entities || []).map((e, i) => renderButton(entityModel(e, i, hass, config), opts.sparks)).join('');
+  const items = (config.entities || []).map((e, i) => renderButton(entityModel(e, i, hass, config), opts.sparks, opts.now)).join('');
   const title = config.title ? `<div class="ccu-title">${esc(config.title)}</div>` : '';
   return `<div class="ccu-card${config.panel ? ' panel' : ''}">${title}<div class="ccu-grid" data-cols="${cols}" style="--cols:${cols};--cols-wide:${wide};--min-tile:${minTile}px">${items}</div>${notes(opts.warnings)}</div>`;
 }
@@ -248,7 +334,7 @@ export function normalizeHeader(h) {
     if (o.color && !TOKENS.includes(o.color)) { warnings.push(t('Valoarea #{n}: culoare "{c}" necunoscută (folosește {l}).', { n: i + 1, c: o.color, l: TOKENS.join('/') })); delete o.color; }
     // autonomia sub valoare (când valoarea e procentul bateriei): chei `runtime_*` (din editor) sau `runtime: { load, … }`
     const nested = o.runtime && typeof o.runtime === 'object' ? o.runtime : {}, rt = {};
-    for (const k of ['load', 'load_entities', 'capacity_entity', 'capacity_kwh', 'grid_present', 'reserve_pct', 'shutdown_pct', 'power', 'power_invert', 'charge_eta', 'while_charging']) {
+    for (const k of ['load', 'load_entities', 'capacity_source', 'capacity_entity', 'capacity_kwh', 'capacity_ah_entity', 'capacity_ah', 'nominal_voltage', 'grid_present', 'reserve_pct', 'shutdown_pct', 'power', 'power_invert', 'charge_eta', 'while_charging']) {
       const v = o['runtime_' + k] !== undefined && o['runtime_' + k] !== '' ? o['runtime_' + k] : nested[k];
       if (v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)) rt[k] = v;
     }
@@ -302,11 +388,21 @@ export function renderHeader(config, hass, now, opts = {}) {
   }).join('');
   let clock = '';
   if (h.right) clock = `<span class="clock right">${esc(rightValue(h.right, hass))}${h.right.label ? `<small>${esc(h.right.label)}</small>` : ''}</span>`;
-  else if (h.clock && now) { const c = formatClock(now); clock = `<span class="clock">${c.time}<small>${esc(c.date)}</small></span>`; }
+  else if (h.clock && now) { const c = formatClock(now); clock = `<span class="clock"><span class="ccu-ico ck" aria-hidden="true">${iconSvg('clock')}</span>${c.time}<small>${esc(c.date)}</small></span>`; }
   return `<div class="ccu-head" data-id="header"><span class="ccu-ico">${iconSvg(h.icon)}</span><span class="vals">${vals}</span>${clock}</div>${notes(opts.warnings)}`;
 }
 
 /** Normalizează meniul jos: items = [{ icon, label, path }] (path = adresă completă ce începe cu '/'). */
+/** show_icon / show_label pe un element de meniu: doar boolean; altfel ignorat, cu avertisment. */
+function navFlags(o, i, warnings) {
+  const out = {};
+  for (const [k, key] of [['show_icon', 'showIcon'], ['show_label', 'showLabel']]) {
+    if (o[k] === undefined) continue;
+    if (typeof o[k] === 'boolean') out[key] = o[k]; else warnings.push(t('Meniu #{n}: „{k}” trebuie să fie true sau false — ignorat.', { n: i + 1, k }));
+  }
+  return out;
+}
+
 export function normalizeNav(cfg) {
   const warnings = [];
   const items = [];
@@ -324,7 +420,7 @@ export function normalizeNav(cfg) {
     const vi = o.visible_if && typeof o.visible_if === 'object' && /^[a-z_]+\.[a-z0-9_]+$/.test(String(o.visible_if.entity)) ? { entity: o.visible_if.entity, state: String(o.visible_if.state) } : null;
     const bl = Array.isArray(o.badge) ? o.badge : (o.badge && Array.isArray(o.badge.entities) ? o.badge.entities : []);
     const mt = (Array.isArray(o.match) ? o.match : o.match ? [o.match] : []).map(okPath).filter(Boolean);
-    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, paths: back ? { tablet: '', phone: '' } : paths, hold, holds, match: mt.length ? mt : null, device: o.device === 'tablet' || o.device === 'phone' ? o.device : '', back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : '' });
+    items.push({ icon: o.icon || (back ? 'back' : 'home'), label: String(o.label ?? o.name ?? ''), path: back ? '' : path, paths: back ? { tablet: '', phone: '' } : paths, hold, holds, match: mt.length ? mt : null, device: o.device === 'tablet' || o.device === 'phone' ? o.device : '', back, visible_if: vi, badge: bl.filter((id) => typeof id === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(id)), badge_style: o.badge_style === 'light' ? 'light' : o.badge_style === 'danger' ? 'danger' : '', ...navFlags(o, i, warnings) });
   });
   return { items, warnings };
 }
@@ -357,8 +453,10 @@ export function renderNav(config, currentPath, opts = {}) {
   // visible_if: { entity, state } — elementul se vede doar când entitatea are acea stare (ex. butonul „Tableta” doar pe tabletă)
   const shown = (it) => forDevice(it) && (!it.visible_if || (hs && hs[it.visible_if.entity] && String(hs[it.visible_if.entity].state) === it.visible_if.state));
   const labels = config.labels !== false;
-  const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? (it.badge_style === 'light' ? 'lit' : 'alert') : 'off';
-    return `<button type="button" class="ccu-nav-item" data-id="${i}" data-state="${st}"><span class="ccu-ico">${iconSvg(it.icon)}${n > 0 ? `<b class="ccu-badge${it.badge_style === 'light' ? ' lit' : ''}">${n}</b>` : ''}</span>${labels ? `<span>${esc(it.label)}</span>` : ''}</button>`; }).join('');
+  const html = config.items.map((it, i) => { if (!shown(it)) return ''; const n = cnt(it); const st = i === on ? 'on' : n > 0 ? (it.badge_style === 'light' ? 'lit' : 'alert') : 'off'; const lv = st === 'alert' && it.badge_style === 'danger' ? ' data-level="danger"' : '';
+    const lab = it.showLabel !== undefined ? it.showLabel : labels, ico = it.showIcon !== undefined ? it.showIcon : config.show_icon !== false, wantIcon = ico || !lab;   // fără iconiță și fără text → iconița rămâne
+    const badge = n > 0 ? `<b class="ccu-badge${it.badge_style === 'light' ? ' lit' : ''}${wantIcon ? '' : ' in'}">${n}</b>` : '';
+    return `<button type="button" class="ccu-nav-item${wantIcon ? '' : ' no-ico'}" data-id="${i}" data-state="${st}"${lv}${st === 'on' ? ' aria-current="page"' : ''}${lab ? '' : ` aria-label="${esc(it.label)}"`}>${wantIcon ? `<span class="ccu-ico">${iconSvg(it.icon)}${wantIcon ? badge : ''}</span>` : ''}${lab ? `<span>${esc(it.label)}</span>` : ''}${wantIcon ? '' : badge}</button>`; }).join('');
   const nav = `<nav class="ccu-nav${config.compact ? ' compact' : ''}${labels ? '' : ' nolabels'}">${html}</nav>`;
   // sticky: bara rămâne fixă jos, pe ecran, cât derulezi pagina; un spațiu gol în pagină (spacer) o împiedică să acopere ultimul card
   if (config.sticky) return `${config.spacer === false ? '' : '<div class="ccu-nav-spacer"></div>'}<div class="ccu-nav-fixed">${nav}</div>${notes(opts.warnings)}`;

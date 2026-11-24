@@ -40,9 +40,12 @@ export const CCU_THEME = `
   --ccu-drop: 0 10px 20px -12px rgba(0,0,0,.8);
   --ccu-font: "Inter","Segoe UI Variable","Segoe UI",system-ui,-apple-system,"Roboto",sans-serif;
   --ccu-anim: 1;
+  --ccu-fx-tint: 1;                  /* intensitatea tintei de stare (0–1); 1 = ca până acum */
+  --ccu-fx-glow: 1;                  /* intensitatea strălucirii (glow) a stărilor (0–1); 1 = ca până acum */
   display: block;
   height: 100%;                      /* în grilă (hero + grafic) cardurile se întind pe înălțime */
   container-type: inline-size;
+  zoom: var(--ccu-scale, 1);          /* scale: din card (implicit 1 = nimic) */
   color: var(--ccu-text);
   font-family: var(--ccu-font);
   font-variant-numeric: tabular-nums;
@@ -61,7 +64,7 @@ export const CCU_THEME = `
 .ccu-card { position: relative; padding: 0; height: 100%; }
 .ccu-card > .ccu-grid { height: 100%; }
 .ccu-card.ccu-graph-card { height: 100%; }
-.ccu-card.panel { padding: 12px; border: var(--ccu-bw) solid var(--ccu-line); border-radius: var(--ccu-r-card); background: var(--ccu-gloss), var(--ccu-surface); box-shadow: var(--ccu-edge), var(--ccu-drop); }
+.ccu-card.panel { padding: 12px; border: var(--ccu-bw) solid var(--ccu-line); border-radius: var(--ccu-r-card); background: var(--ccu-panel-bg, var(--ccu-gloss), var(--ccu-surface)); box-shadow: var(--ccu-edge), var(--ccu-drop); }
 .ccu-title { font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--ccu-muted); margin: 0 2px 8px; }
 .ccu-note { margin-top: 8px; padding: 6px 10px; border-radius: 10px; font-size: 11px; line-height: 1.3; color: var(--ccu-alert);
   background: color-mix(in srgb, var(--ccu-alert) 10%, transparent); border: var(--ccu-bw) solid color-mix(in srgb, var(--ccu-alert) 40%, transparent); }
@@ -148,47 +151,289 @@ export const CCU_THEME = `
 .ccu-btn[data-state="on"] .ccu-sw { background: linear-gradient(180deg, var(--ccu-on), color-mix(in srgb, var(--ccu-on) 70%, #000)); border-color: color-mix(in srgb, var(--ccu-on) 70%, #fff 15%); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 0 10px color-mix(in srgb, var(--ccu-on) 45%, transparent); }
 .ccu-btn[data-state="on"] .ccu-sw i { transform: translateX(18px); }
 
+/* ---- ce se vede pe buton: linia de stare (show_state) și butoane fără iconiță / fără nume (show_icon / show_name: false) ----
+   grid-area se pune DOAR pe variantele care au șablon cu zone numite (altfel butoanele obișnuite s-ar muta) */
+.ccu-st { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; white-space: nowrap; overflow: hidden;
+  font-size: 12px; line-height: 1.2; font-weight: 500; color: var(--ccu-muted); position: relative; z-index: 1; }
+.ccu-st i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.ccu-st .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ccu-btn[data-state="on"] .ccu-st { color: var(--ccu-on-hi); }
+.ccu-btn[data-state="alert"] .ccu-st { color: var(--ccu-alert-hi); }
+.ccu-btn[data-state="ok"] .ccu-st { color: var(--ccu-ok); }
+.ccu-btn[data-state="off"] .ccu-st i, .ccu-btn[data-state="unavailable"] .ccu-st i { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+.ccu-btn.s .ccu-st { justify-content: center; }
+.ccu-btn.xs .ccu-st { font-size: 11.5px; }
+/* m: iconiță stânga; nume / stare / valoare în coloana din dreapta */
+.ccu-btn.m.has-st { grid-template-areas: "ico name" "ico st" "ico sec"; }
+.ccu-btn.m.has-st .ccu-st { grid-area: st; align-self: center; }
+.ccu-btn.m.vert.has-st { grid-template-areas: "ico" "name" "st" "sec"; }
+.ccu-btn.m.no-ico { grid-template-columns: minmax(0, 1fr); grid-template-areas: "name" "sec"; }
+.ccu-btn.m.no-ico.has-st { grid-template-areas: "name" "st" "sec"; }
+.ccu-btn.m.vert.no-ico { grid-template-areas: "name" "sec"; }
+.ccu-btn.m.vert.no-ico.has-st { grid-template-areas: "name" "st" "sec"; }
+.ccu-btn.m.no-name .ccu-sec { align-self: center; }
+/* l: rând lat — starea sub nume */
+.ccu-btn.l:is(.has-st, .no-ico, .no-name) { grid-template-areas: "ico name sec sw"; }
+.ccu-btn.l:is(.has-st, .no-ico, .no-name) .ccu-ico { grid-area: ico; }
+.ccu-btn.l:is(.has-st, .no-ico, .no-name) .ccu-name { grid-area: name; }
+.ccu-btn.l:is(.has-st, .no-ico, .no-name) .ccu-sec { grid-area: sec; }
+.ccu-btn.l:is(.has-st, .no-ico, .no-name) .ccu-sw { grid-area: sw; }
+.ccu-btn.l.has-st { grid-template-areas: "ico name sec sw" "ico st sec sw"; row-gap: 0; }
+.ccu-btn.l.has-st .ccu-st { grid-area: st; align-self: start; } .ccu-btn.l.has-st .ccu-name { align-self: end; }
+.ccu-btn.l.no-ico { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name sec sw"; }
+.ccu-btn.l.no-ico.has-st { grid-template-areas: "name sec sw" "st sec sw"; }
+/* xl (erou): starea lângă titlu */
+.ccu-btn.xl.has-st { grid-template-areas: "ico name" "ico st" "sec sec" "delta delta"; row-gap: 4px; }
+.ccu-btn.xl.has-st .ccu-st { grid-area: st; align-self: center; }
+.ccu-btn.xl.no-ico { grid-template-columns: 1fr; grid-template-areas: "name" "sec" "delta"; }
+.ccu-btn.xl.no-ico.has-st { grid-template-areas: "name" "st" "sec" "delta"; }
+/* fără nume, cu stare: starea ia locul numelui (fără rând gol) */
+.ccu-btn.m.has-st.no-name { grid-template-areas: "ico st" "ico sec"; }
+.ccu-btn.m.vert.has-st.no-name { grid-template-areas: "ico" "st" "sec"; }
+.ccu-btn.l.has-st.no-name { grid-template-areas: "ico st sec sw"; }
+.ccu-btn.l.has-st.no-name .ccu-st { align-self: center; }
+.ccu-btn.xl.has-st.no-name { grid-template-areas: "ico st" "sec sec" "delta delta"; }
+.ccu-btn.xl.has-st.no-name.no-ico { grid-template-areas: "st" "sec" "delta"; }
+/* s pe ecran lat (tabletă): iconiță stânga; fără iconiță, o singură coloană */
+@container (min-width: 540px) {
+  .ccu-btn.s.has-st { grid-template-areas: "ico name" "ico st" "ico sec"; }
+  .ccu-btn.s.has-st .ccu-st { grid-area: st; justify-content: flex-start; }
+  .ccu-btn.s.has-st.no-name { grid-template-areas: "ico st" "ico sec"; }
+  .ccu-btn.s.no-ico { grid-template-columns: minmax(0, 1fr); grid-template-areas: "name" "sec"; }
+  .ccu-btn.s.no-ico.has-st { grid-template-areas: "name" "st" "sec"; }
+}
+
+/* ---- mod noapte (opțiunea night): cardul se întunecă după soare; --ccu-night-op vine din night_dim ---- */
+:host([data-night]) { opacity: var(--ccu-night-op, .85); transition: opacity 1.2s ease; }
+@media (prefers-reduced-motion: reduce) { :host([data-night]) { transition: none; } }
+
+/* ---- val luminos (opțiunea wave, doar xl): strălucirea (halou) urmează glow; linia și umplerea rămân și fără glow ---- */
+.ccu-btn.has-wave { overflow: hidden; }
+.ccu-btn.has-wave > :not(.ccu-wave):not(.ccu-wd):not(.ccu-cut) { position: relative; z-index: 1; }
+.ccu-wave { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 56%; z-index: 0; pointer-events: none; color: var(--ccu-accent); }
+.ccu-btn[data-state="on"] .ccu-wave { color: var(--ccu-on-hi); }
+.ccu-btn[data-state="alert"] .ccu-wave { color: var(--ccu-alert-hi); }
+.ccu-btn[data-state="ok"] .ccu-wave { color: var(--ccu-ok); }
+.ccu-btn[data-state="unavailable"] .ccu-wave, .ccu-btn[data-state="off"] .ccu-wave { color: var(--ccu-muted); }
+.ccu-wave path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.ccu-wave .wf { vector-effect: none; }
+.ccu-wave .w2 { stroke: currentColor; stroke-width: 1px; stroke-opacity: .28; }
+.ccu-wave .w3 { stroke: currentColor; stroke-width: 1px; stroke-opacity: .16; }
+.ccu-wave .wh { stroke: currentColor; stroke-width: 12px; stroke-opacity: calc(.11 * var(--ccu-fx-glow, 1) * var(--wk, 1)); }
+.ccu-wave .wm { stroke: currentColor; stroke-width: 5px; stroke-opacity: calc(.24 * var(--ccu-fx-glow, 1) * var(--wk, 1)); }
+.ccu-wave .wf { opacity: calc(.45 + .55 * var(--wk, 1)); }
+/* fără producție azi: linie plată și stinsă, fără halou, fără umplere */
+.ccu-wave.idle :is(.wf, .w2, .w3, .wh, .wm) { display: none; }
+.ccu-wave.idle .wc { opacity: .45; }
+.ccu-wave .wc { stroke-width: 1.6px; }
+@media not (prefers-reduced-motion: reduce) { .ccu-wave .wh, .ccu-wave .wm { animation: ccu-breathe 5.5s ease-in-out infinite; } }
+@keyframes ccu-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+:host([data-anim="off"]) .ccu-wave :is(.wh, .wm) { animation: none !important; }
+:host([data-anim="calm"]) .ccu-wave :is(.wh, .wm) { animation-iteration-count: 3 !important; }
+
+.ccu-nav-item.no-ico { min-height: 40px; grid-auto-flow: column; justify-content: center; gap: 6px; }
+.ccu-badge.in { position: static; box-shadow: none; }
+
+/* ---- efecte opționale (rim, mark, cut, streak, peak): temele le pornesc prin feat, cardul le schimbă cu effects ----
+   Ascunse implicit: fără data-feat nimic din ce urmează nu se vede. */
+:host {
+  --ccu-mk-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath d='M1 9.2 5.4 .8M6.6 9.2 11 .8' stroke='%2395e4ee' stroke-width='1.3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") top 9px right 14px / 11px 9px no-repeat;
+  --ccu-cut-clip: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+  --ccu-cut-ring: polygon(evenodd, 9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px, 9.62px 1.5px, calc(100% - 9.62px) 1.5px, calc(100% - 1.5px) 9.62px, calc(100% - 1.5px) calc(100% - 9.62px), calc(100% - 9.62px) calc(100% - 1.5px), 9.62px calc(100% - 1.5px), 1.5px calc(100% - 9.62px), 1.5px 9.62px);
+}
+.ccu-cut, .ccu-wd { display: none; }
+.ccu-btn > .ccu-cut { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.ccu-wd { position: absolute; left: 73.3%; top: 52%; width: 9px; height: 9px; z-index: 2; pointer-events: none; transform: translate(-50%, -50%) rotate(45deg); background: #fff; box-shadow: 0 0 10px 2px color-mix(in srgb, currentColor 70%, transparent); color: var(--ccu-on-hi); }
+.ccu-graph .pk, .ccu-graph .gx, .ccu-graph .ax { display: none; }
+
+/* rim: conturul neon — lumină sus-stânga, mai estompat spre colțul opus (inel de 2px din ::before) */
+:host([data-feat~="rim"]) :is(.ccu-btn, .ccu-chip)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 2;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--bc, var(--ccu-line)) 78%, #ffffff) 0%, var(--bc, var(--ccu-line)) 28%, color-mix(in srgb, var(--bc, var(--ccu-line)) 40%, transparent) 68%, color-mix(in srgb, var(--bc, var(--ccu-line)) 75%, transparent) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+:host([data-feat~="rim"]) .ccu-chip { position: relative; }
+:host([data-feat~="rim"]) :is(.ccu-btn, .ccu-chip)[data-state="unavailable"]::before { opacity: .6; }
+
+/* streak: linie de lumină pe marginea de sus a cardurilor active */
+:host([data-feat~="streak"]) .ccu-btn:is([data-state="on"], [data-state="alert"], .xl)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2px; pointer-events: none; z-index: 2;
+  background: linear-gradient(90deg, transparent 0, color-mix(in srgb, var(--bc, var(--ccu-accent)) 40%, #ffffff) 14%, transparent 52%) top / 100% 2px no-repeat, linear-gradient(transparent, transparent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+:host([data-feat~="streak"]:not([data-feat~="rim"])) .ccu-btn:is([data-state="on"], [data-state="alert"], .xl)::before { background: linear-gradient(90deg, transparent 0, color-mix(in srgb, var(--bc, var(--ccu-accent)) 40%, #ffffff) 14%, transparent 52%) top / 100% 2px no-repeat; }
+
+/* cut: colțuri tăiate (9px) pe cardurile mari (xl) și pe panouri; bordura urmează diagonala (inel din ::before, cu regula evenodd).
+   mark: semnul „//” pe cardurile pornite și pe cele mari */
+:host([data-feat~="cut"]) .ccu-btn.xl, :host([data-feat~="cut"]) .ccu-card.panel { clip-path: var(--ccu-cut-clip); border-radius: 0; border-color: transparent; }
+:host([data-feat~="cut"]) .ccu-btn.xl::before, :host([data-feat~="cut"]) .ccu-card.panel::before { content: ""; position: absolute; inset: 0; padding: 0 !important; border-radius: 0; z-index: 2; pointer-events: none;
+  -webkit-mask: none !important; mask: none !important; clip-path: var(--ccu-cut-ring);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--bc, var(--ccu-text)) 55%, #ffffff) 0%, var(--bc, color-mix(in srgb, var(--ccu-text) 38%, transparent)) 32%, color-mix(in srgb, var(--bc, var(--ccu-text)) 38%, transparent) 70%, color-mix(in srgb, var(--bc, var(--ccu-text)) 70%, transparent) 100%) !important; }
+:host([data-feat~="cut"][data-feat~="streak"]) .ccu-btn.xl::before { background: linear-gradient(90deg, transparent 0, color-mix(in srgb, var(--bc, var(--ccu-accent)) 30%, #ffffff) 12%, transparent 50%) top / 100% 2px no-repeat, linear-gradient(135deg, color-mix(in srgb, var(--bc, var(--ccu-text)) 55%, #ffffff) 0%, var(--bc, color-mix(in srgb, var(--ccu-text) 38%, transparent)) 32%, color-mix(in srgb, var(--bc, var(--ccu-text)) 38%, transparent) 70%, color-mix(in srgb, var(--bc, var(--ccu-text)) 70%, transparent) 100%) !important; }
+:host([data-feat~="cut"]) :is(.ccu-head, .ccu-nav) { clip-path: var(--ccu-cut-clip); border-radius: 0 !important; border-color: transparent; position: relative; }
+:host([data-feat~="cut"]) :is(.ccu-head, .ccu-nav)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; clip-path: var(--ccu-cut-ring);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ccu-text) 55%, transparent) 0%, color-mix(in srgb, var(--ccu-text) 34%, transparent) 40%, color-mix(in srgb, var(--ccu-text) 26%, transparent) 100%); }
+:host([data-feat~="mark"]) .ccu-btn:not(.xs):is([data-state="on"], .xl, .l) > .ccu-cut { display: block; background: var(--ccu-mk-l); }
+:host([data-feat~="mark"]) .ccu-card.ccu-graph-card.panel::after { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: var(--ccu-mk-l); }
+
+/* bar: antetul și meniul de jos în stilul „bară de sticlă”: etichetă deasupra valorii, iconiță lângă text, separatoare, elementul curent = pastilă luminoasă */
+:host([data-feat~="bar"]) .ccu-head { background: linear-gradient(90deg, color-mix(in srgb, var(--ccu-accent) 10%, var(--ccu-surface)), var(--ccu-surface) 62%); border-radius: 16px; padding: 12px 18px 12px 16px; }
+:host([data-feat~="bar"]) .ccu-head > .ccu-ico { color: var(--ccu-text); filter: none; --ico: 34px; }
+:host([data-feat~="bar"]) .ccu-head .vals .ccu-ico:not([class*="c-"]) { color: var(--ccu-text); }
+:host([data-feat~="bar"]) .ccu-head .vals > span.has-label .ccu-ico { --ico: 30px; }
+:host([data-feat~="bar"]) .ccu-head .vals .tx { flex-direction: column-reverse; display: flex; gap: 1px; }
+:host([data-feat~="bar"]) .ccu-head .vals .tx b { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+:host([data-feat~="bar"]) .ccu-head .vals .tx small { font-size: 14px; font-weight: 500; color: color-mix(in srgb, var(--ccu-text) 82%, transparent); }
+:host([data-feat~="bar"]) .ccu-head .clock { display: grid; grid-template-columns: auto auto; column-gap: 12px; align-items: center; font-size: 22px; font-weight: 700; }
+:host([data-feat~="bar"]) .ccu-head .clock .ck { display: block; grid-row: 1 / 3; --ico: 30px; color: var(--ccu-text); }
+:host([data-feat~="bar"]) .ccu-head .clock small { grid-column: 2; margin-top: 0; font-size: 14px; color: color-mix(in srgb, var(--ccu-text) 82%, transparent); }
+.ccu-head .clock .ck { display: none; }
+:host([data-feat~="bar"][data-feat~="streak"]) .ccu-head { position: relative; }
+:host([data-feat~="bar"][data-feat~="streak"]) .ccu-head::before { content: ""; position: absolute; left: 14px; top: -1px; width: 26%; height: 2px; pointer-events: none; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ccu-accent) 80%, #ffffff), transparent); box-shadow: 0 0 10px 1px color-mix(in srgb, var(--ccu-accent) calc(60% * var(--ccu-fx-glow, 1)), transparent); }
+
+:host([data-feat~="bar"]) .ccu-nav { gap: 0; padding: 6px; border-radius: 16px; background: linear-gradient(90deg, color-mix(in srgb, var(--ccu-sel-line, var(--ccu-accent)) 5%, var(--ccu-surface)), var(--ccu-surface) 58%); }
+:host([data-feat~="bar"]) .ccu-nav-item { position: relative; grid-auto-flow: column; justify-content: center; align-content: center; gap: 12px; min-height: 52px; padding: 6px 8px; border-radius: 13px; font-size: 16px; font-weight: 600; color: var(--ccu-text); }
+:host([data-feat~="bar"]) .ccu-nav-item .ccu-ico { --ico: 28px; }
+:host([data-feat~="bar"]) .ccu-nav-item:not([data-state="on"]) + .ccu-nav-item:not([data-state="on"])::before { content: ""; position: absolute; left: 0; top: 24%; bottom: 24%; width: 1px; background: color-mix(in srgb, var(--ccu-text) 24%, transparent); }
+:host([data-feat~="bar"]) .ccu-nav-item[data-state="on"] { color: var(--ccu-sel-fg, var(--ccu-on-hi)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ccu-sel-line, var(--ccu-on)) 55%, #ffffff), inset 0 0 14px color-mix(in srgb, var(--ccu-sel-line, var(--ccu-on)) calc(22% * var(--ccu-fx-glow, 1)), transparent), 0 0 12px 1px color-mix(in srgb, var(--ccu-sel-line, var(--ccu-on)) calc(34% * var(--ccu-fx-glow, 1)), transparent); }
+:host([data-feat~="bar"]) .ccu-nav-item[data-state="on"] .ccu-ico { color: var(--ccu-sel-line, var(--ccu-on-hi)); filter: none; }
+:host([data-feat~="bar"]) .ccu-nav.compact .ccu-nav-item, :host([data-feat~="bar"]) .ccu-nav.nolabels .ccu-nav-item { grid-auto-flow: row; }
+/* bar, meniul pe ecrane înguste: coloane care se pot strânge, text tăiat cu „…”, apoi iconița deasupra textului. Pentru meniul fix (sticky) gazda nu e container → se folosește lățimea ferestrei. */
+:host([data-feat~="bar"]) .ccu-nav { grid-auto-columns: minmax(0, 1fr); }
+:host([data-feat~="bar"]) .ccu-nav-item { min-width: 0; overflow: hidden; }
+:host([data-feat~="bar"]) .ccu-nav-item > span:not(.ccu-ico) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@container (max-width: 640px) {
+  :host([data-feat~="bar"]) .ccu-nav-item { gap: 8px; font-size: 14px; padding: 6px 4px; }
+  :host([data-feat~="bar"]) .ccu-nav-item .ccu-ico { --ico: 24px; }
+}
+@container (max-width: 430px) {
+  :host([data-feat~="bar"]) .ccu-nav-item { grid-auto-flow: row; gap: 3px; font-size: 12px; min-height: 54px; }
+  :host([data-feat~="bar"]) .ccu-nav-item .ccu-ico { --ico: 24px; }
+}
+@media (max-width: 700px) {
+  :host([data-sticky][data-feat~="bar"]) .ccu-nav-item { gap: 8px; font-size: 14px; padding: 6px 4px; }
+  :host([data-sticky][data-feat~="bar"]) .ccu-nav-item .ccu-ico { --ico: 24px; }
+}
+@media (max-width: 450px) {
+  :host([data-sticky][data-feat~="bar"]) .ccu-nav-item { grid-auto-flow: row; gap: 3px; font-size: 12px; min-height: 54px; }
+}
+
+:host([data-feat~="bar"]) .ccu-nav-item.no-ico { min-height: 44px; }
+
+/* bar + tile pe ecrane înguste: antetul se strânge (fără etichete, valori mai mici), cardul xl își mută subtitlul pe rândul de jos */
+@container (max-width: 640px) {
+  :host([data-feat~="bar"]) .ccu-head { padding: 10px 12px; gap: 10px; }
+  :host([data-feat~="bar"]) .ccu-head > .ccu-ico { --ico: 28px; }
+  :host([data-feat~="bar"]) .ccu-head .vals > span.has-label { padding: 0 10px; gap: 7px; }
+  :host([data-feat~="bar"]) .ccu-head .vals > span.has-label .ccu-ico { --ico: 24px; }
+  :host([data-feat~="bar"]) .ccu-head .vals .tx b { font-size: 16px; }
+  :host([data-feat~="bar"]) .ccu-head .vals .tx small { font-size: 12px; }
+  :host([data-feat~="bar"]) .ccu-head .clock { font-size: 18px; column-gap: 8px; }
+  :host([data-feat~="bar"]) .ccu-head .clock .ck { --ico: 24px; }
+  :host([data-feat~="bar"]) .ccu-head .clock small { font-size: 12px; }
+}
+@container (max-width: 460px) {
+  :host([data-feat~="bar"]) .ccu-head > .ccu-ico, :host([data-feat~="bar"]) .ccu-head .clock .ck { display: none; }
+  :host([data-feat~="bar"]) .ccu-head .vals > span.has-label { padding: 0 6px; gap: 5px; }
+  :host([data-feat~="bar"]) .ccu-head .vals > span.has-label .ccu-ico { --ico: 18px; }
+  :host([data-feat~="bar"]) .ccu-head .vals .tx small:not(.rt) { display: none; }
+  :host([data-feat~="bar"]) .ccu-head .vals .tx b { font-size: 14px; }
+  :host([data-feat~="bar"]) .ccu-head .clock { font-size: 15px; }
+  :host([data-feat~="bar"]) .ccu-head .clock small { display: none; }
+  :host([data-feat~="tile"]) .ccu-btn.xl { grid-template-columns: auto 1fr; grid-template-areas: "ico name" "sec sec" "delta delta"; row-gap: 4px; }
+  :host([data-feat~="tile"]) .ccu-btn.xl .ccu-name { font-size: 16px; white-space: normal; }
+  :host([data-feat~="tile"]) .ccu-btn.xl .ccu-sec::before { content: none; }
+}
+
+/* plot: graficul în stil neon — doar linii verticale punctate, fără cele orizontale, axa din stânga vizibilă */
+:host([data-feat~="plot"]) .ccu-graph .gy { display: none; }
+:host([data-feat~="plot"]) .ccu-graph .gx, :host([data-feat~="plot"]) .ccu-graph .ax { display: block; }
+:host([data-feat~="plot"]) .ccu-graph .gx { stroke: color-mix(in srgb, var(--ccu-text) 52%, transparent); stroke-dasharray: 5 5; opacity: 1; }
+:host([data-feat~="plot"]) .ccu-graph .axis { stroke: color-mix(in srgb, var(--ccu-text) 62%, transparent); }
+:host([data-feat~="plot"]) .ccu-graph .area { fill: color-mix(in srgb, var(--sc, var(--ccu-series)) 28%, transparent) !important; }
+:host([data-feat~="plot"]) .ccu-graph text { fill: var(--ccu-text); font-size: 11px; }
+:host([data-feat~="plot"]) .ccu-graph .line { stroke-width: 1.8; }
+
+/* tile (stilul „Neon Smart Home UI”): iconiță | separator | nume + stare, valoarea centrată dedesubt, „//” pe toate cardurile, rândul pornit cu colțuri asimetrice */
+:host { --ccu-cut-clip-s: polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px); --ccu-cut-ring-s: polygon(evenodd, 7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px, 7.62px 1.5px, calc(100% - 7.62px) 1.5px, calc(100% - 1.5px) 7.62px, calc(100% - 1.5px) calc(100% - 7.62px), calc(100% - 7.62px) calc(100% - 1.5px), 7.62px calc(100% - 1.5px), 1.5px calc(100% - 7.62px), 1.5px 7.62px); --ccu-cut-clip-a: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); --ccu-cut-ring-a: polygon(evenodd, 9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px, 9.62px 1.5px, calc(100% - 1.5px) 1.5px, calc(100% - 1.5px) calc(100% - 9.62px), calc(100% - 9.62px) calc(100% - 1.5px), 1.5px calc(100% - 1.5px), 1.5px 9.62px); }
+:host([data-feat~="tile"]) .ccu-btn.m { --ico: 28px; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ico name" "ico st" "sec sec"; row-gap: 2px; padding: 12px 14px; min-height: 96px; }
+:host([data-feat~="tile"]) .ccu-btn.m:not(.has-st) { grid-template-areas: "ico name" "sec sec"; }
+:host([data-feat~="tile"]) .ccu-btn.m .ccu-name { font-size: 13.5px; font-weight: 700; align-self: end; padding-right: 12px; }
+:host([data-feat~="tile"]) .ccu-btn.m .ccu-st { align-self: start; }
+:host([data-feat~="tile"]) .ccu-btn.m .ccu-sec { grid-area: sec; justify-self: center; align-self: center; font-size: 26px; font-weight: 600; letter-spacing: 0; margin-top: 4px; }
+:host([data-feat~="tile"]) .ccu-btn:is(.m, .xl) > .ccu-ico { align-self: stretch; width: calc(var(--ico, 32px) + 13px); height: auto; min-height: var(--ico, 32px); padding-right: 12px; margin-right: 2px; border-right: 1px solid color-mix(in srgb, var(--ccu-text) 30%, transparent); display: grid; place-items: center; }
+:host([data-feat~="tile"]) .ccu-btn.xl { grid-template-columns: auto auto 1fr; grid-template-areas: "ico name sec" "delta delta delta"; align-items: center; column-gap: 12px; }
+:host([data-feat~="tile"]) .ccu-btn.xl .ccu-name { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: visible; }
+:host([data-feat~="tile"]) .ccu-btn.xl .ccu-sec { font-size: 14px; font-weight: 400; align-self: center; justify-self: start; }
+:host([data-feat~="tile"]) .ccu-btn.xl .ccu-sec::before { content: "- "; }
+:host([data-feat~="mark"][data-feat~="tile"]) .ccu-btn:is(.m, .s, .xl, .l[data-state="on"]) > .ccu-cut { display: block; background: var(--ccu-mk-l); }
+:host([data-feat~="tile"]) .ccu-wd { clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); transform: translate(-50%, -50%); width: 17px; height: 17px; box-shadow: none; filter: drop-shadow(0 0 5px #ffffff); }
+:host([data-feat~="tile"]) .ccu-graph-head .ccu-title { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 700; }
+:host([data-feat~="tile"]) .ccu-graph-head .ccu-title .ccu-ico { --ico: 26px; width: calc(var(--ico) + 13px); color: var(--ccu-accent); padding-right: 12px; border-right: 1px solid color-mix(in srgb, var(--ccu-text) 30%, transparent); }
+.ccu-graph-head .ccu-title .ccu-ico { margin-right: 8px; }
+:host([data-feat~="tile"]) .ccu-graph-head .ccu-title .ccu-ico { margin-right: 0; }
+
+/* cut, varianta asimetrică: rândul „l” pornit (ex. aer condiționat) are colțurile stânga-sus și dreapta-jos tăiate; antetul și meniul au tăieturi mici (7px) */
+:host([data-feat~="cut"]) .ccu-btn.l[data-state="on"] { clip-path: var(--ccu-cut-clip-a); border-radius: 0; border-color: transparent; }
+:host([data-feat~="cut"]) .ccu-btn.l[data-state="on"]::before { content: ""; position: absolute; inset: 0; padding: 0 !important; border-radius: 0; z-index: 2; pointer-events: none; -webkit-mask: none !important; mask: none !important; clip-path: var(--ccu-cut-ring-a); background: linear-gradient(135deg, color-mix(in srgb, var(--bc, var(--ccu-text)) 55%, #ffffff) 0%, var(--bc, color-mix(in srgb, var(--ccu-text) 38%, transparent)) 32%, color-mix(in srgb, var(--bc, var(--ccu-text)) 38%, transparent) 70%, color-mix(in srgb, var(--bc, var(--ccu-text)) 70%, transparent) 100%) !important; }
+:host([data-feat~="cut"]) :is(.ccu-head, .ccu-nav) { clip-path: var(--ccu-cut-clip-s); }
+:host([data-feat~="cut"]) :is(.ccu-head, .ccu-nav)::after { clip-path: var(--ccu-cut-ring-s); }
+:host([data-feat~="cut"][data-feat~="bar"]) .ccu-nav-item[data-state="on"] { clip-path: var(--ccu-cut-clip-s); border-radius: 0; border-color: transparent; box-shadow: inset 0 0 14px color-mix(in srgb, var(--ccu-sel-line, var(--ccu-on)) calc(10% * var(--ccu-fx-glow, 1)), transparent); }
+:host([data-feat~="cut"][data-feat~="bar"]) .ccu-nav-item[data-state="on"]::before { content: ""; position: absolute; inset: 0; width: auto; height: auto; top: 0; bottom: 0; left: 0; z-index: 2; pointer-events: none; clip-path: var(--ccu-cut-ring-s); background: linear-gradient(135deg, color-mix(in srgb, var(--ccu-sel-line, var(--ccu-on)) 60%, #ffffff), var(--ccu-sel-line, var(--ccu-on)) 45%, color-mix(in srgb, var(--ccu-sel-line, var(--ccu-on)) 70%, transparent)); }
+
+/* peak: diamant alb la vârful valului și punct alb la maximul graficului; liniile verticale punctate mai lungi */
+:host([data-feat~="peak"]) .ccu-btn.has-wave > .ccu-wd { display: block; }
+:host([data-feat~="peak"]) .ccu-graph .pk { display: block; fill: #ffffff; stroke: none; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--sc, var(--ccu-series)) 85%, transparent)); }
+:host([data-feat~="peak"]) .ccu-graph .grid { stroke-dasharray: 4 5; }
+
+/* ---- buton „selectat” (opțiunea selected pe o entitate): aceleași culori ca elementul selectat din meniu (sel-*) ---- */
+.ccu-btn[data-sel][data-state] { --bc: var(--ccu-sel-line, var(--ccu-accent)); color: var(--ccu-sel-fg, var(--ccu-text));
+  background: var(--ccu-sel-tile-bg, var(--ccu-sel-bg, linear-gradient(135deg, color-mix(in srgb, var(--ccu-accent) 30%, var(--ccu-bg)), color-mix(in srgb, var(--ccu-accent) 12%, var(--ccu-bg))))); }
+.ccu-btn[data-sel][data-state] .ccu-ico { color: var(--ccu-sel-line, var(--ccu-accent)); }
+
+/* ---- pericol (opțiunea danger): aceeași stare „alert”, dar roșie; --ccu-danger vine din temă (implicit roșul vechi) ---- */
+.ccu-btn[data-level="danger"], .ccu-chip[data-level="danger"], .ccu-nav-item[data-level="danger"] {
+  --ccu-alert: var(--ccu-danger, var(--ccu-c-red)); --ccu-alert-hi: var(--ccu-danger-hi, color-mix(in srgb, var(--ccu-danger, var(--ccu-c-red)) 72%, #ffffff));
+  --ccu-alert-bg: var(--ccu-danger-bg); --ccu-alert-line: var(--ccu-danger-line); --ccu-chip-alert-bg: var(--ccu-chip-danger-bg); }
+
 /* ---- stări (derivate din --ccu-on / --ccu-alert: la fel de bogate în orice presetare) ---- */
 .ccu-btn[data-state="on"] {
-  --bc: color-mix(in srgb, var(--ccu-on) 85%, #fff 5%);
-  background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-on) 42%, transparent), color-mix(in srgb, var(--ccu-on) 12%, transparent) 55%, color-mix(in srgb, var(--ccu-on) 4%, transparent)),
-    var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) 13%, var(--ccu-bg));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 18px color-mix(in srgb, var(--ccu-on) 20%, transparent), 0 0 18px -2px color-mix(in srgb, var(--ccu-on) 36%, transparent), var(--ccu-drop);
+  --bc: var(--ccu-on-line, color-mix(in srgb, var(--ccu-on) 85%, #fff 5%));
+  background: var(--ccu-on-bg, radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-on) calc(42% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-on) calc(12% * var(--ccu-fx-tint, 1)), transparent) 55%, color-mix(in srgb, var(--ccu-on) calc(4% * var(--ccu-fx-tint, 1)), transparent)),
+    var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) calc(13% * var(--ccu-fx-tint, 1)), var(--ccu-bg)));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 18px color-mix(in srgb, var(--ccu-on) calc(20% * var(--ccu-fx-glow, 1)), transparent), 0 0 18px -2px color-mix(in srgb, var(--ccu-on) calc(36% * var(--ccu-fx-glow, 1)), transparent), var(--ccu-drop);
 }
-.ccu-btn[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-on) 55%, transparent)); }
+.ccu-btn[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-on) calc(55% * var(--ccu-fx-glow, 1)), transparent)); }
 .ccu-btn[data-state="on"] .ccu-sec { color: #fff; } :host([data-theme="light"]) .ccu-btn[data-state="on"] .ccu-sec { color: var(--ccu-text); }
 .ccu-btn[data-state="alert"] {
-  --bc: color-mix(in srgb, var(--ccu-alert) 60%, transparent);
-  background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-alert) 30%, transparent), color-mix(in srgb, var(--ccu-alert) 8%, transparent) 60%, color-mix(in srgb, var(--ccu-alert) 3%, transparent)),
-    var(--ccu-gloss), color-mix(in srgb, var(--ccu-alert) 11%, var(--ccu-bg));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 14px -4px color-mix(in srgb, var(--ccu-alert) 38%, transparent), var(--ccu-drop);
+  --bc: var(--ccu-alert-line, color-mix(in srgb, var(--ccu-alert) 60%, transparent));
+  background: var(--ccu-alert-bg, radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-alert) calc(30% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-alert) calc(8% * var(--ccu-fx-tint, 1)), transparent) 60%, color-mix(in srgb, var(--ccu-alert) calc(3% * var(--ccu-fx-tint, 1)), transparent)),
+    var(--ccu-gloss), color-mix(in srgb, var(--ccu-alert) calc(11% * var(--ccu-fx-tint, 1)), var(--ccu-bg)));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 14px -4px color-mix(in srgb, var(--ccu-alert) calc(38% * var(--ccu-fx-glow, 1)), transparent), var(--ccu-drop);
 }
-.ccu-btn[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-alert) 45%, transparent)); }
+.ccu-btn[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-alert) calc(45% * var(--ccu-fx-glow, 1)), transparent)); }
 .ccu-btn[data-state="ok"] .ccu-ico { color: var(--ccu-ok); }
-.ccu-btn[data-state="unavailable"] { opacity: .45; cursor: default; box-shadow: none; }
+.ccu-btn[data-state="unavailable"] { opacity: var(--ccu-na-op, .45); cursor: default; box-shadow: none; }
 .ccu-btn[data-state="unavailable"]::after { display: none; }
-.ccu-btn.l[data-state="on"] { --bc: var(--ccu-line); background: var(--ccu-gloss), var(--ccu-surface);
+.ccu-btn[data-state="unavailable"] { background: var(--ccu-na-bg, var(--ccu-gloss), var(--ccu-surface)); }
+.ccu-btn.l[data-state="on"] { --bc: var(--ccu-l-on-line, var(--ccu-line)); background: var(--ccu-l-on-bg, var(--ccu-gloss), var(--ccu-surface));
   box-shadow: var(--ccu-edge), var(--ccu-drop); }
 .ccu-btn.l[data-state="on"] .ccu-sec { color: var(--ccu-text); }
-.ccu-btn.xl[data-state="on"] { background: radial-gradient(120% 130% at 0% 0%, color-mix(in srgb, var(--ccu-on) 34%, transparent), color-mix(in srgb, var(--ccu-on) 14%, transparent) 55%, color-mix(in srgb, var(--ccu-on) 5%, #000 40%)), var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) 14%, var(--ccu-bg)); }
+.ccu-btn.xl[data-state="on"] { background: var(--ccu-xl-bg, radial-gradient(120% 130% at 0% 0%, color-mix(in srgb, var(--ccu-on) calc(34% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-on) calc(14% * var(--ccu-fx-tint, 1)), transparent) 55%, color-mix(in srgb, var(--ccu-on) 5%, #000 40%)), var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) calc(14% * var(--ccu-fx-tint, 1)), var(--ccu-bg))); }
 .ccu-btn.xl[data-state="on"] .ccu-sec { color: var(--ccu-muted); }
 
 /* ---- chips ---- */
 .ccu-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.ccu-chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: 999px; cursor: pointer;
-  border: var(--ccu-bw) solid var(--bc, rgba(148,163,184,.30)); background: var(--ccu-gloss), var(--ccu-surface); color: var(--ccu-text);
+.ccu-chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--ccu-chip-r, 999px); cursor: pointer;
+  border: var(--ccu-bw) solid var(--bc, rgba(148,163,184,.30)); background: var(--ccu-chip-bg, var(--ccu-gloss), var(--ccu-surface)); color: var(--ccu-text);
   font-size: 12.5px; font-weight: 600; box-shadow: var(--ccu-edge), var(--ccu-drop); transition: border-color .25s ease, background .25s ease; }
 .ccu-chip .ccu-ico { --ico: 18px; }
 .ccu-chip b { font-weight: 700; color: var(--ccu-ok); }
 .ccu-chip[data-inactive] { opacity: .45; border-style: dashed; filter: grayscale(.6); }
-.ccu-chip[data-state="on"] { --bc: color-mix(in srgb, var(--ccu-on) 72%, transparent);
-  background: radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--ccu-on) 26%, transparent), color-mix(in srgb, var(--ccu-on) 6%, transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) 12%, var(--ccu-bg)); }
-.ccu-chip[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-on) 50%, transparent)); }
-.ccu-chip[data-state="alert"] { --bc: color-mix(in srgb, var(--ccu-alert) 72%, transparent);
-  background: radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--ccu-alert) 30%, transparent), color-mix(in srgb, var(--ccu-alert) 8%, transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-alert) 11%, var(--ccu-bg)); }
-.ccu-chip[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-alert) 45%, transparent)); }
+.ccu-chip[data-state="on"] { --bc: var(--ccu-on-line, color-mix(in srgb, var(--ccu-on) 72%, transparent));
+  background: var(--ccu-chip-on-bg, var(--ccu-on-bg, radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--ccu-on) calc(26% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-on) calc(6% * var(--ccu-fx-tint, 1)), transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-on) calc(12% * var(--ccu-fx-tint, 1)), var(--ccu-bg)))); }
+.ccu-chip[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-on) calc(50% * var(--ccu-fx-glow, 1)), transparent)); }
+.ccu-chip[data-state="alert"] { --bc: var(--ccu-alert-line, color-mix(in srgb, var(--ccu-alert) 72%, transparent));
+  background: var(--ccu-chip-alert-bg, var(--ccu-alert-bg, radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--ccu-alert) calc(30% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-alert) calc(8% * var(--ccu-fx-tint, 1)), transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-alert) calc(11% * var(--ccu-fx-tint, 1)), var(--ccu-bg)))); }
+.ccu-chip[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-alert) calc(45% * var(--ccu-fx-glow, 1)), transparent)); }
 .ccu-chip[data-state="ok"] .ccu-ico { color: var(--ccu-ok); }
-.ccu-chip[data-state="unavailable"] { opacity: .45; }
+.ccu-chip[data-state="unavailable"] { opacity: var(--ccu-na-op, .45); }
 
 /* ---- header (bandă pe un rând) ---- */
 .ccu-head { display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 12px; border: var(--ccu-bw) solid var(--ccu-line); border-radius: var(--ccu-r-card);
@@ -215,19 +460,19 @@ export const CCU_THEME = `
 .ccu-badge { position: absolute; top: -7px; right: -11px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; display: grid; place-items: center;
   background: var(--ccu-c-red); color: #fff; font: 700 11px/1 inherit; box-shadow: 0 0 0 2px var(--ccu-bg), 0 0 10px color-mix(in srgb, var(--ccu-c-red) 60%, transparent); }
 .ccu-nav-item[data-state="alert"] { color: var(--ccu-alert-hi); border-color: color-mix(in srgb, var(--ccu-alert) 60%, transparent);
-  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-alert) 30%, transparent), color-mix(in srgb, var(--ccu-alert) 8%, transparent) 65%), color-mix(in srgb, var(--ccu-alert) 11%, var(--ccu-bg));
-  box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-alert) 16%, transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-alert) 38%, transparent); }
-.ccu-nav-item[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-alert) 45%, transparent)); }
-.ccu-badge.lit { background: var(--ccu-c-yellow); color: #1c1500; box-shadow: 0 0 0 2px var(--ccu-bg), 0 0 10px color-mix(in srgb, var(--ccu-c-yellow) 60%, transparent); }
+  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-alert) calc(30% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-alert) calc(8% * var(--ccu-fx-tint, 1)), transparent) 65%), color-mix(in srgb, var(--ccu-alert) calc(11% * var(--ccu-fx-tint, 1)), var(--ccu-bg));
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-alert) calc(16% * var(--ccu-fx-glow, 1)), transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-alert) calc(38% * var(--ccu-fx-glow, 1)), transparent); }
+.ccu-nav-item[data-state="alert"] .ccu-ico { color: var(--ccu-alert-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-alert) calc(45% * var(--ccu-fx-glow, 1)), transparent)); }
+.ccu-badge.lit { background: var(--ccu-c-yellow); color: #1c1500; box-shadow: 0 0 0 2px var(--ccu-bg), 0 0 10px color-mix(in srgb, var(--ccu-c-yellow) calc(60% * var(--ccu-fx-glow, 1)), transparent); }
 .ccu-nav-item[data-state="lit"] { color: var(--ccu-c-yellow); border-color: color-mix(in srgb, var(--ccu-c-yellow) 55%, transparent);
-  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-c-yellow) 26%, transparent), color-mix(in srgb, var(--ccu-c-yellow) 7%, transparent) 65%), color-mix(in srgb, var(--ccu-c-yellow) 9%, var(--ccu-bg));
-  box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-c-yellow) 14%, transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-c-yellow) 34%, transparent); }
-.ccu-nav-item[data-state="lit"] .ccu-ico { color: var(--ccu-c-yellow); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-c-yellow) 45%, transparent)); }
+  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-c-yellow) calc(26% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-c-yellow) calc(7% * var(--ccu-fx-tint, 1)), transparent) 65%), color-mix(in srgb, var(--ccu-c-yellow) calc(9% * var(--ccu-fx-tint, 1)), var(--ccu-bg));
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--ccu-c-yellow) calc(14% * var(--ccu-fx-glow, 1)), transparent), 0 0 14px -4px color-mix(in srgb, var(--ccu-c-yellow) calc(34% * var(--ccu-fx-glow, 1)), transparent); }
+.ccu-nav-item[data-state="lit"] .ccu-ico { color: var(--ccu-c-yellow); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-c-yellow) calc(45% * var(--ccu-fx-glow, 1)), transparent)); }
 .ccu-nav-item:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 1px; }
-.ccu-nav-item[data-state="on"] { color: var(--ccu-on-hi); border-color: color-mix(in srgb, var(--ccu-on) 72%, transparent);
-  background: radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-on) 32%, transparent), color-mix(in srgb, var(--ccu-on) 8%, transparent) 65%), color-mix(in srgb, var(--ccu-on) 13%, var(--ccu-bg));
-  box-shadow: inset 0 0 14px color-mix(in srgb, var(--ccu-on) 18%, transparent), 0 0 14px -3px color-mix(in srgb, var(--ccu-on) 38%, transparent); }
-.ccu-nav-item[data-state="on"] .ccu-ico { color: var(--ccu-on-hi); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-on) 55%, transparent)); }
+.ccu-nav-item[data-state="on"] { color: var(--ccu-sel-fg, var(--ccu-on-hi)); border-color: var(--ccu-sel-line, color-mix(in srgb, var(--ccu-on) 72%, transparent));
+  background: var(--ccu-sel-bg, radial-gradient(130% 150% at 50% 0%, color-mix(in srgb, var(--ccu-on) calc(32% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-on) calc(8% * var(--ccu-fx-tint, 1)), transparent) 65%), color-mix(in srgb, var(--ccu-on) calc(13% * var(--ccu-fx-tint, 1)), var(--ccu-bg)));
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--ccu-on) calc(18% * var(--ccu-fx-glow, 1)), transparent), 0 0 14px -3px color-mix(in srgb, var(--ccu-on) calc(38% * var(--ccu-fx-glow, 1)), transparent); }
+.ccu-nav-item[data-state="on"] .ccu-ico { color: var(--ccu-sel-fg, var(--ccu-on-hi)); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ccu-on) calc(55% * var(--ccu-fx-glow, 1)), transparent)); }
 
 /* meniu jos „sticky”: fix pe ecran; un spațiu în pagină rezervă locul. Gazda nu mai e container (altfel Safari ar lega „fixed” de gazdă). */
 :host([data-sticky]) { container-type: normal; }
@@ -252,7 +497,7 @@ export const CCU_THEME = `
 .ccu-tabs { display: flex; gap: 6px; flex: none; }
 .ccu-tab { all: unset; cursor: pointer; box-sizing: border-box; height: 26px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 12px; font-weight: 600;
   color: var(--ccu-muted); border: var(--ccu-bw) solid var(--ccu-line); background: var(--ccu-surface); white-space: nowrap; }
-.ccu-tab[data-state="on"] { color: var(--ccu-on-hi); border-color: color-mix(in srgb, var(--ccu-on) 70%, transparent); background: color-mix(in srgb, var(--ccu-on) 18%, var(--ccu-bg)); }
+.ccu-tab[data-state="on"] { color: var(--ccu-sel-fg, var(--ccu-on-hi)); border-color: var(--ccu-sel-line, color-mix(in srgb, var(--ccu-on) 70%, transparent)); background: var(--ccu-sel-bg, color-mix(in srgb, var(--ccu-on) calc(18% * var(--ccu-fx-tint, 1)), var(--ccu-bg))); }
 .ccu-tab:focus-visible { outline: 2px solid var(--ccu-accent); outline-offset: 2px; }
 .ccu-graph-head.compact { flex-wrap: nowrap; } .ccu-graph-head.compact .ccu-legend { margin: 0 auto 0 6px; }
 .ccu-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 11.5px; color: var(--ccu-muted); }
@@ -269,14 +514,14 @@ export const CCU_THEME = `
 /* ---- climate: culoarea după mod (răcire = albastru, încălzire = roșu; auto/rest = culoarea obișnuită de „activ”) ---- */
 .ccu-btn[data-mode="cool"][data-state="on"], .ccu-chip[data-mode="cool"][data-state="on"], .ccu-nav-item[data-mode="cool"][data-state="on"] {
   --bc: color-mix(in srgb, var(--ccu-cool) 82%, transparent);
-  background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-cool) 38%, transparent), color-mix(in srgb, var(--ccu-cool) 10%, transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-cool) 13%, var(--ccu-bg));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 16px -3px color-mix(in srgb, var(--ccu-cool) 42%, transparent), var(--ccu-drop); }
+  background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-cool) calc(38% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-cool) calc(10% * var(--ccu-fx-tint, 1)), transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-cool) calc(13% * var(--ccu-fx-tint, 1)), var(--ccu-bg));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 16px -3px color-mix(in srgb, var(--ccu-cool) calc(42% * var(--ccu-fx-glow, 1)), transparent), var(--ccu-drop); }
 .ccu-btn[data-mode="heat"][data-state="on"], .ccu-chip[data-mode="heat"][data-state="on"], .ccu-nav-item[data-mode="heat"][data-state="on"] {
   --bc: color-mix(in srgb, var(--ccu-heat) 82%, transparent);
-  background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-heat) 34%, transparent), color-mix(in srgb, var(--ccu-heat) 9%, transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-heat) 12%, var(--ccu-bg));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 16px -3px color-mix(in srgb, var(--ccu-heat) 42%, transparent), var(--ccu-drop); }
-.ccu-btn[data-mode="cool"][data-state="on"] .ccu-ico, .ccu-chip[data-mode="cool"][data-state="on"] .ccu-ico { color: var(--ccu-cool-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-cool) 55%, transparent)); }
-.ccu-btn[data-mode="heat"][data-state="on"] .ccu-ico, .ccu-chip[data-mode="heat"][data-state="on"] .ccu-ico { color: var(--ccu-heat-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-heat) 55%, transparent)); }
+  background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--ccu-heat) calc(34% * var(--ccu-fx-tint, 1)), transparent), color-mix(in srgb, var(--ccu-heat) calc(9% * var(--ccu-fx-tint, 1)), transparent) 60%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-heat) calc(12% * var(--ccu-fx-tint, 1)), var(--ccu-bg));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 16px -3px color-mix(in srgb, var(--ccu-heat) calc(42% * var(--ccu-fx-glow, 1)), transparent), var(--ccu-drop); }
+.ccu-btn[data-mode="cool"][data-state="on"] .ccu-ico, .ccu-chip[data-mode="cool"][data-state="on"] .ccu-ico { color: var(--ccu-cool-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-cool) calc(55% * var(--ccu-fx-glow, 1)), transparent)); }
+.ccu-btn[data-mode="heat"][data-state="on"] .ccu-ico, .ccu-chip[data-mode="heat"][data-state="on"] .ccu-ico { color: var(--ccu-heat-hi); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ccu-heat) calc(55% * var(--ccu-fx-glow, 1)), transparent)); }
 .ccu-ico .rot { transform-box: fill-box; transform-origin: 50% 50%; }
 
 /* culoarea iconiței (icon_color), în orice stare — după stări, ca să le bată */
@@ -287,7 +532,7 @@ export const CCU_THEME = `
 .ccu-btn[data-ic="cyan"] .ccu-ico, .ccu-chip[data-ic="cyan"] .ccu-ico { color: var(--ccu-c-cyan); }
 .ccu-btn[data-ic="red"] .ccu-ico, .ccu-chip[data-ic="red"] .ccu-ico { color: var(--ccu-c-red); }
 .ccu-btn[data-ic="white"] .ccu-ico, .ccu-chip[data-ic="white"] .ccu-ico { color: var(--ccu-c-white); }
-.ccu-btn[data-ic] .ccu-ico, .ccu-chip[data-ic] .ccu-ico { filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 40%, transparent)); }
+.ccu-btn[data-ic] .ccu-ico, .ccu-chip[data-ic] .ccu-ico { filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor calc(40% * var(--ccu-fx-glow, 1)), transparent)); }
 
 /* ---- persoane: avatare suprapuse ---- */
 .ccu-chip.ccu-people { padding: 0 14px 0 5px; gap: 8px; cursor: default; }
@@ -521,11 +766,11 @@ export const CCU_THEME = `
 
 /* ---- becuri: buton „lampă” (orice bec simplu) și tile cu orb / slidere / culori ---- */
 .ccu-btn[data-lamp] .ccu-ico { box-sizing: content-box; padding: 7px; border-radius: 50%; background: color-mix(in srgb, var(--ccu-text) 7%, transparent); border: var(--ccu-bw) solid var(--ccu-line); transition: background .3s ease, box-shadow .3s ease, color .3s ease; }
-.ccu-btn[data-lamp][data-state="on"] { --ccu-on: #ffc857; --ccu-on-hi: #ffe08a; border-color: color-mix(in srgb, #ffc857 62%, transparent);
-  background: radial-gradient(120% 150% at 0% 0%, color-mix(in srgb, #ffc857 30%, transparent), color-mix(in srgb, #ffc857 7%, transparent) 62%), var(--ccu-gloss), color-mix(in srgb, #ffc857 9%, var(--ccu-bg));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 20px -4px color-mix(in srgb, #ffc857 50%, transparent), var(--ccu-drop); }
-.ccu-btn[data-lamp][data-state="on"] .ccu-ico { color: #ffe08a; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, #ffc857 38%, transparent), color-mix(in srgb, #ffc857 8%, transparent) 70%); border-color: color-mix(in srgb, #ffc857 55%, transparent); box-shadow: 0 0 16px 2px color-mix(in srgb, #ffc857 40%, transparent); }
-.ctl.li { --lc: #ffc857; }
+.ccu-btn[data-lamp][data-state="on"] { --ccu-on: var(--ccu-lamp, #ffc857); --ccu-on-hi: var(--ccu-lamp-hi, #ffe08a); border-color: color-mix(in srgb, var(--ccu-lamp, #ffc857) 62%, transparent);
+  background: radial-gradient(120% 150% at 0% 0%, color-mix(in srgb, var(--ccu-lamp, #ffc857) 30%, transparent), color-mix(in srgb, var(--ccu-lamp, #ffc857) 7%, transparent) 62%), var(--ccu-gloss), color-mix(in srgb, var(--ccu-lamp, #ffc857) 9%, var(--ccu-bg));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 20px -4px color-mix(in srgb, var(--ccu-lamp, #ffc857) calc(50% * var(--ccu-fx-glow, 1)), transparent), var(--ccu-drop); }
+.ccu-btn[data-lamp][data-state="on"] .ccu-ico { color: var(--ccu-lamp-hi, #ffe08a); background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--ccu-lamp, #ffc857) 38%, transparent), color-mix(in srgb, var(--ccu-lamp, #ffc857) 8%, transparent) 70%); border-color: color-mix(in srgb, var(--ccu-lamp, #ffc857) 55%, transparent); box-shadow: 0 0 16px 2px color-mix(in srgb, var(--ccu-lamp, #ffc857) calc(40% * var(--ccu-fx-glow, 1)), transparent); }
+.ctl.li { --lc: var(--ccu-lamp, #ffc857); }
 .ctl.li[data-state="on"] { --ccu-on: var(--lc); --ccu-on-hi: color-mix(in srgb, var(--lc) 70%, #fff); }
 .ctl.li .orb { all: unset; cursor: pointer; flex: none; box-sizing: border-box; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; touch-action: manipulation; color: var(--ccu-muted);
   background: var(--ccu-gloss), var(--ccu-surface-2); border: var(--ccu-bw) solid var(--ccu-line); box-shadow: var(--ccu-edge); transition: box-shadow .3s ease, background .3s ease, color .3s ease, border-color .3s ease; }

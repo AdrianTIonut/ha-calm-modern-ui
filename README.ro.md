@@ -7,7 +7,7 @@ Română · [English](README.md)
 Set de carduri pentru Home Assistant, într-un stil calm și modern: plăci sticloase, verde pentru „activ”, albastru pentru informație,
 portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără rețea, fără biblioteci externe, fără `INTERNET` către terți.
 
-<img src="docs/img/devices.png" alt="Calm Modern UI pe tabletă și pe telefon (date demo inventate)">
+<img src="docs/img/devices.gif" alt="Calm Modern UI pe tabletă și pe telefon, prin toate cele 8 teme (date demo inventate)">
 
 | Card | Ce face |
 |---|---|
@@ -26,6 +26,17 @@ portocaliu pentru atenție. Un singur fișier JavaScript (`ccu.js`), fără reț
 | `ccu-header-card` | Antet pe un rând: iconiță, până la 3 valori (cu autonomia bateriei sub procent), ceas sau o valoare în dreapta |
 | `ccu-nav-card` | Meniu de jos pentru tabletă și telefon: pagini și butoane diferite pe dispozitiv, apăsare lungă, insigne, butoane condiționate, fix jos |
 | `ccu-title-card` | Titlu de secțiune cu iconiță și subtitlu |
+
+## Noutăți în 0.10.0
+
+- **Două teme noi:** `quiet-slate` (calmă, cu contrast verificat, fără strălucire) și `cyberpunk` (Neon Glass: indigo foarte închis, sticlă, cyan / magenta / chihlimbar / coral). Acum sunt 8 teme.
+- **Opțiuni noi pe orice card** (toate oprite implicit, cu câmp în editorul vizual): `scale` și `radius` (mărime și rotunjire), `glow` (strălucire), `night` (mod noapte după soare), `font` și `font_css`, `effects` (`rim`, `mark`, `cut`, `streak`, `peak`, `plot`, `bar`, `tile`).
+- **Butoane, chips și meniu:** alegi ce se vede (`show_icon`, `show_name`, `show_value`, `show_state`, `labels`), `selected: true` pe un buton, pericol separat de atenție (`danger`, `danger_above`, `danger_below`, `badge_style: danger`).
+- **Valul Solar** (`wave: true` pe un buton `xl`) urmează producția de azi: curba, vârful și strălucirea vin din istoricul entității.
+- **Grafic:** `icon`, `x_step` (ore rotunde din 3 în 3) și `axis_unit: false`; serii din atribut; axa de temperatură nu mai pornește de la 0.
+- **Fonturi livrate** în folderul `fonts/` (Exo 2, Chakra Petch, Oxanium); descarci `fonts.zip` din ultimul release și îl dezarhivezi o dată în `/config/www/ccu/` (fișierele ajung în `/config/www/ccu/fonts/`).
+- **Baterie:** capacitatea se alege din editor (`capacity_source`); „plin în” și autonomia arată minute sub o oră.
+- Cardurile existente nu se schimbă fără opțiunile noi. Lista completă, cu explicații, e în [CHANGELOG.md](CHANGELOG.md).
 
 ## Galerie
 
@@ -109,7 +120,7 @@ liste cu ↑ ↓ ✕ și o previzualizare în direct. YAML-ul rămâne disponibi
 
 ## Presetări și culori
 
-Șase teme incluse (`green` e implicită). Orice card acceptă `preset:` și `colors:`; toate culorile fiecărei teme sunt în [docs/COLORS.md](docs/COLORS.md).
+Opt teme incluse (`green` e implicită; `quiet-slate` e varianta calmă, cu contrast verificat și fără strălucire; `cyberpunk` e „Neon Glass”). Orice card acceptă `preset:` și `colors:`; toate culorile fiecărei teme sunt în [docs/COLORS.md](docs/COLORS.md).
 
 <img src="docs/img/themes.png" alt="The six themes">
 
@@ -119,7 +130,7 @@ Suprascrie orice rol pe un card:
 
 
 ```yaml
-preset: green        # implicit. Mai sunt: calm, contrast, mono, warm, light
+preset: green        # implicit. Mai sunt: calm, quiet-slate, contrast, mono, warm, light
 colors:              # opțional, suprascrie orice culoare
   on: '#22c55e'      # activ
   alert: '#f59e0b'   # atenție
@@ -135,6 +146,91 @@ Sunt acceptate doar culori valide (`#hex`, `rgb()`, `hsl()`, `var(--…)`); oric
 > **Capcană YAML:** `on` fără ghilimele devine `true` (și cheia `on:` devine `"true"`). Cardurile le tratează ca „on”, deci
 > `colors: { on: '#22c55e' }` și `color: on` merg; ghilimelele (`"on"`) sunt totuși varianta sigură în alte câmpuri.
 `animations: false` oprește toate animațiile; animațiile se opresc singure și la „reduce motion”.
+
+### Mărime și rotunjire (pe orice card)
+
+```yaml
+scale: 1.25     # 0,7–1,6; implicit 1. Mărește / micșorează tot cardul proporțional (text, iconițe, butoane)
+radius: 8       # 0–32 px; implicit 14. Rotunjirea colțurilor (0 = colțuri drepte)
+```
+
+- **`scale`** e pentru ecrane diferite (tabletă pe perete, telefon, ecran la distanță, vedere mai slabă). Când măresc, încap mai puține coloane, deci grila se reașază singură. Intervalul e 0,7–1,6; în afara lui, valoarea se aduce la limită, cu un avertisment pe card.
+- **`radius`** se aplică butoanelor cu forma `chamfer` și `square`, panourilor și antetului (panourile au ~1,3× raza). Formele `round` și `pill` rămân rotunde.
+- Ambele se află în editorul vizual, la „Aspect și limbă”. Fără ele, cardurile arată exact ca până acum.
+
+### Strălucire (glow) și val luminos
+
+```yaml
+glow: soft      # auto (implicit, ca în temă) | off | soft | full — pe orice card
+wave: true      # val luminos pe cardurile mari (size: xl); pe card sau pe fiecare entitate
+```
+
+- **`glow`** reglează cât strălucesc stările „pornit” / „atenție”, becurile și valul. `auto` păstrează exact ce definește tema (cele vechi strălucesc ca până acum; `quiet-slate` nu strălucește). `off` = deloc, `soft` = pe jumătate, `full` = maxim.
+- **`wave`** desenează sub valoare un val subțire cu un halou discret, doar pe butoanele `xl`. Linia se vede și cu `glow: off`; haloul urmează `glow`. Se mișcă încet („respiră”) și se oprește cu `animations: false` sau la „reduce motion”.
+- Becurile aprinse folosesc culorile `lamp` / `lamp-hi` din temă (în `quiet-slate` un chihlimbar discret, în rest galbenul de până acum); le poți schimba cu `colors: { lamp: '#e0bd86' }`.
+- Ambele au câmpuri în editorul vizual („Aspect și limbă” și „Ce se vede pe buton”). Fără ele, cardurile arată exact ca până acum.
+
+### Mod noapte
+
+```yaml
+night: auto          # off (implicit) | auto — întunecă cardul când soarele e sub orizont (sun.sun)
+night_dim: 20        # 0–60 %, cât se întunecă; implicit 15
+night_entity: binary_sensor.intunecat   # opțional: altă entitate în loc de sun.sun
+```
+
+- Fără `night`, nimic nu se schimbă. Cu `night: auto`, cardul devine mai puțin luminos noaptea (ușor, ca să nu orbească tableta pe perete) și revine singur ziua.
+- Pentru o altă entitate, „on”, „night” sau „below_horizon” înseamnă noapte. Dacă entitatea lipsește, cardul rămâne ca ziua.
+- Se află în editorul vizual, la „Aspect și limbă”.
+
+### Pericol (roșu) separat de atenție
+
+```yaml
+entities:
+  - entity: sensor.boiler
+    alert_above: 30        # atenție (chihlimbar în quiet-slate)
+    danger_above: 35       # pericol (roșu); la fel danger_below
+  - entity: binary_sensor.fum
+    on_as: alert
+    danger: true           # alerta acestei entități se arată ca pericol
+```
+
+- Pe butoane și chips. Fără aceste chei, nimic nu se schimbă: alerta rămâne „atenție”, ca până acum.
+- `danger_above` / `danger_below` trec entitatea în alertă de pericol (zero e prag valid). `danger: true` face roșie alerta pe care entitatea o avea deja.
+- În meniul de jos: `badge_style: danger` face întreg elementul roșu cât timp insigna e peste 0.
+- Culoarea vine din temă (`danger`, implicit roșul vechi; în `quiet-slate` un roșu pastel) și se poate schimba cu `colors: { danger: '#e88f8a' }`. În temele unde „atenția” e deja roșie (ex. `calm`), pericolul arată doar mai intens.
+- Câmpuri în editorul vizual, pe fiecare buton și chip.
+
+### Ce se vede pe chips și pe meniul de jos
+
+```yaml
+# ccu-chips-card
+show_icon: true     # false = fără iconiță (pe card sau pe fiecare chip)
+show_name: true     # false = doar iconița / valoarea; numele rămâne ca aria-label
+# ccu-nav-card
+show_icon: true     # false = doar text
+labels: true        # false = doar iconițe
+items:
+  - { icon: home, label: Home, path: /a, show_label: false }   # suprascriere pe un element (și show_icon)
+```
+
+- Dacă ar rămâne un chip sau un buton gol (fără iconiță, nume și valoare), iconița rămâne. Insigna meniului rămâne vizibilă și fără iconiță.
+- Fără aceste chei, nimic nu se schimbă. Câmpuri în editorul vizual, pe card și pe fiecare chip / buton.
+
+### Tema `cyberpunk` (Neon Glass), fonturi și efecte
+
+```yaml
+preset: cyberpunk          # indigo foarte închis, sticlă, cyan = pornit, magenta = selectat, chihlimbar = atenție, coral = pericol
+font: Exo 2                # Exo 2 | Chakra Petch | Oxanium (livrate), sau numele unui font al tău + font_css
+effects: [rim, mark]       # rim | mark | cut | streak | peak | plot | bar | tile | none; gol = ca în tema aleasă
+```
+
+- **Efectele** (toate opționale, oprite în temele vechi): `rim` = contur neon cu lumină sus-stânga; `mark` = semnul „//” pe cardurile pornite și pe cele mari; `cut` = colțuri tăiate pe cardurile mari, panouri, antet și meniul de jos; `streak` = linie de lumină pe marginea de sus a cardurilor active; `peak` = diamant la vârful valului și punct alb la maximul graficului; `plot` = grafic cu linii verticale punctate (fără cele orizontale) și axa din stânga; `bar` = antetul (eticheta deasupra valorii, iconițe albe, ceas cu iconiță) și meniul de jos (iconiță lângă text, separatoare, elementul curent = pastilă luminoasă). `tile` = stilul „Neon Smart Home UI”: pe tile iconiță | separator | nume și stare, valoarea mare centrată dedesubt, „//” pe toate, iar pe cardul Solar titlu și subtitlu pe un rând și stea la vârful valului. Colțurile `cut` au 9 px, iar bordura urmează diagonala (antetul și meniul au 7 px; rândul pornit are doar colțurile stânga-sus și dreapta-jos tăiate). Tema `cyberpunk` pornește doar efectele de stil (`rim`, `mark`, `cut`, `streak`, `peak`, `plot`); formatul (mărimi, aranjare) rămâne ca la celelalte teme, deci meniul și antetul încap și pe telefon. `bar` și `tile` schimbă aranjarea (meniu pe rând, tile cu separator) și se adaugă doar cu `effects:`; cu `effects:` alegi tu.
+- **Fonturile** sunt în folderul `fonts/` din depozit (Exo 2, Chakra Petch, Oxanium, toate SIL Open Font License; includ literele ă â î ș ț). Descarcă `fonts.zip` din [ultimul release](https://github.com/AdrianTIonut/ha-calm-modern-ui/releases/latest) și dezarhiveaz-o în `/config/www/ccu/`, ca fișierele să ajungă în `/config/www/ccu/fonts/` (HACS / Marketplace instalează doar `ccu.js`, niciodată fonturile; pasul e necesar și atunci). La instalarea manuală poți copia direct folderul `fonts/` din depozit. Browserul le ține apoi în cache: nu se descarcă de fiecare dată și nu se cere nimic de pe internet. Fără fișiere, textul folosește Inter / fontul sistemului.
+- **Fontul tău:** pune fișierele `.woff2` și o foaie de stil cu `@font-face` în `/config/www/ccu/fonts/` și scrie `font: Numele Meu` și `font_css: /local/ccu/fonts/foaia-mea.css`. Sunt acceptate doar adrese care încep cu `/` sau `https://`.
+- Graficul are și `icon:` (iconiță în titlu, cu separator în stilul `tile`), `x_step: 3` (etichete `00 03 06 …` din 3 în 3 ore, pentru intervale până la 48 h) și `axis_unit: false` (fără unitate pe axa Y: `2,0` în loc de `2 kW`), potrivit cu `plot`.
+- **Valul (`wave: true`) urmează producția de azi:** curba se desenează din istoricul entității, de la începutul producției de azi până acum, cu vârful (diamant / stea, efectul `peak`) la maximul real al zilei. Strălucirea crește cu puterea de acum față de maximul zilei; fără producție azi rămâne o linie plată și stinsă, iar după apus curba zilei rămâne, dar stinsă. Fără istoric (de exemplu în editorul vizual) se arată forma decorativă.
+- Pe un buton: `selected: true` îl arată „selectat” (magenta în `cyberpunk`). Alertele `danger` au textul „Alertă”.
+- Câmpuri în editorul vizual: „Font” și „Efecte” la „Aspect și limbă”, „Evidențiat (selectat)” pe fiecare buton.
 
 ## Acțiuni (toate cardurile cu entități)
 
@@ -181,6 +277,34 @@ entities:
 Mărimi: **xs** pastilă · **s** vertical (orizontal pe ecran lat) · **m** placă orizontală · **l** rând lat (`toggle: true` = comutator) ·
 **xl** erou: valoare mare, `delta: { entity, percent_entity }`, `spark: { hours: 6 }` (grafic mic din istoric), `active: true` (verde permanent).
 Puterile în W de la 1000 în sus se arată în kW (`auto_kw: false` le păstrează în W).
+
+### Ce se vede pe buton
+
+Fiecare buton poate arăta **iconiță, nume, linie de stare și valoare**. Le alegi pe card (pentru toate butoanele) și le poți suprascrie pe fiecare buton. Totul se setează și din editorul vizual (secțiunea „Ce se vede pe buton”; pe un buton, comutatorul „Alege ce se vede pe acest buton”).
+
+```yaml
+type: custom:ccu-buttons-card
+show_icon: true        # implicit true
+show_name: true        # implicit true
+show_value: true       # implicit true (valoarea / textul secundar)
+show_state: true       # implicit false: linia „● Pornit” / „○ Oprit”
+state_style: dot       # dot = punct + text (implicit) | text = doar text
+state_labels:          # opțional: alte texte pentru stări (de ex. în altă limbă)
+  on: Aprins
+  off: Stins
+  alert: Atenție
+  unavailable: Indisponibil
+entities:
+  - entity: light.bucatarie
+    secondary: { entity: sensor.temperatura_bucatarie }   # „24,6 °C” sub starea „Pornit”
+  - entity: sensor.lab
+    show_state: false  # pe un buton, suprascrie cardul
+```
+
+- Cu `show_state: true` un buton are trei rânduri: **nume / stare / valoare**. Dacă ascunzi un rând, butonul se rearanjează (rămân două rânduri) și nu scade sub mărimea minimă de atingere.
+- Senzorii numerici (`sensor`, `number`…) nu sunt „pornit / oprit”: la ei linia de stare apare doar pentru *Atenție*, *OK* și *Indisponibil*.
+- Când ascunzi numele sau valoarea, cititoarele de ecran le primesc în continuare (`aria-label`: nume, stare, valoare).
+- Fără aceste opțiuni butoanele arată exact ca până acum.
 
 ### Opțiuni pentru „alerte” și „grupuri” (pe butoane și pe chips)
 
@@ -232,7 +356,7 @@ header:
       icon: battery
       color: ok
       runtime_load: sensor.consum_casa           # consumul, ca la cardul de baterie (+ runtime_load_entities pentru mai multe)
-      runtime_capacity_kwh: 10                   # sau runtime_capacity_entity
+      runtime_capacity_kwh: 10                   # sau runtime_capacity_entity, sau runtime_capacity_ah_entity + runtime_nominal_voltage (cu runtime_capacity_source: kwh | entity | ah)
       runtime_reserve_pct: 20
       runtime_power: sensor.putere_baterie       # opțional: cât se încarcă arată „plin în …” în loc de autonomie
       runtime_charge_eta: avg                    # avg (media ultimelor 10 min, implicit) | now
@@ -311,6 +435,29 @@ series:                       # până la 8; numele e eticheta rândului
   - { entity: binary_sensor.ventil_dormitor, name: Dormitor, color: yellow }
 ```
 
+**Atribut în loc de stare** (`attribute`): o serie poate citi un atribut numeric al entității, de exemplu temperatura unui aparat de aer condiționat (entitățile `climate` au starea `off` / `cool` / `heat`, iar temperaturile sunt atribute). `unit` e opțional (la temperaturi se folosește unitatea din Home Assistant). În editor: bifa *Citește un atribut în loc de stare*.
+
+```yaml
+type: custom:ccu-graph-card
+title: AC bucătărie, real vs setat (24 h)
+series:
+  - { entity: climate.ac_bucatarie, attribute: current_temperature, name: Real }
+  - { entity: climate.ac_bucatarie, attribute: temperature, name: Setat, color: yellow }
+```
+
+**Activ doar cât starea e…** (`state_is`): seria e „pornită” cât starea e una din valorile listate (separate prin virgulă sau listă). Împreună cu cronologia dă un rând pe modul unui termostat, cu durate și totaluri. În editor: bifa *Activ doar cât starea e…*.
+
+```yaml
+type: custom:ccu-graph-card
+title: AC bucătărie, mod (24 h)
+timeline: true
+series:
+  - { entity: climate.ac_bucatarie, state_is: cool, name: Răcire }
+  - { entity: climate.ac_bucatarie, state_is: heat, name: Încălzire, color: yellow }
+```
+
+(`attribute` și `state_is` nu merg împreună pe aceeași serie. Se poate folosi orice entitate, nu doar senzori.)
+
 Pe cronologie fiecare bară arată **cât a mers** („3 h”, „1 h 25 min”; barele înguste primesc o formă scurtă sau nimic), la marginea din dreapta apare **totalul pe rând**, perioadele în care entitatea a fost **indisponibilă** sunt **hașurate în galben**, iar axa are ore rotunde (00:00, 03:00, …). Atinge sau trece cu mouse-ul peste o bară, un gol hașurat sau o perioadă oprită ca să citești intervalul exact și durata. `hide_durations: true` scoate duratele și totalurile (bifă în editor).
 
 O serie a cărei entitate nu are stare numerică și nici pornit / oprit nu desenează nimic (de exemplu o entitate `climate`: starea ei e modul, nu o temperatură). Folosește senzorul ei de temperatură.
@@ -343,7 +490,9 @@ Punctele curg pe panglici în sensul energiei (spre nod sau spre un consumator).
 ```yaml
 type: custom:ccu-battery-card
 soc: sensor.invertor_deye_battery
-capacity_entity: sensor.invertor_deye_battery_capacity   # sau capacity_kwh: 38.6
+capacity_source: ah                                      # de unde vine capacitatea: kwh | entity | ah (vezi „Capacitatea bateriei” mai jos)
+capacity_ah_entity: number.invertor_deye_battery_capacity  # Ah, citiți de la inversor (sau capacity_ah: 942)
+nominal_voltage: 51.2                                    # V, pentru calculul Ah × V
 load: sensor.invertor_deye_load_power                    # pentru autonomie (până la rezervă, la consumul curent)
 load_entities: [sensor.alt_consum]                       # opțional: alte circuite pe baterie, se adună la `load`
 power: sensor.putere_baterie                             # opțional: + = descărcare, − = încărcare (power_invert: true o întoarce)
@@ -355,12 +504,28 @@ shutdown_pct: 10
 color: yellow                                            # yellow | green | blue | orange
 ```
 
+#### Capacitatea bateriei: ce introduci
+
+Cardul transformă procentul în kWh cu **un singur număr: energia întregii baterii la 100 %** (capacitatea nominală). **Nu** e energia rămasă după pragurile de oprire sau de rezervă: acelea le scade cardul singur. În editor, *Capacitatea bateriei vine din* are trei surse, și apar doar câmpurile celei alese:
+
+| Sursă (`capacity_source`) | Ce dai | Când |
+|---|---|---|
+| **Valoare scrisă de mine** (`kwh`) | `capacity_kwh: 48.2` | cel mai simplu și mai sigur; kWh-ul nominal al bateriei |
+| **Senzor în kWh** (`entity`) | `capacity_entity: sensor.…` | ai un senzor care dă kWh-ul nominal |
+| **Ah × tensiune nominală** (`ah`) | `capacity_ah_entity` (senzor sau număr în Ah) sau `capacity_ah`, și `nominal_voltage` (implicit 51,2 V) | inversorul dă Ah, de exemplu Deye: 942 Ah × 51,2 V = **48,2 kWh** |
+
+- Cu o sursă aleasă, cardul folosește **doar** acea sursă. Dacă valoarea ei lipsește (de exemplu senzorul e `unavailable`) arată „—”, nu trece pe tăcute la alt câmp. Fără `capacity_source` se poartă ca înainte: senzorul dacă are valoare, altfel `capacity_kwh`.
+- **Nu folosi senzori de „estimare”.** Unele integrări publică o „capacitate a bateriei” care e o estimare învățată (de exemplu senzorul *Battery Capacity* din Solarman, care stă lângă o valoare și se calculează din contoare de energie). Nu e capacitatea scării procentuale și făcea cardul să arate cu ~20 % mai puțină energie.
+- **Verifică singur:** la o încărcare de, să zicem, 30 de puncte de procent, energia intrată în baterie împărțită la 0,30 trebuie să fie apropiată de numărul introdus.
+- Exemplu, 48,2 kWh cu `reserve_pct: 20` și `shutdown_pct: 10`: cu rețea banda utilizabilă e 80 % × 48,2 = **38,6 kWh** (cei 20 % de sub rezervă rămân deoparte, oprirea inclusă); fără rețea e 90 % × 48,2 = **43,4 kWh**. Oprirea de 10 % și rezerva sunt praguri pe aceeași scară 0–100 %, nu se adună.
+
 Cum se calculează (exact, din procente și capacitate; se rotunjește doar la afișare):
 
 - **Cu rețea**: banda utilizabilă e `reserve_pct` → 100 %. Cardul arată energia din bandă, „X kWh din Y kWh”, cu Y = (100 − rezervă)% × capacitate, și autonomia până la rezervă, la consumul curent.
 - **Fără rețea (backup activ)**: banda devine `shutdown_pct` → 100 %, același „X kWh din Y kWh” și autonomia până la pragul de oprire. Doar atunci apar „Backup activ” și marcajul de oprire.
 - **Autonomia** = energia utilizabilă împărțită la consumul curent (`load` plus `load_entities`, adunate), ca și cum încărcarea s-ar opri acum. Dacă vreunul dintre senzori nu are valoare, nu se afișează autonomia, în loc să iasă prea optimistă.
 - **Cât timp se încarcă** (cere `power`) cardul arată „Plin în”: timpul până la 100 % la puterea de încărcare, luată ca **medie a ultimelor 10 minute**, ca cifra să nu sară când trece un nor (`charge_eta: now` folosește puterea de acum). Autonomia se ascunde cât se încarcă; `runtime_while_charging: true` o arată și pe ea. Peste 99 % „Plin în” dispare și revine autonomia. La fel în antet (`runtime_power`, `runtime_charge_eta`, `runtime_while_charging`).
+- **Duratele** („Plin în” și autonomia, pe cardul de baterie și sub procent în antet) apar în **minute sub o oră** („~42 min”), în **ore și minute** până la 10 ore, rotunjite la 5 minute („~1 h 25 min”), și cu o zecimală de la 10 ore în sus („~16,2 h”).
 - Schimbi `reserve_pct` (de exemplu 20 → 30) și totul se recalculează. Procentul mare e mereu starea reală de încărcare.
 
 

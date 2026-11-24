@@ -245,6 +245,32 @@ export function parseMinimalResponse(data, entityIds) {
 }
 
 /**
+ * Punctele unei serii din istoricul unei entități, când seria nu e simpla stare numerică:
+ * - `attribute`: valoarea numerică a unui atribut (ex. climate → current_temperature, temperature); atributele lipsă la un rând rămân cele de dinainte;
+ * - `state_is`: 1 când starea e una din listă, altfel 0 (ex. climate: `cool` / `heat`) — seria devine pornit / oprit.
+ * `rows` = lista de stări a entității din răspunsul HA (cu atribute pentru `attribute`: minimal_response false).
+ */
+export function parseSeriesRows(rows, spec) {
+  const pts = [];
+  if (!Array.isArray(rows) || !spec) return pts;
+  const list = Array.isArray(spec.state_is) ? spec.state_is.map(String) : [];
+  const attr = typeof spec.attribute === 'string' ? spec.attribute : '';
+  let attrs = {};
+  for (const item of rows) {
+    if (!item || typeof item !== 'object') continue;
+    if (item.a && typeof item.a === 'object') attrs = item.a;
+    const t = typeof item.lu === 'number' ? item.lu * 1000 : item.lu;
+    const s = item.s;
+    const gone = s === null || s === undefined || s === 'unavailable' || s === 'unknown';
+    let v = null;
+    if (list.length) { v = gone ? null : (list.includes(String(s)) ? 1 : 0); pts.binary = true; }
+    else if (attr && !gone) { const x = attrs[attr]; const n = typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' ? Number(x) : NaN; v = Number.isFinite(n) ? n : null; }
+    pts.push({ t, v });
+  }
+  return pts;
+}
+
+/**
  * formatLabel(value, unit) — formatează o valoare pentru etichetă (Y-axis sau tooltip).
  * - W/kW/MWh: virgulă zecimală (românesc), separator de mii (spațiu subțire)
  * - etichete pentru unități: „kW”, „MWh”, „°C”, etc.

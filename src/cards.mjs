@@ -9,9 +9,9 @@ import { attachGestures } from './gestures.mjs';
 import { defineEditors, detectEnergy } from './editor.mjs';
 import { normalizeRadio, radioModel, renderRadio, stationUrl } from './radio.mjs';
 import { normalizeVehicles, buildVehiclesModel, renderVehicles, normalizeDeadlines, dueDocuments, parseDate } from './vehicles.mjs';
-import { applyPreset } from './presets.mjs';
+import { applyPreset, applyLook, nightConfig, applyNight } from './presets.mjs';
 import { normalizeGraphConfig, buildGraphModel, renderGraphCard, nearestPoint, rangeHours, thin, formatValue, timelineHit } from './graph-card.mjs';
-import { parseMinimalResponse, formatTimeLabel, discreteValue } from './graph-data.mjs';
+import { parseMinimalResponse, parseSeriesRows, formatTimeLabel, discreteValue } from './graph-data.mjs';
 import { normalizeWeatherConfig, buildWeatherModel, renderWeather } from './weather.mjs';
 import { normalizeFlowConfig, buildFlowModel, renderFlow, normalizeBatteryConfig, buildBatteryModel, headerRuntimeTexts, fetchAveragePower, renderBattery, normalizeBatteriesConfig, buildBatteriesModel, renderBatteries, discoverBatteries, normalizeLowBatteries, lowBatteryModel } from './energy.mjs';
 import { normalizeControls, controlModel, renderControls, sliderValue, normalizeTitle, renderTitle, normalizeRemote, renderRemote } from './controls.mjs';
@@ -68,6 +68,9 @@ class CcuBase extends HTMLElement {
     if (!config.entities.length && !this._allowEmpty) throw new Error('The configuration has no valid entity (entities).');
     this._config = config; this._warnings = warnings;
     applyPreset(this, config.preset, config.colors);
+    const night = nightConfig(cfg); this._night = night;
+    this._warnings = warnings.concat(applyLook(this, cfg, config.preset), night.warnings);   // scale / radius / glow / night (orice card)
+    applyNight(this, night, this._hass);
     this._applyMotion(cfg);
     this._lastRefs = null;
     this._draw(true);
@@ -76,6 +79,7 @@ class CcuBase extends HTMLElement {
   set hass(h) {
     this._hass = h;
     if (!this._config) return;
+    if (this._night) applyNight(this, this._night, h);   // noapte / zi, ieftin și înaintea verificării de schimbări
     const refs = this._entityIds().map((id) => h?.states?.[id]);
     const changed = !this._lastRefs || refs.length !== this._lastRefs.length || refs.some((r, i) => r !== this._lastRefs[i]);
     if (!changed) return;
@@ -159,7 +163,9 @@ class CcuButtonsCard extends CcuBase {
   async _loadSparks() {
     if (this._sparkBusy || !this._hass?.callWS || !this._config) return;
     const wanted = (this._config.entities || []).filter((e) => e.spark && e.size !== 's').map((e) => ({ id: e.spark.entity || e.entity, hours: Math.min(48, Math.max(1, Number(e.spark.hours) || 6)) }));
-    if (!wanted.length) return;
+    // val luminos (wave) pe cardurile xl: istoricul de azi, de la miezul nopții (aceeași cerere ca la spark)
+    const waves = (this._config.entities || []).filter((e) => e.size === 'xl' && (typeof e.wave === 'boolean' ? e.wave : this._config.wave === true)).map((e) => e.entity);
+    if (!wanted.length && !waves.length) return;
     this._sparkBusy = true;
     try {
       for (const w of wanted) {
@@ -168,8 +174,13 @@ class CcuButtonsCard extends CcuBase {
         const rows = (res && res[w.id]) || [];
         this._sparks[w.id] = sparkPath(rows.map((r) => r.s));
       }
+      for (const id of waves) {
+        const mid = new Date(); mid.setHours(0, 0, 0, 0);
+        const res = await this._hass.callWS({ type: 'history/history_during_period', start_time: mid.toISOString(), end_time: new Date().toISOString(), entity_ids: [id], minimal_response: true, no_attributes: true, significant_changes_only: false });
+        this._sparks['wave:' + id] = ((res && res[id]) || []).map((r) => [Number(r.lu) * 1000, Number(r.s)]).filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+      }
       this._draw(false);
-    } catch (e) { /* fără istoric: graficul mic rămâne gol */ }
+    } catch (e) { /* fără istoric: graficul mic rămâne gol, valul rămâne forma decorativă */ }
     this._sparkBusy = false;
   }
   set hass(h) { super.hass = h; if (!this._sparkLoaded && h?.callWS) { this._sparkLoaded = true; this._loadSparks(); } }
@@ -313,7 +324,7 @@ class CcuGraphCard extends CcuBase {
     this.toggleAttribute('data-tap', !!(this._tap && this._tap.action && this._tap.action !== 'none'));
   }
   _entityIds() { return []; }            // graficul se actualizează doar la refresh, nu la fiecare schimbare de stare
-  set hass(h) { this._hass = h; if (this._config && !this._started && h && h.callWS) { this._started = true; this._load(false); } }
+  set hass(h) { this._hass = h; if (this._config && this._night) applyNight(this, this._night, h); if (this._config && !this._started && h && h.callWS) { this._started = true; this._load(false); } }
   get hass() { return this._hass; }
   _width() { return this.clientWidth || (this.parentElement && this.parentElement.clientWidth) || 360; }
   _height() { return this._config.height || (this._width() >= 520 ? 190 : 150); }
@@ -331,18 +342,33 @@ class CcuGraphCard extends CcuBase {
     if (!force && hit && Date.now() - hit.at < ttl) return;
     if (this._loading) return;
     this._loading = true; this._draw(false);
-    const ids = this._config.series.map((s) => s.entity), hours = rangeHours(this._range), end = new Date(), start = new Date(end.getTime() - hours * 3600e3);
+    const S = this._config.series, uniq = (a) => [...new Set(a)];
+    const ids = uniq(S.filter((s) => !s.attribute).map((s) => s.entity)), attrIds = uniq(S.filter((s) => s.attribute).map((s) => s.entity));
+    const hours = rangeHours(this._range), end = new Date(), start = new Date(end.getTime() - hours * 3600e3);
+    const ask = (entity_ids, light) => this._hass.callWS({ type: 'history/history_during_period', start_time: start.toISOString(), end_time: end.toISOString(), entity_ids, minimal_response: light, no_attributes: light, significant_changes_only: false });
     try {
-      const res = await this._hass.callWS({ type: 'history/history_during_period', start_time: start.toISOString(), end_time: end.toISOString(), entity_ids: ids, minimal_response: true, no_attributes: true, significant_changes_only: false });
+      const res = ids.length ? await ask(ids, true) : {};
+      const resA = attrIds.length ? await ask(attrIds, false) : {};   // atributele cer răspunsul întreg (nu „minimal”)
       const parsed = parseMinimalResponse(res, ids);
-      const data = ids.map((id) => {
-        const bin = !!(parsed[id] && parsed[id].binary);
-        let pts = thin(parsed[id] || [], this._config.timeline ? 600 : 150);   // cronologia păstrează toate trecerile pornit / oprit
-        const cur = this._hass.states && this._hass.states[id]; const n = Number(cur && cur.state);
-        if (cur && cur.state !== '' && Number.isFinite(n) && pts.length) pts = pts.concat([{ t: end.getTime(), v: n }]);
-        else if (bin && cur && pts.length && discreteValue(cur.state) !== undefined) pts = pts.concat([{ t: end.getTime(), v: discreteValue(cur.state) }]);
-        pts.unit = (cur && cur.attributes && cur.attributes.unit_of_measurement) || '';
-        pts.binary = bin;
+      const tempUnit = (this._hass.config && this._hass.config.unit_system && this._hass.config.unit_system.temperature) || '°C';
+      const data = S.map((s) => {
+        const id = s.entity, cur = this._hass.states && this._hass.states[id];
+        let pts, bin = false, unit = (cur && cur.attributes && cur.attributes.unit_of_measurement) || '', last = null;
+        if (s.attribute) {
+          pts = thin(parseSeriesRows(resA[id], { attribute: s.attribute }), this._config.timeline ? 600 : 150);
+          const x = cur && cur.attributes ? Number(cur.attributes[s.attribute]) : NaN; last = Number.isFinite(x) && cur.attributes[s.attribute] !== '' && cur.attributes[s.attribute] !== null ? x : null;
+          unit = s.unit || (/temp/i.test(s.attribute) ? tempUnit : '');
+        } else if (s.state_is) {
+          bin = true; pts = thin(parseSeriesRows(res[id], { state_is: s.state_is }), this._config.timeline ? 600 : 150);
+          last = cur && !['unavailable', 'unknown', ''].includes(String(cur.state)) ? (s.state_is.includes(String(cur.state)) ? 1 : 0) : null; unit = '';
+        } else {
+          bin = !!(parsed[id] && parsed[id].binary);
+          pts = thin(parsed[id] || [], this._config.timeline ? 600 : 150);   // cronologia păstrează toate trecerile pornit / oprit
+          const n = Number(cur && cur.state);
+          if (cur && cur.state !== '' && Number.isFinite(n)) last = n; else if (bin && cur && discreteValue(cur.state) !== undefined) last = discreteValue(cur.state);
+        }
+        if (last !== null && pts.length) pts = pts.concat([{ t: end.getTime(), v: last }]);
+        pts.unit = unit; pts.binary = bin;
         return pts;
       });
       this._cache.set(key, { at: Date.now(), data });
@@ -445,7 +471,7 @@ class CcuBatteryCard extends CcuBase {
     const base = normalizeConfig({ ...(cfg || {}), entities: b.config.soc ? [b.config.soc] : [] });
     return { config: { ...base.config, ...b.config, entities: b.config.soc ? [{ entity: b.config.soc, name: b.config.title }] : [] }, warnings: b.warnings.concat(base.warnings.filter((w) => !/entit|Fără/i.test(w))) };
   }
-  _entityIds() { const c = this._config; return [c.soc, c.capacity_entity, c.load, c.power, c.grid_present].concat(c.load_entities || []).filter(Boolean); }
+  _entityIds() { const c = this._config; return [c.soc, c.capacity_entity, c.capacity_ah_entity, c.load, c.power, c.grid_present].concat(c.load_entities || []).filter(Boolean); }
   _html() {
     const c = this._config;
     if (c.power && c.charge_eta !== 'now') avgRefresh(this, [{ id: c.power, invert: c.power_invert }]);
@@ -602,7 +628,7 @@ class CcuHeaderCard extends CcuBase {
   }
   _entityIds() {
     const h = this._config.header;
-    const rt = h.values.flatMap((v) => (v.runtimeCfg ? [v.runtimeCfg.load, v.runtimeCfg.capacity_entity, v.runtimeCfg.grid_present, v.runtimeCfg.power].concat(v.runtimeCfg.load_entities || []).filter(Boolean) : []));
+    const rt = h.values.flatMap((v) => (v.runtimeCfg ? [v.runtimeCfg.load, v.runtimeCfg.capacity_entity, v.runtimeCfg.capacity_ah_entity, v.runtimeCfg.grid_present, v.runtimeCfg.power].concat(v.runtimeCfg.load_entities || []).filter(Boolean) : []));
     return h.values.map((v) => v.entity).concat(h.right ? [h.right.entity] : [], rt);
   }
   _hasClock() { return !!(this._config && this._config.header.clock); }

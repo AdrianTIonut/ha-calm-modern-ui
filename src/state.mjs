@@ -267,6 +267,8 @@ export function secondaryText(entity, hass) {
 
     case 'light':
     case 'switch':
+    case 'input_boolean':
+    case 'automation':
     case 'fan':
     case 'cover':
     case 'lock':

@@ -321,5 +321,37 @@ try {
 } catch (e) { failt('animations lipsă', e.message); }
 
 // ---- rezumat ----
+
+// ---- ce se vede pe buton: validare ----
+{
+  const r = normalizeConfig({ type: 'x', show_icon: 'da', show_state: true, state_style: 'puncte', state_labels: 'x', entities: [{ entity: 'light.a', show_name: 1, state_style: 'text' }] });
+  const w = r.warnings.join(' | ');
+  if (r.config.show_icon === undefined && r.config.show_state === true && r.config.state_style === undefined && r.config.state_labels === undefined && r.config.entities[0].show_name === undefined && r.config.entities[0].state_style === 'text'
+      && /show_icon/.test(w) && /state_style|stilul stării/.test(w) && /state_labels/.test(w) && /show_name/.test(w)) ok('opțiunile „ce se vede pe buton”: valorile invalide se șterg cu avertisment, cele valide rămân');
+  else failt('opțiunile „ce se vede pe buton”', JSON.stringify({ c: r.config, w }));
+}
+{
+  const r = normalizeConfig({ type: 'x', state_labels: { on: ' Aprins ', off: '', alert: 5, bogus: 'x', unavailable: 'N/A' }, entities: ['light.a'] });
+  const sl = r.config.state_labels || {};
+  if (sl.on === 'Aprins' && sl.unavailable === 'N/A' && !('off' in sl) && !('alert' in sl) && !('bogus' in sl)) ok('state_labels: doar cheile cunoscute, cu text; spațiile se taie');
+  else failt('state_labels curățare', JSON.stringify(sl));
+}
+{
+  const r = normalizeConfig({ type: 'x', show_name: false, show_value: false, show_icon: true, show_state: false, state_style: 'dot', entities: ['light.a'] });
+  if (r.warnings.length === 0 && r.config.show_name === false && r.config.show_value === false) ok('opțiuni valide: fără avertismente');
+  else failt('opțiuni valide', JSON.stringify(r.warnings));
+}
+
+{
+  const r = normalizeConfig({ type: 'x', wave: 'da', entities: ['light.a'] });
+  if (r.config.wave === undefined && r.warnings.length >= 1) ok('wave nebooleană: ignorată, cu avertisment');
+  else failt('wave nebooleană', JSON.stringify([r.config.wave, r.warnings]));
+}
+{
+  const r = normalizeConfig({ type: 'x', wave: true, entities: [{ entity: 'light.a', wave: false }] });
+  if (r.config.wave === true && r.config.entities[0].wave === false && r.warnings.length === 0) ok('wave boolean păstrată pe card și pe entitate');
+  else failt('wave boolean', JSON.stringify([r.config, r.warnings]));
+}
+
 console.log(`\n${pass} / ${pass + fail} teste OK`);
 process.exit(fail > 0 ? 1 : 0);

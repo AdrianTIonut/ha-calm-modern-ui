@@ -29,7 +29,7 @@ txt = headerRuntimeTexts(h, { states: S({ 'sensor.soc': 82, 'sensor.l': 'unavail
 ok('consum indisponibil → fără text', txt[0] === '');
 h = hdr({ ...cfgv, runtime_power: 'sensor.p' });
 txt = headerRuntimeTexts(h, { states: S({ 'sensor.soc': 82, 'sensor.l': 1200, 'sensor.p': -10000 }) });
-ok('în încărcare: „plin în …” (7,2 kWh / 10 kW = 0,70 h)', txt[0] === 'plin în ~0,70 h', txt[0]);
+ok('în încărcare: „plin în …” (7,2 kWh / 10 kW = 0,72 h = ~43 min)', txt[0] === 'plin în ~43 min', txt[0]);
 txt = headerRuntimeTexts(h, { states: S({ 'sensor.soc': 82, 'sensor.l': 1200, 'sensor.p': 800 }) });
 ok('în descărcare rămâne autonomia', txt[0] === '~20,7 h', txt[0]);
 

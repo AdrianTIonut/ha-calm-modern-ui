@@ -198,6 +198,8 @@ export function normalizeBatteryConfig(cfg) {
   const cfgOut = {
     soc, capacity_entity: ent('capacity_entity'), power: ent('power'), power_invert: src.power_invert === true, charge_eta: src.charge_eta === 'now' ? 'now' : 'avg', runtime_while_charging: src.runtime_while_charging === true || src.runtime_while_charging === 'true', load: ent('load'), load_entities: (Array.isArray(src.load_entities) ? src.load_entities : src.load_entities ? [src.load_entities] : []).map(String).filter(okId), grid_present: ent('grid_present'),
     capacity_kwh: num('capacity_kwh', 0, 0.1, 1000), reserve_pct: num('reserve_pct', 20, 0, 100), shutdown_pct: num('shutdown_pct', 10, 0, 100),
+    // de unde vine capacitatea: kwh (număr) | entity (senzor kWh) | ah (Ah × tensiune nominală); lipsă = ca înainte (senzorul dacă are valoare, altfel kWh)
+    capacity_source: ['kwh', 'entity', 'ah'].includes(src.capacity_source) ? src.capacity_source : '', capacity_ah_entity: ent('capacity_ah_entity'), capacity_ah: num('capacity_ah', 0, 0.1, 100000), nominal_voltage: num('nominal_voltage', 51.2, 1, 1000),
     title: str(src.title) || t('Baterie'), show_title: src.show_title !== false, color: ['yellow', 'green', 'blue', 'orange'].includes(src.color) ? src.color : 'yellow',
   };
   if (cfgOut.shutdown_pct > cfgOut.reserve_pct) warnings.push(t('Baterie: „shutdown_pct” e peste „reserve_pct”; le-am inversat.'));
@@ -205,13 +207,50 @@ export function normalizeBatteryConfig(cfg) {
   return { config: cfgOut, warnings };
 }
 
+/**
+ * Capacitatea bateriei în kWh pentru 100% din SOC (energia nominală, NU cea rămasă după Shutdown), după `capacity_source`:
+ * `kwh` = numărul scris; `entity` = senzorul în kWh; `ah` = Ah (senzor sau număr) × `nominal_voltage` / 1000.
+ * Cu sursa aleasă explicit nu se trece pe alt câmp (lipsa valorii = null, cardul arată „—”); fără sursă: senzorul dacă are valoare, altfel kWh (ca înainte).
+ */
+export function batteryCapacityKwh(config, st) {
+  const fromKwh = () => (config.capacity_kwh > 0 ? config.capacity_kwh : null);
+  const fromEntity = () => { const v = toKwh(st(config.capacity_entity)); return v !== null && v > 0 ? v : null; };
+  const fromAh = () => {
+    const s = st(config.capacity_ah_entity), raw = s && s.state !== '' ? Number(s.state) : NaN;
+    const mAh = s && s.attributes && /^mah$/i.test(String(s.attributes.unit_of_measurement || ''));
+    const ah = Number.isFinite(raw) && raw > 0 ? (mAh ? raw / 1000 : raw) : (config.capacity_ah > 0 ? config.capacity_ah : null);
+    const v = config.nominal_voltage > 0 ? config.nominal_voltage : 51.2;
+    return ah ? (ah * v) / 1000 : null;
+  };
+  switch (config.capacity_source) {
+    case 'kwh': return fromKwh();
+    case 'entity': return fromEntity();
+    case 'ah': return fromAh();
+    default: { const e = fromEntity(); return e !== null ? e : fromKwh(); }
+  }
+}
+
+/**
+ * Durata dintr-un număr de ore, pentru „Plin în” și autonomie: sub o oră în minute („~42 min”), între 1 și 10 ore ore + minute rotunjite la 5
+ * („~1 h 25 min”), de la 10 ore în sus o zecimală („~16,2 h”), peste 100 de ore „>99 h”. null → „—”.
+ */
+export function formatHours(h) {
+  if (h === null || h === undefined || !Number.isFinite(h)) return '—';
+  if (h >= 100) return '>99 h';
+  const min = Math.max(0, Math.round(h * 60));
+  if (min < 1) return '<1 min';
+  if (min < 60) return `~${min} min`;
+  if (h >= 10) return `~${formatNumber(Math.round(h * 10) / 10)} h`;
+  const m5 = Math.round(min / 5) * 5, hh = Math.floor(m5 / 60), mm = m5 % 60;
+  return `~${hh} h${mm ? ` ${mm} min` : ''}`;
+}
+
 /** Modelul bateriei: SOC, energie, autonomie până la rezervă, stare (ok / low / backup / na). */
 export function buildBatteryModel(config, hass, extra) {
   const st = (id) => (id && hass && hass.states ? hass.states[id] : null);
   const socS = st(config.soc), p = socS ? Number(socS.state) : NaN;
   const soc = Number.isFinite(p) && socS.state !== '' ? Math.min(100, Math.max(0, p)) : null;
-  const capE = toKwh(st(config.capacity_entity));
-  const total = capE !== null && capE > 0 ? capE : (config.capacity_kwh || null);
+  const total = batteryCapacityKwh(config, st);
   const now = soc !== null && total ? (soc / 100) * total : null;
   // consumul = `load` + `load_entities` (se adună); dacă una dintre ele nu are valoare, autonomia nu se calculează (altfel ar ieși prea optimistă)
   const loadIds = [config.load].concat(config.load_entities || []).filter(Boolean);
@@ -237,7 +276,7 @@ export function buildBatteryModel(config, hass, extra) {
   const state = soc === null ? 'na' : backup ? 'backup' : soc <= config.reserve_pct ? 'low' : 'ok';
   const charging = chargeW !== null && soc !== null && soc < 99;   // peste 99% nu mai arătăm „plin în”: bateria oscilează cu câțiva W și cifrele ar sări
   const fullH = charging && total ? (((100 - soc) / 100) * total * 1000) / chargeW : null;   // timp până la 100% la puterea de încărcare de acum
-  const hh = (h) => (h === null ? '—' : h >= 100 ? '>99 h' : `~${formatNumber(Math.round(h * 10) / 10)} h`);
+  const hh = formatHours;
   return { soc, total, now, autonomyH, usable, bandTotal, floor, state, backup, charging, chargeW, fullH, fullText: hh(fullH), loadW, socText: soc === null ? '—' : `${Math.round(soc)}%`,
     energyText: usable !== null && bandTotal !== null ? t('{a} kWh din {b} kWh', { a: formatNumber(Math.round(usable * 10) / 10), b: formatNumber(Math.round(bandTotal * 10) / 10) }) : (bandTotal !== null ? t('— din {b} kWh', { b: formatNumber(Math.round(bandTotal * 10) / 10) }) : ''),
     autonomyText: hh(autonomyH) };

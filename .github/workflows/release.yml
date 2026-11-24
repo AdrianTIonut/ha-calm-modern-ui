@@ -13,8 +13,12 @@ jobs:
         with: { node-version: 22 }
       - run: node tests/run-all.mjs
       - run: node build.mjs
-      - name: Publish a release with ccu.js attached (HACS downloads it from here)
+      - name: Pack the fonts (not part of ccu.js; unzip into /config/www/ccu/)
+        run: zip -r fonts.zip fonts
+      - name: Publish a release with ccu.js attached (HACS / Marketplace downloads it from here) and fonts.zip
         uses: softprops/action-gh-release@v2
         with:
-          files: ccu.js
+          files: |
+            ccu.js
+            fonts.zip
           generate_release_notes: true
